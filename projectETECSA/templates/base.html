@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <nav class="flex-grow-1 d-flex flex-column gap-1">
+        <nav class="flex-grow-1 d-flex flex-column gap-1 pb-4">
             <a href="{% url 'dashboard' %}" class="nav-item-custom {% if current_page == 'dashboard' %}active{% endif %}">
                 <span class="material-symbols-outlined icon-filled">dashboard</span>
                 Resumen
@@ -96,13 +96,13 @@
                 <span class="material-symbols-outlined">settings</span>
                 Configuración
             </a>
-        </nav>
-
-        <div class="mt-auto pt-4 border-top" style="border-color: var(--surface-container-high) !important;">
-            <a href="{% url 'admin_panel' %}" class="nav-item-custom mb-3 {% if current_page == 'admin_panel' %}active{% endif %}">
+            <a href="{% url 'admin_panel' %}" class="nav-item-custom mt-auto {% if current_page == 'admin_panel' %}active{% endif %}">
                 <span class="material-symbols-outlined">admin_panel_settings</span>
                 Administrador
             </a>
+        </nav>
+
+        <div class="mt-auto pt-4 border-top" style="border-color: var(--surface-container-high) !important;">
             <a href="#" class="nav-item-custom mb-3">
                 <span class="material-symbols-outlined">summarize</span>
                 Reportes

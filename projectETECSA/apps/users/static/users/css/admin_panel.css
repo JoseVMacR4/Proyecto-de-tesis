@@ -3,7 +3,179 @@
    Basado en "Institutional Authority & Tonal Depth"
 */
 
-/* Reutiliza estilos de settings.css para consistencia */
+/* Navigation Tabs */
+.settings-tabs {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--outline-variant);
+    padding-bottom: 0;
+}
+
+.settings-tab {
+    padding-bottom: 1rem;
+    border-bottom: 2px solid transparent;
+    background: none;
+    border: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--on-surface-variant);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.settings-tab:hover {
+    color: var(--primary);
+}
+
+.settings-tab.active {
+    border-bottom-color: var(--primary);
+    color: var(--primary);
+    font-weight: 700;
+}
+
+/* Settings Cards */
+.settings-card {
+    background-color: var(--surface-container-lowest);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(193, 199, 210, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s ease;
+}
+
+.settings-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.settings-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.settings-card-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+}
+
+.settings-card-icon {
+    color: var(--primary-container);
+    font-size: 1.5rem;
+}
+
+/* Profile Info Items */
+.profile-info-item {
+    background-color: var(--surface-container-low);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.profile-info-label {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--outline);
+    margin-bottom: 0.25rem;
+}
+
+.profile-info-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--on-surface);
+}
+
+/* Bank Items */
+.bank-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.bank-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background-color: var(--surface);
+    border-radius: 0.75rem;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.bank-item:hover {
+    background-color: var(--surface-container-low);
+    border-color: rgba(193, 199, 210, 0.3);
+}
+
+.bank-item-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.bank-icon-container {
+    width: 40px;
+    height: 40px;
+    background-color: var(--primary-fixed-dim);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+}
+
+.bank-name {
+    font-weight: 700;
+    color: var(--on-surface);
+    margin-bottom: 0.125rem;
+}
+
+.bank-description {
+    font-size: 0.75rem;
+    color: var(--on-surface-variant);
+    font-weight: 500;
+}
+
+.bank-status {
+    font-size: 0.625rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+}
+
+.bank-status.active {
+    background-color: var(--secondary-container);
+    color: var(--on-secondary-container);
+}
+
+.bank-status.pending {
+    background-color: var(--tertiary-fixed);
+    color: var(--on-tertiary-fixed-variant);
+}
+
+.btn-bank-action {
+    padding: 0.25rem;
+    background: none;
+    border: none;
+    color: var(--outline);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-bank-action:hover {
+    color: var(--primary);
+}
+
+/* Tab Content Transitions */
 .tab-content {
     display: none;
 }
