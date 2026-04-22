@@ -92,7 +92,7 @@
                 <span class="material-symbols-outlined">description</span>
                 Informes
             </a>
-            <a href="#" class="nav-item-custom">
+            <a href="{% url 'settings' %}" class="nav-item-custom {% if current_page == 'settings' %}active{% endif %}">
                 <span class="material-symbols-outlined">settings</span>
                 Configuración
             </a>
