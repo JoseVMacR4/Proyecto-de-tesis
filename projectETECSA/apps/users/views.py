@@ -39,6 +39,13 @@ def settings(request):
     return render(request, 'users/settings.html', context)
 
 @login_required
+def admin_panel(request):
+    context = {
+        'current_page': 'admin_panel'
+    }
+    return render(request, 'users/admin_panel.html', context)
+
+@login_required
 def logout_view(request):
     logout(request)
     return redirect('login')

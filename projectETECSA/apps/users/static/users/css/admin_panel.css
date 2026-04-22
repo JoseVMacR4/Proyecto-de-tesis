@@ -1,0 +1,82 @@
+/*
+   ETECSA Finanzas - Admin Panel Styles
+   Basado en "Institutional Authority & Tonal Depth"
+*/
+
+/* Reutiliza estilos de settings.css para consistencia */
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Botones de acción específicos */
+.btn-edit-user,
+.btn-delete-user,
+.btn-edit-operation,
+.btn-delete-operation,
+.btn-edit-bank,
+.btn-delete-bank,
+.btn-edit-office,
+.btn-delete-office {
+    transition: all 0.2s ease;
+}
+
+.btn-edit-user:hover,
+.btn-edit-operation:hover,
+.btn-edit-bank:hover,
+.btn-edit-office:hover {
+    color: var(--primary) !important;
+    transform: scale(1.1);
+}
+
+.btn-delete-user:hover,
+.btn-delete-operation:hover,
+.btn-delete-bank:hover,
+.btn-delete-office:hover {
+    color: var(--error) !important;
+    transform: scale(1.1);
+}
+
+/* Ajustes específicos para tablas de administración */
+.table-custom thead th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--outline);
+    border-bottom: 2px solid var(--surface-container-high);
+}
+
+.table-custom tbody td {
+    vertical-align: middle;
+    padding: 1rem 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 767.98px) {
+    .settings-tabs {
+        gap: 0.75rem;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 0.5rem;
+    }
+
+    .table-responsive {
+        font-size: 0.875rem;
+    }
+}

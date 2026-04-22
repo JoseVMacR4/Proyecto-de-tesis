@@ -9,20 +9,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ETECSA Finanzas - Gestión Central{% endblock %}</title>
-    
+
     <!-- Bootstrap 5 (local) -->
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
-    
+
     <!-- Fonts (local) -->
     <link href="{% static 'css/inter.css' %}" rel="stylesheet">
     <link href="{% static 'css/manrope.css' %}" rel="stylesheet">
-    
+
     <!-- Material Symbols (local) -->
     <link href="{% static 'css/material-symbols.css' %}" rel="stylesheet">
-    
+
     <!-- Dashboard CSS Base -->
     <link rel="stylesheet" href="{% static 'users/css/dashboard.css' %}">
-    
+
     <!-- Block for additional CSS -->
     {% block extra_css %}{% endblock %}
 </head>
@@ -37,23 +37,23 @@
             </button>
             <span class="fs-4 font-manrope fw-extrabold text-primary" style="letter-spacing: -0.02em;">ETECSA Finanzas</span>
         </div>
-        
+
         <div class="d-flex align-items-center gap-3 gap-md-4">
             <!-- Search (Hidden on small screens) -->
             <div class="position-relative d-none d-md-block">
                 <span class="material-symbols-outlined search-icon">search</span>
                 <input type="text" class="form-control search-input" placeholder="Buscar...">
             </div>
-            
+
             <button class="btn btn-link p-0 text-secondary">
                 <span class="material-symbols-outlined">notifications</span>
             </button>
             <button class="btn btn-link p-0 text-secondary">
                 <span class="material-symbols-outlined">help_outline</span>
             </button>
-            
+
             <div class="vr mx-1 d-none d-sm-block"></div>
-            
+
             <a href="{% url 'logout' %}" class="btn btn-primary-gradient logout-button d-flex align-items-center gap-2 py-2 px-3 fw-bold text-white">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="d-none d-sm-inline">Cerrar Sesión</span>
@@ -99,6 +99,10 @@
         </nav>
 
         <div class="mt-auto pt-4 border-top" style="border-color: var(--surface-container-high) !important;">
+            <a href="{% url 'admin_panel' %}" class="nav-item-custom mb-3 {% if current_page == 'admin_panel' %}active{% endif %}">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+                Administrador
+            </a>
             <a href="#" class="nav-item-custom mb-3">
                 <span class="material-symbols-outlined">summarize</span>
                 Reportes
@@ -113,10 +117,10 @@
 
     <!-- Bootstrap JS (local) -->
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    
+
     <!-- Custom Dashboard JS -->
     <script src="{% static 'users/js/dashboard.js' %}"></script>
-    
+
     <!-- Block for additional JS -->
     {% block extra_js %}{% endblock %}
 </body>
