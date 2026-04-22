@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ETECSA Finanzas - Estados de Cuenta{% endblock %}
+
+{% block extra_css %}
+    <!-- Bank Accounts Custom CSS -->
+    <link rel="stylesheet" href="{% static 'bank_accounts/css/bank_accounts.css' %}">
+{% endblock %}
+
+{% block content %}
+
+        <!-- Header -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
+            <div>
+                <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Estados de Cuenta</h1>
+                <p class="text-muted fw-medium mb-0 small">Gestión de cuentas bancarias y consulta de saldos disponibles.</p>
+            </div>
+            <button class="btn btn-primary-gradient d-flex align-items-center gap-2 fw-bold text-white" id="addAccountBtn">
+                <span class="material-symbols-outlined">add</span>
+                <span>Nueva Cuenta</span>
+            </button>
+        </div>
+
+        <!-- Stats Cards Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Total Cuentas</p>
+                        <span class="material-symbols-outlined text-primary" style="font-size: 20px;">account_balance</span>
+                    </div>
+                    <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">8</h3>
+                    <p class="text-muted small mb-0">Cuentas activas</p>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Saldo Total</p>
+                        <span class="material-symbols-outlined text-primary" style="font-size: 20px;">wallet</span>
+                    </div>
+                    <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">$45.2M</h3>
+                    <p class="text-muted small mb-0">USD consolidado</p>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4">
+                <div class="stat-card">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Última Actualización</p>
+                        <span class="material-symbols-outlined text-primary" style="font-size: 20px;">schedule</span>
+                    </div>
+                    <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">Hoy</h3>
+                    <p class="text-muted small mb-0">10:45 AM</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounts Table Section -->
+        <div class="table-container">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center p-4 border-bottom" style="border-color: var(--surface-container-high) !important;">
+                <h5 class="font-manrope fw-bold text-primary mb-3 mb-sm-0">Cuentas Registradas</h5>
+                <div class="d-flex gap-2">
+                    <div class="position-relative d-none d-md-block">
+                        <span class="material-symbols-outlined search-icon" style="font-size: 18px;">search</span>
+                        <input type="text" class="form-control search-input form-control-sm" placeholder="Buscar cuenta..." style="width: 200px;" id="accountSearchInput">
+                    </div>
+                    <button class="btn btn-sm d-flex align-items-center gap-1 fw-bold text-secondary" style="background-color: var(--surface-container-low);">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span> Filtrar
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Número de Cuenta</th>
+                            <th>Tipo</th>
+                            <th>Banco</th>
+                            <th>Moneda</th>
+                            <th>Saldo</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****3456</td>
+                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(5, 150, 213, 0.1); color: #0596d5;">Corriente</span></td>
+                            <td>Banco Metropolitano</td>
+                            <td>USD</td>
+                            <td class="font-manrope fw-bold">$12,450.00</td>
+                            <td><span class="status-badge status-matched">Activa</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****7890</td>
+                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(100, 45, 0, 0.1); color: #642d00;">Ahorro</span></td>
+                            <td>BANDEC</td>
+                            <td>USD</td>
+                            <td class="font-manrope fw-bold">$32,100.50</td>
+                            <td><span class="status-badge status-matched">Activa</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****2341</td>
+                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(200, 100, 50, 0.1); color: #c86432;">Plazo</span></td>
+                            <td>BPA</td>
+                            <td>USD</td>
+                            <td class="font-manrope fw-bold">$500.00</td>
+                            <td><span class="status-badge status-pending">Inactiva</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****5678</td>
+                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(5, 150, 213, 0.1); color: #0596d5;">Corriente</span></td>
+                            <td>Transfermóvil</td>
+                            <td>USD</td>
+                            <td class="font-manrope fw-bold">$1,200.00</td>
+                            <td><span class="status-badge status-matched">Activa</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****9102</td>
+                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(5, 150, 213, 0.1); color: #0596d5;">Corriente</span></td>
+                            <td>Enzona</td>
+                            <td>USD</td>
+                            <td class="font-manrope fw-bold">$-250.75</td>
+                            <td><span class="status-badge status-flagged">Alerta</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****3464</td>
+                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(100, 45, 0, 0.1); color: #642d00;">Ahorro</span></td>
+                            <td>Banco Popular</td>
+                            <td>USD</td>
+                            <td class="font-manrope fw-bold">$-1,050.00</td>
+                            <td><span class="status-badge status-flagged">Alerta</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****7865</td>
+                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(5, 150, 213, 0.1); color: #0596d5;">Corriente</span></td>
+                            <td>ICBC Cuba</td>
+                            <td>USD</td>
+                            <td class="font-manrope fw-bold">$8,900.00</td>
+                            <td><span class="status-badge status-matched">Activa</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****4532</td>
+                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(100, 45, 0, 0.1); color: #642d00;">Ahorro</span></td>
+                            <td>First Bank</td>
+                            <td>USD</td>
+                            <td class="font-manrope fw-bold">$-100.25</td>
+                            <td><span class="status-badge status-pending">Revisión</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Footer -->
+            <div class="p-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3" style="background-color: rgba(245, 243, 243, 0.5);">
+                <span class="small text-muted fw-medium">Mostrando 8 de 8 cuentas</span>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center p-1 text-muted"><span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span></button>
+                    <button class="btn btn-sm btn-primary fw-bold px-2">1</button>
+                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center p-1 text-muted"><span class="material-symbols-outlined" style="font-size: 18px;">chevron_right</span></button>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Bank Accounts Custom JS -->
+    <script src="{% static 'bank_accounts/js/bank_accounts.js' %}"></script>
+{% endblock %}

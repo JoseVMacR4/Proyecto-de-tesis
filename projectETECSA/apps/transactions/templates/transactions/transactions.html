@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ETECSA Finanzas - Informes{% endblock %}
+
+{% block extra_css %}
+    <!-- Transactions Custom CSS -->
+    <link rel="stylesheet" href="{% static 'transactions/css/transactions.css' %}">
+{% endblock %}
+
+{% block content %}
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
+        <div>
+            <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Informes Financieros</h1>
+            <p class="text-muted fw-medium mb-0 small">Generación y consulta de reportes detallados de transacciones y conciliación.</p>
+        </div>
+        <button class="btn btn-primary-gradient d-flex align-items-center gap-2 fw-bold text-white" id="generateReportBtn">
+            <span class="material-symbols-outlined">download</span>
+            <span>Generar Reporte</span>
+        </button>
+    </div>
+
+    <!-- Stats Cards Row -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Total Transacciones</p>
+                    <span class="material-symbols-outlined text-primary" style="font-size: 20px;">receipt_long</span>
+                </div>
+                <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">2,847</h3>
+                <p class="text-muted small mb-0">Mes actual</p>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Monto Total</p>
+                    <span class="material-symbols-outlined text-primary" style="font-size: 20px;">monetization_on</span>
+                </div>
+                <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">$98.5M</h3>
+                <p class="text-muted small mb-0">Procesado</p>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Tasa Éxito</p>
+                    <span class="material-symbols-outlined text-primary" style="font-size: 20px;">trending_up</span>
+                </div>
+                <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">99.2%</h3>
+                <p class="text-muted small mb-0">Exitosas</p>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Tiempo Promedio</p>
+                    <span class="material-symbols-outlined text-primary" style="font-size: 20px;">schedule</span>
+                </div>
+                <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">2.4s</h3>
+                <p class="text-muted small mb-0">Procesamiento</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters Section -->
+    <div class="table-container mb-4">
+        <div class="p-4 border-bottom" style="border-color: var(--surface-container-high) !important;">
+            <h5 class="font-manrope fw-bold text-primary mb-3">Filtros de Búsqueda</h5>
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label fw-bold small text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Rango de Fecha</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0" style="background-color: white; color: #999;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">calendar_today</span>
+                        </span>
+                        <input type="text" class="form-control form-control-sm border-0" id="dateRange" placeholder="01/04/2026 - 20/04/2026" style="background-color: #f5f3f3;">
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label fw-bold small text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Tipo Transacción</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0" style="background-color: white; color: #999;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">category</span>
+                        </span>
+                        <select class="form-select form-select-sm border-0" style="background-color: #f5f3f3;">
+                            <option>Todas</option>
+                            <option>Ingreso</option>
+                            <option>Egreso</option>
+                            <option>Transferencia</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label fw-bold small text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">Estado</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0" style="background-color: white; color: #999;">
+                            <span class="material-symbols-outlined" style="font-size: 1.1rem;">filter_list</span>
+                        </span>
+                        <select class="form-select form-select-sm border-0" style="background-color: #f5f3f3;">
+                            <option>Todos</option>
+                            <option>Completada</option>
+                            <option>Pendiente</option>
+                            <option>Error</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label class="form-label fw-bold small text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.05em;">&nbsp;</label>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm fw-bold text-white" style="background-color: var(--primary); border: none; flex-grow: 1;">
+                            <span class="material-symbols-outlined me-1" style="font-size: 0.9rem;">search</span>
+                            Buscar
+                        </button>
+                        <button class="btn btn-sm fw-bold text-secondary border" style="background-color: var(--surface-container-low); flex-grow: 1;">
+                            <span class="material-symbols-outlined" style="font-size: 0.9rem;">refresh</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="table-container">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center p-4 border-bottom" style="border-color: var(--surface-container-high) !important;">
+            <h5 class="font-manrope fw-bold text-primary mb-3 mb-sm-0">Historial de Transacciones</h5>
+            <div class="d-flex gap-2">
+                <div class="position-relative d-none d-md-block">
+                    <span class="material-symbols-outlined search-icon" style="font-size: 18px;">search</span>
+                    <input type="text" class="form-control search-input form-control-sm" placeholder="Buscar transacción..." style="width: 200px;">
+                </div>
+                <button class="btn btn-sm d-flex align-items-center gap-1 fw-bold text-secondary" style="background-color: var(--surface-container-low);">
+                    <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-custom mb-0">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Referencia</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th class="text-end">Monto</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-muted small">20 Abr, 2026</td>
+                        <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TRX-20240420-001</td>
+                        <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(0, 150, 136, 0.1); color: #009688;">Ingreso</span></td>
+                        <td>Depósito Banco Metropolitano</td>
+                        <td class="text-end font-manrope fw-bold" style="color: #009688;">+$5,240.00</td>
+                        <td><span class="status-badge status-matched">Completada</span></td>
+                        <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined" style="font-size: 1rem;">info</span></button></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">20 Abr, 2026</td>
+                        <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TRX-20240420-002</td>
+                        <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(200, 50, 50, 0.1); color: #c83232;">Egreso</span></td>
+                        <td>Pago de nómina</td>
+                        <td class="text-end font-manrope fw-bold" style="color: #c83232;">-$12,450.00</td>
+                        <td><span class="status-badge status-matched">Completada</span></td>
+                        <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined" style="font-size: 1rem;">info</span></button></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">20 Abr, 2026</td>
+                        <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TRX-20240420-003</td>
+                        <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(100, 50, 150, 0.1); color: #6432aa;">Transferencia</span></td>
+                        <td>Transferencia a BANDEC</td>
+                        <td class="text-end font-manrope fw-bold" style="color: #6432aa;">$8,900.50</td>
+                        <td><span class="status-badge status-pending">Pendiente</span></td>
+                        <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined" style="font-size: 1rem;">info</span></button></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">19 Abr, 2026</td>
+                        <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TRX-20240419-001</td>
+                        <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(0, 150, 136, 0.1); color: #009688;">Ingreso</span></td>
+                        <td>Reembolso de fondos</td>
+                        <td class="text-end font-manrope fw-bold" style="color: #009688;">+$1,120.00</td>
+                        <td><span class="status-badge status-matched">Completada</span></td>
+                        <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined" style="font-size: 1rem;">info</span></button></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">19 Abr, 2026</td>
+                        <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TRX-20240419-002</td>
+                        <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(200, 50, 50, 0.1); color: #c83232;">Egreso</span></td>
+                        <td>Pago de servicios</td>
+                        <td class="text-end font-manrope fw-bold" style="color: #c83232;">-$342.10</td>
+                        <td><span class="status-badge status-flagged">Error</span></td>
+                        <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined" style="font-size: 1rem;">info</span></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="p-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3" style="background-color: rgba(245, 243, 243, 0.5);">
+            <span class="small text-muted fw-medium">Mostrando 5 de 2,847 transacciones</span>
+            <div class="d-flex gap-1">
+                <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center p-1 text-muted"><span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span></button>
+                <button class="btn btn-sm btn-primary fw-bold px-2">1</button>
+                <button class="btn btn-sm btn-light border fw-bold px-2 text-secondary">2</button>
+                <button class="btn btn-sm btn-light border fw-bold px-2 text-secondary">3</button>
+                <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center p-1 text-muted"><span class="material-symbols-outlined" style="font-size: 18px;">chevron_right</span></button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Transactions Custom JS -->
+    <script src="{% static 'transactions/js/transactions.js' %}"></script>
+{% endblock %}

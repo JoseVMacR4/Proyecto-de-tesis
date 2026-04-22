@@ -1,0 +1,290 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Conciliación Bancaria - ETECSA Finanzas{% endblock %}
+
+{% block extra_css %}
+    <!-- Reconciliation Custom CSS -->
+    <link href="{% static 'reconciliation/css/reconciliation.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+        <!-- Header -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
+            <div>
+                <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Conciliación Bancaria</h1>
+                <p class="text-muted fw-medium mb-0 small">Gestione y verifique la integridad de las transacciones financieras entre los registros contables de la unidad y los estados bancarios institucionales.</p>
+            </div>
+        </div>
+            
+            <!-- Notifications Container -->
+            <div id="notifications" class="mb-3"></div>
+            
+            <!-- Summary Stats (Bento Cards) -->
+            <div class="row g-3 mb-4">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="stats-card success">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="stats-icon primary">
+                                <span class="material-symbols-outlined">payments</span>
+                            </div>
+                            <div>
+                                <div class="stats-value">1,248</div>
+                                <div class="stats-label">Total Procesadas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="stats-card success">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="stats-icon success">
+                                <span class="material-symbols-outlined filled">check_circle</span>
+                            </div>
+                            <div>
+                                <div class="stats-value">1,172</div>
+                                <div class="stats-label" style="color: var(--success);">Conciliadas (94%)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="stats-card">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="stats-icon warning">
+                                <span class="material-symbols-outlined">pending_actions</span>
+                            </div>
+                            <div>
+                                <div class="stats-value">56</div>
+                                <div class="stats-label">Pendiente Validación</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-6 col-lg-3">
+                    <div class="stats-card critical">
+                        <div class="d-flex align-items-start gap-3">
+                            <div class="stats-icon error">
+                                <span class="material-symbols-outlined">warning</span>
+                            </div>
+                            <div>
+                                <div class="stats-value">20</div>
+                                <div class="stats-label">Discrepancias Críticas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Filter Bar -->
+            <div class="filter-bar mb-4">
+                <div class="row g-2">
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="input-group">
+                            <span class="input-group-text border-0" style="background-color: white; color: #999;">
+                                <span class="material-symbols-outlined">calendar_today</span>
+                            </span>
+                            <input type="text" id="dateRange" class="form-control filter-input" placeholder="Rango de fecha" value="01/10/2023 - 31/10/2023">
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="input-group">
+                            <span class="input-group-text border-0" style="background-color: white; color: #999;">
+                                <span class="material-symbols-outlined">account_balance</span>
+                            </span>
+                            <select id="bankFilter" class="form-select filter-select">
+                                <option>Todos los Bancos</option>
+                                <option>Banco Metropolitano</option>
+                                <option>BANDEC</option>
+                                <option>BPA</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <div class="input-group">
+                            <span class="input-group-text border-0" style="background-color: white; color: #999;">
+                                <span class="material-symbols-outlined">filter_list</span>
+                            </span>
+                            <select id="statusFilter" class="form-select filter-select">
+                                <option>Estado: Todos</option>
+                                <option>matched</option>
+                                <option>pending</option>
+                                <option>flagged</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 col-md-6 col-lg-3 d-flex gap-2">
+                        <button id="filterBtn" class="filter-btn flex-grow-1" title="Aplicar Filtros">
+                            <span class="material-symbols-outlined align-middle me-1">filter_alt</span>
+                            Filtrar
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="resetFilters()">
+                            <span class="material-symbols-outlined" style="font-size: 1rem;">refresh</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Data Table Section -->
+            <div class="reconciliation-table">
+                <div class="table-header">
+                    <h5 class="table-title mb-0">Transacciones Bancarias</h5>
+                    <button id="exportBtn" class="export-btn">
+                        <span class="material-symbols-outlined" style="font-size: 1rem;">download</span>
+                        Exportar CSV
+                    </button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light border-bottom">
+                            <tr>
+                                <th class="w-auto">
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                </th>
+                                <th>Fecha</th>
+                                <th>Referencia</th>
+                                <th>Banco</th>
+                                <th>Entidad</th>
+                                <th class="text-end">Monto (CUP)</th>
+                                <th class="text-center">Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Row 1: Matched -->
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="row-select" class="form-check-input">
+                                </td>
+                                <td>24 Oct, 2023</td>
+                                <td class="font-monospace ref-code">REF-99201-BM</td>
+                                <td>
+                                    <div class="bank-badge">
+                                        <div class="bank-avatar bm">BM</div>
+                                        <span class="bank-name">Metropolitano</span>
+                                    </div>
+                                </td>
+                                <td>Centro Comercial Carlos III</td>
+                                <td class="text-end amount primary">12,450.00</td>
+                                <td class="text-center">
+                                    <span class="status-badge status-matched">Matched</span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="action-btn btn-view" title="Ver detalles">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <!-- Row 2: Pending -->
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="row-select" class="form-check-input">
+                                </td>
+                                <td>23 Oct, 2023</td>
+                                <td class="font-monospace ref-code">REF-88412-BD</td>
+                                <td>
+                                    <div class="bank-badge">
+                                        <div class="bank-avatar bc">BC</div>
+                                        <span class="bank-name">BANDEC</span>
+                                    </div>
+                                </td>
+                                <td>Dirección Territorial Sur</td>
+                                <td class="text-end amount primary">8,900.50</td>
+                                <td class="text-center">
+                                    <span class="status-badge status-pending">Pending</span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn-reconcile">
+                                        <span class="material-symbols-outlined" style="font-size: 0.9rem;">sync</span>
+                                        <span style="font-size: 0.75rem;">Conciliar</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <!-- Row 3: Flagged -->
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="row-select" class="form-check-input">
+                                </td>
+                                <td>22 Oct, 2023</td>
+                                <td class="font-monospace ref-code">REF-77310-BP</td>
+                                <td>
+                                    <div class="bank-badge">
+                                        <div class="bank-avatar bp">BP</div>
+                                        <span class="bank-name">BPA</span>
+                                    </div>
+                                </td>
+                                <td>Servicios de Red S.A.</td>
+                                <td class="text-end amount error">45,000.00</td>
+                                <td class="text-center">
+                                    <span class="status-badge status-flagged">Flagged</span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="action-btn btn-error" title="Revisar error">
+                                        <span class="material-symbols-outlined">error</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            
+                            <!-- Row 4: Matched -->
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="row-select" class="form-check-input">
+                                </td>
+                                <td>22 Oct, 2023</td>
+                                <td class="font-monospace ref-code">REF-66299-BM</td>
+                                <td>
+                                    <div class="bank-badge">
+                                        <div class="bank-avatar bm">BM</div>
+                                        <span class="bank-name">Metropolitano</span>
+                                    </div>
+                                </td>
+                                <td>Oficina Comercial Vedado</td>
+                                <td class="text-end amount primary">1,120.00</td>
+                                <td class="text-center">
+                                    <span class="status-badge status-matched">Matched</span>
+                                </td>
+                                <td class="text-end">
+                                    <button class="action-btn btn-view" title="Ver detalles">
+                                        <span class="material-symbols-outlined">visibility</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination-container">
+                    <div class="pagination-info">Mostrando 1-4 de 1,248 resultados</div>
+                    <div class="pagination-controls">
+                        <button class="pagination-btn">
+                            <span class="material-symbols-outlined">chevron_left</span>
+                        </button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn">2</button>
+                        <button class="pagination-btn">3</button>
+                        <span class="pagination-ellipsis">...</span>
+                        <button class="pagination-btn">25</button>
+                        <button class="pagination-btn">
+                            <span class="material-symbols-outlined">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Custom Reconciliation JS -->
+    <script src="{% static 'reconciliation/js/reconciliation.js' %}"></script>
+{% endblock %}

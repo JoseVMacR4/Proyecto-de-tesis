@@ -1,0 +1,300 @@
+/* ====================================
+   TRANSACTIONS / INFORMES CSS
+   ==================================== */
+
+:root {
+    --primary: #003e6f;
+    --secondary: #466275;
+    --success: #009688;
+    --error: #ba1a1a;
+    --warning: #ffb800;
+    --surface: #fbf9f8;
+    --surface-container-low: #f5f3f3;
+    --surface-container: #efeded;
+    --surface-container-high: #e9e8e7;
+    --on-surface: #1b1c1c;
+    --on-surface-variant: #414750;
+}
+
+/* ====================================
+   STAT CARDS
+   ==================================== */
+.stat-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1.25rem;
+    border: 1px solid var(--surface-container-high);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.stat-card h3 {
+    color: var(--primary);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+/* ====================================
+   TABLE STYLES
+   ==================================== */
+.table-container {
+    background-color: white;
+    border-radius: 8px;
+    border: 1px solid var(--surface-container-high);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+}
+
+.table-custom {
+    margin-bottom: 0;
+}
+
+.table-custom thead {
+    background-color: var(--surface-container-low);
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    color: var(--on-surface-variant);
+    text-transform: uppercase;
+}
+
+.table-custom thead th {
+    border: none;
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.table-custom tbody td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--surface-container-high);
+    vertical-align: middle;
+}
+
+.table-custom tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table-custom tbody tr:hover {
+    background-color: rgba(0, 62, 111, 0.02);
+}
+
+/* Badge Styles for Transaction Types */
+.badge {
+    font-weight: 700;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+    padding: 0.35rem 0.75rem;
+}
+
+/* ====================================
+   STATUS BADGES
+   ==================================== */
+.status-badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.status-badge.status-matched {
+    background-color: rgba(0, 150, 136, 0.15);
+    color: #009688;
+}
+
+.status-badge.status-pending {
+    background-color: rgba(255, 152, 0, 0.15);
+    color: #ff9800;
+}
+
+.status-badge.status-flagged {
+    background-color: rgba(186, 26, 26, 0.15);
+    color: #ba1a1a;
+}
+
+/* ====================================
+   FILTER SECTION
+   ==================================== */
+.form-label {
+    margin-bottom: 0.5rem;
+}
+
+.form-control,
+.form-select {
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border: 1px solid var(--surface-container-high);
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 62, 111, 0.1);
+}
+
+.input-group-text {
+    background-color: white !important;
+    border: 1px solid var(--surface-container-high);
+    border-radius: 6px 0 0 6px;
+}
+
+.input-group .form-control,
+.input-group .form-select {
+    border-radius: 0 6px 6px 0;
+}
+
+/* ====================================
+   BUTTONS
+   ==================================== */
+.btn-primary-gradient {
+    background: linear-gradient(135deg, #003e6f 0%, #005596 100%);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-gradient:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 62, 111, 0.3);
+}
+
+.btn-primary-gradient:active {
+    transform: translateY(0);
+}
+
+.btn-light {
+    background-color: white;
+    border: 1px solid var(--surface-container-high);
+    color: var(--on-surface-variant);
+}
+
+.btn-light:hover {
+    background-color: var(--surface-container-low);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+/* ====================================
+   PAGINATION
+   ==================================== */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding: 1.5rem;
+    background-color: rgba(245, 243, 243, 0.5);
+    border-top: 1px solid var(--surface-container-high);
+}
+
+.pagination-info {
+    font-size: 0.85rem;
+    color: var(--on-surface-variant);
+    font-weight: 500;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 0.5rem;
+    border: 1px solid var(--surface-container-high);
+    background-color: white;
+    color: var(--on-surface-variant);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.pagination-btn.active {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.pagination-ellipsis {
+    display: flex;
+    align-items: center;
+    color: var(--on-surface-variant);
+    padding: 0 0.25rem;
+}
+
+/* ====================================
+   RESPONSIVE DESIGN
+   ==================================== */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+    
+    .table-custom thead th,
+    .table-custom tbody td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .pagination-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* ====================================
+   ANIMATIONS
+   ==================================== */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stat-card {
+    animation: slideIn 0.3s ease;
+}
+
+/* ====================================
+   PRINT STYLES
+   ==================================== */
+@media print {
+    .btn,
+    .filter-bar,
+    .pagination-container {
+        display: none !important;
+    }
+    
+    .table-container {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}

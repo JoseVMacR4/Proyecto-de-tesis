@@ -1,0 +1,492 @@
+/*
+   ETECSA Finanzas - Reconciliation Styles
+   Basado en Material Design 3 - Institutional Authority
+*/
+
+:root {
+    --primary: #003e6f;
+    --primary-container: #005596;
+    --secondary: #466275;
+    --secondary-container: #c6e4fa;
+    --tertiary: #642d00;
+    --tertiary-container: #ffdbc8;
+    --surface: #fbf9f8;
+    --surface-container: #efeded;
+    --surface-container-high: #e9e8e7;
+    --surface-container-lowest: #ffffff;
+    --on-surface: #1b1c1c;
+    --on-surface-variant: #414750;
+    --outline: #727781;
+    --outline-variant: #c1c7d2;
+    --error: #ba1a1a;
+    --error-container: #ffdad6;
+    --success: #21a038;
+    --success-container: #d1f2d9;
+}
+
+/* ===== Summary Stats Cards ===== */
+.stats-card {
+    background: var(--surface-container-lowest);
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 1px solid var(--outline-variant);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stats-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.stats-card.critical {
+    border-bottom: 3px solid var(--error);
+}
+
+.stats-card.success {
+    border-bottom: 3px solid var(--success);
+}
+
+.stats-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.stats-icon.primary {
+    background-color: rgba(0, 62, 111, 0.1);
+    color: var(--primary);
+}
+
+.stats-icon.success {
+    background-color: rgba(33, 160, 56, 0.1);
+    color: var(--success);
+}
+
+.stats-icon.warning {
+    background-color: rgba(100, 45, 0, 0.1);
+    color: var(--tertiary);
+}
+
+.stats-icon.error {
+    background-color: var(--error-container);
+    color: var(--error);
+}
+
+.stats-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--on-surface);
+    line-height: 1.2;
+}
+
+.stats-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--on-surface-variant);
+    margin-top: 0.5rem;
+}
+
+.stats-card.error .stats-label {
+    color: var(--error);
+}
+
+.stats-card.success .stats-label {
+    color: var(--success);
+}
+
+/* ===== Filter Bar ===== */
+.filter-bar {
+    background: var(--surface-container);
+    border: 1px solid var(--outline-variant);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+.filter-input,
+.filter-select {
+    background: white;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(0, 62, 111, 0.1);
+}
+
+.filter-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 62, 111, 0.15);
+}
+
+.filter-btn:hover {
+    background: var(--primary-container);
+    box-shadow: 0 4px 8px rgba(0, 62, 111, 0.25);
+}
+
+.filter-btn:active {
+    transform: scale(0.98);
+}
+
+/* ===== Data Table ===== */
+.reconciliation-table {
+    background: var(--surface-container-lowest);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.reconciliation-table thead {
+    background: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.reconciliation-table th {
+    padding: 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #757575;
+    text-align: left;
+}
+
+.reconciliation-table th.text-center {
+    text-align: center;
+}
+
+.reconciliation-table th.text-right {
+    text-align: right;
+}
+
+.reconciliation-table tbody tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background-color 0.2s ease;
+}
+
+.reconciliation-table tbody tr:hover {
+    background-color: #fafafa;
+}
+
+.reconciliation-table td {
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: var(--on-surface);
+}
+
+.reconciliation-table td.font-monospace {
+    font-family: 'Courier New', monospace;
+    color: #757575;
+    font-size: 0.8rem;
+}
+
+/* Bank Badge */
+.bank-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bank-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: white;
+}
+
+.bank-avatar.bm {
+    background-color: #2196f3;
+}
+
+.bank-avatar.bc {
+    background-color: #ff9800;
+}
+
+.bank-avatar.bp {
+    background-color: #f44336;
+}
+
+.bank-name {
+    font-weight: 500;
+}
+
+/* Status Badge */
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.status-matched {
+    background-color: var(--secondary-container);
+    color: #004881;
+}
+
+.status-pending {
+    background-color: var(--tertiary-container);
+    color: #743500;
+}
+
+.status-flagged {
+    background-color: var(--error-container);
+    color: var(--error);
+}
+
+/* Amount Column */
+.amount {
+    font-weight: 700;
+    text-align: right;
+}
+
+.amount.primary {
+    color: var(--primary);
+}
+
+.amount.error {
+    color: var(--error);
+}
+
+/* Action Buttons */
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: #999;
+    transition: color 0.2s ease;
+    padding: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.action-btn:hover {
+    color: var(--primary);
+}
+
+.action-btn.error:hover {
+    color: var(--error);
+}
+
+.btn-reconcile {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 62, 111, 0.15);
+}
+
+.btn-reconcile:hover {
+    background: var(--primary-container);
+    box-shadow: 0 4px 8px rgba(0, 62, 111, 0.25);
+}
+
+/* Pagination */
+.pagination-container {
+    background: #f9f9f9;
+    border-top: 1px solid #f0f0f0;
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pagination-info {
+    font-size: 0.8rem;
+    color: #757575;
+    font-weight: 600;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.pagination-btn {
+    background: white;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 36px;
+    text-align: center;
+}
+
+.pagination-btn:hover:not(.disabled) {
+    border-color: var(--primary);
+    background: rgba(0, 62, 111, 0.05);
+}
+
+.pagination-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.pagination-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-ellipsis {
+    padding: 0.5rem 0.25rem;
+    color: #999;
+}
+
+/* Export Button */
+.export-btn {
+    background: white;
+    border: 1px solid #d0d0d0;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.export-btn:hover {
+    background: #f5f5f5;
+    border-color: var(--primary);
+}
+
+/* Header Section */
+.reconciliation-header {
+    margin-bottom: 2rem;
+}
+
+.breadcrumb-custom {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 0.5rem;
+}
+
+.breadcrumb-custom span.material-symbols-outlined {
+    font-size: 1rem;
+}
+
+.page-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.2;
+}
+
+.page-subtitle {
+    font-size: 0.9rem;
+    color: var(--on-surface-variant);
+    line-height: 1.6;
+    max-width: 600px;
+}
+
+/* Table Header with Export */
+.table-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-card {
+        padding: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.75rem;
+    }
+
+    .filter-bar {
+        padding: 0.75rem;
+    }
+
+    .reconciliation-table {
+        font-size: 0.8rem;
+    }
+
+    .reconciliation-table th,
+    .reconciliation-table td {
+        padding: 0.75rem;
+    }
+
+    .pagination-container {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+}
+
+/* Material Icons Customization */
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.material-symbols-outlined.filled {
+    font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}

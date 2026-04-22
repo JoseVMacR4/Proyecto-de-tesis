@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ETECSA Finanzas - Gestión Central{% endblock %}
+
+{% block content %}
+        <!-- Header -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
+            <div>
+                <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Panel Financiero</h1>
+                <p class="text-muted fw-medium mb-0 small">Visualización de flujos de caja y estados de conciliación corporativa.</p>
+            </div>
+            <div>
+                <button class="btn btn-sm fw-semibold text-secondary border-bottom border-2 rounded-1" style="background-color: var(--surface-container-low); border-color: rgba(114, 119, 129, 0.2) !important;">
+                    Últimos 30 días
+                </button>
+            </div>
+        </div>
+
+        <!-- Bento Grid -->
+        <div class="row g-4 mb-5">
+            <!-- Hero Metric -->
+            <div class="col-12 col-lg-7">
+                <div class="bento-card hero-card d-flex flex-column justify-content-center p-4 p-md-5">
+                    <div class="position-relative" style="z-index: 10;">
+                        <p class="fw-bold text-uppercase mb-2" style="font-size: 0.75rem; letter-spacing: 0.1em; color: rgba(162, 201, 255, 0.9);">Balance Total Consolidado</p>
+                        <h2 class="font-manrope fw-extrabold mb-4" style="font-size: clamp(2.5rem, 5vw, 3.5rem);">$12,842,091.50</h2>
+                        <div class="d-flex flex-wrap align-items-center gap-3">
+                            <span class="hero-badge d-flex align-items-center gap-1 fw-bold">
+                                <span class="material-symbols-outlined" style="font-size: 14px;">trending_up</span> +4.2% vs mes anterior
+                            </span>
+                            <span class="small fst-italic" style="color: rgba(162, 201, 255, 0.8);">Corte: Hoy, 08:42 AM</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Metric -->
+            <div class="col-12 col-md-6 col-lg-5">
+                <div class="bento-card pending-card d-flex flex-column justify-content-between p-4">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem; letter-spacing: 0.1em;">Conciliaciones Pendientes</p>
+                            <span class="material-symbols-outlined" style="color: var(--tertiary);">warning</span>
+                        </div>
+                        <h3 class="font-manrope fw-bold mb-1" style="font-size: 2.5rem;">142</h3>
+                        <p class="text-muted small mb-0">Requieren atención inmediata</p>
+                    </div>
+                    <div class="progress-custom mt-4">
+                        <div class="progress-bar-custom" style="width: 65%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate Metric -->
+            <div class="col-12 col-md-4">
+                <div class="bento-card rate-card p-4">
+                    <span class="material-symbols-outlined text-primary mb-2" style="font-size: 2.5rem;">speed</span>
+                    <p class="fw-bold text-muted text-uppercase mb-1" style="font-size: 0.75rem;">Tasa de Emparejamiento</p>
+                    <h4 class="font-manrope fw-extrabold text-primary mb-2" style="font-size: 1.75rem;">98.2%</h4>
+                    <span class="badge rounded-pill fw-bold" style="background-color: rgba(0, 62, 111, 0.05); color: rgba(0, 62, 111, 0.6); font-size: 0.65rem; letter-spacing: 0.05em;">OPTIMIZADO</span>
+                </div>
+            </div>
+
+            <!-- Summary Metric -->
+            <div class="col-12 col-md-8">
+                <div class="bento-card summary-card d-flex flex-column flex-sm-row align-items-sm-center justify-content-between p-4 gap-3">
+                    <div>
+                        <h5 class="font-manrope fw-bold mb-1">Resumen de Operaciones</h5>
+                        <p class="text-muted small mb-0">Estado consolidado de las transacciones procesadas hoy.</p>
+                    </div>
+                    <button class="btn btn-sm fw-bold text-primary" style="background-color: var(--surface-container-high);">Ver Detalles</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-container">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center p-4 border-bottom" style="border-color: var(--surface-container-high) !important;">
+                <h5 class="font-manrope fw-bold text-primary mb-3 mb-sm-0">Transacciones Recientes</h5>
+                <div class="d-flex gap-2">
+                    <div class="position-relative d-none d-md-block">
+                        <span class="material-symbols-outlined search-icon" style="font-size: 18px;">search</span>
+                        <input type="text" class="form-control search-input form-control-sm" placeholder="Buscar transacción..." style="width: 200px;">
+                    </div>
+                    <button class="btn btn-sm d-flex align-items-center gap-1 fw-bold text-secondary" style="background-color: var(--surface-container-low);">
+                        <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span> Filtrar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Referencia</th>
+                            <th>Entidad</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-muted">Oct 24, 2023</td>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TX-90821-BC</td>
+                            <td>Banco Metropolitano S.A.</td>
+                            <td class="font-manrope fw-bold">$1,240.00</td>
+                            <td><span class="status-badge status-matched">Matched</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Oct 24, 2023</td>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TX-90822-BC</td>
+                            <td>Transfermóvil Directo</td>
+                            <td class="font-manrope fw-bold">$4,892.50</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Oct 23, 2023</td>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TX-90823-BC</td>
+                            <td>BANDEC Sucursal 12</td>
+                            <td class="font-manrope fw-bold">$12,000.00</td>
+                            <td><span class="status-badge status-matched">Matched</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Oct 23, 2023</td>
+                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.75rem;">TX-90824-BC</td>
+                            <td>Enzona Pasarela</td>
+                            <td class="font-manrope fw-bold">$342.10</td>
+                            <td><span class="status-badge status-flagged">Flagged</span></td>
+                            <td class="text-end"><button class="btn btn-link p-0 text-muted"><span class="material-symbols-outlined">more_vert</span></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination Footer -->
+            <div class="p-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3" style="background-color: rgba(245, 243, 243, 0.5);">
+                <span class="small text-muted fw-medium">Mostrando 4 de 128 transacciones</span>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center p-1 text-muted"><span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span></button>
+                    <button class="btn btn-sm btn-primary fw-bold px-2">1</button>
+                    <button class="btn btn-sm btn-light border fw-bold px-2 text-secondary">2</button>
+                    <button class="btn btn-sm btn-light border fw-bold px-2 text-secondary">3</button>
+                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center p-1 text-muted"><span class="material-symbols-outlined" style="font-size: 18px;">chevron_right</span></button>
+                </div>
+            </div>
+        </div>
+
+{% endblock %}
+
+{% block extra_js %}
+    <!-- Custom Dashboard JS -->
+    <script src="{% static 'users/js/dashboard.js' %}"></script>
+{% endblock %}

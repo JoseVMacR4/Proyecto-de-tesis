@@ -1,0 +1,110 @@
+/*
+   Bank Accounts Section Styles
+   Consistent with dashboard institutional design
+*/
+
+.stat-card {
+    background-color: var(--surface-container-lowest);
+    border: 1px solid var(--surface-container-high);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.stat-card:hover {
+    border-color: var(--primary-container);
+    box-shadow: 0 4px 12px rgba(0, 85, 150, 0.08);
+    transform: translateY(-2px);
+}
+
+.stat-card p {
+    letter-spacing: 0.05em;
+}
+
+/* Account Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 50rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-matched {
+    background-color: var(--status-matched-bg);
+    color: var(--status-matched-text);
+}
+
+.status-pending {
+    background-color: var(--status-pending-bg);
+    color: var(--status-pending-text);
+}
+
+.status-flagged {
+    background-color: var(--status-flagged-bg);
+    color: var(--status-flagged-text);
+}
+
+/* Account Row Hover Effects */
+.table-custom tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.table-custom tbody tr:hover {
+    background-color: rgba(0, 85, 150, 0.02);
+}
+
+/* Account Menu Button */
+.account-menu {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.table-custom tbody tr:hover .account-menu {
+    opacity: 1;
+}
+
+/* Add Account Button */
+#addAccountBtn {
+    border-radius: 1rem;
+    box-shadow: 0 8px 18px rgba(0, 62, 111, 0.14);
+    transition: all 0.25s ease;
+}
+
+#addAccountBtn:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(0, 62, 111, 0.2);
+}
+
+/* Search and Filter */
+#accountSearchInput {
+    background-color: var(--surface-container-low);
+    border: 1px solid var(--surface-container-high);
+    transition: all 0.2s ease;
+}
+
+#accountSearchInput:focus {
+    border-color: var(--primary-container);
+    box-shadow: 0 0 0 2px rgba(0, 85, 150, 0.1);
+    outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 0.5rem;
+    }
+
+    #addAccountBtn span:last-child {
+        display: none;
+    }
+
+    #addAccountBtn {
+        min-width: auto;
+        width: auto;
+    }
+}
