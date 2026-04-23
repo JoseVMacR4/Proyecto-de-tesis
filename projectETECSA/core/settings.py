@@ -38,11 +38,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Apps locales
     'apps.users',
     'apps.bank_accounts',
     'apps.reconciliation',
     'apps.transactions',
-    'bootstrap5',
+    'apps.rbac',
+    'apps.audit',
+    'apps.reports',
+    'apps.catalog',
+    'apps.statements',
+    # Terceros
+    'django_bootstrap5',
 ]
 
 MIDDLEWARE = [
@@ -80,8 +87,12 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'etecsa_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -135,3 +146,10 @@ LOGIN_REDIRECT_URL = 'dashboard'
 
 # A dónde lo manda si intenta entrar a una página privada sin loguearse
 LOGIN_URL = 'login'
+
+# Modelo de usuario personalizado
+AUTH_USER_MODEL = 'rbac.User'
+
+# Timezone (ajustar según necesidad)
+TIME_ZONE = 'UTC'
+USE_TZ = True
