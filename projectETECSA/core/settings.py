@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'apps.bank_accounts',
     'apps.reconciliation',
     'apps.transactions',
-    'bootstrap5',
+    'django_bootstrap5',
 ]
 
 MIDDLEWARE = [
@@ -120,6 +120,9 @@ USE_TZ = True
 # Default primary key field type
 # https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Modelo de usuario personalizado
+AUTH_USER_MODEL = 'users.User'
 
 
 # Static files (CSS, JavaScript, Images)

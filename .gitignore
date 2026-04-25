@@ -9,9 +9,7 @@ env/
 venv/
 .venv/
 .ENV
-.ENV.*
-.env
-.env.*
+.venv.bak/
 pip-log.txt
 pip-delete-this-directory.txt
 .tox/
@@ -22,34 +20,28 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
-.git/modules/
+*.pot
+*.pyc
+*.pyo
 .pytest_cache/
+.mypy_cache/
 .hypothesis/
 
 # Django
-*.pot
-*.py[co]
-*~
-.DS_Store
-.svn/
-.wafpickle-*
-coverage/
-.DS_Store
-Thumbs.db
+*.log
+local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
-local_settings.py
-celerybeat-schedule
-celerybeat.pid
+.env
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*.tmp
+*~
 
 # OS
 .DS_Store
