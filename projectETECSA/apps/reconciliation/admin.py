@@ -1,52 +1,32 @@
 from django.contrib import admin
-from .models import Bank, BankTransaction, ReconciliationLog
+from .models import BankStatement, BankStatementTransaction
 
-# Register your models here.
-
-@admin.register(Bank)
-class BankAdmin(admin.ModelAdmin):
-	list_display = ('code', 'name', 'short_code')
-	search_fields = ('name', 'code')
-	ordering = ('name',)
-
-
-@admin.register(BankTransaction)
-class BankTransactionAdmin(admin.ModelAdmin):
-	list_display = ('reference', 'bank', 'entity', 'amount', 'transaction_date', 'status')
-	list_filter = ('status', 'bank', 'transaction_date', 'created_at')
-	search_fields = ('reference', 'entity')
-	readonly_fields = ('created_at', 'updated_at')
-	
-	fieldsets = (
-		('Información de Transacción', {
-			'fields': ('reference', 'bank', 'entity', 'amount', 'transaction_date')
-		}),
-		('Estado', {
-			'fields': ('status', 'notes')
-		}),
-		('Metadatos', {
-			'fields': ('created_at', 'updated_at'),
-			'classes': ('collapse',)
-		}),
-	)
-	
-	ordering = ('-transaction_date', '-created_at')
+@admin.register(BankStatement)
+class BankStatementAdmin(admin.ModelAdmin):
+    list_display = (
+        'bank_account',
+        'statement_date',
+        'starting_balance',
+        'ending_balance',
+        'entry_count',
+    )
+    list_filter = ('statement_date', 'bank_account')
+    search_fields = ('file_name', 'bank_account__code')
+    readonly_fields = ('created_at', 'updated_at')
+    ordering = ('-statement_date',)
 
 
-@admin.register(ReconciliationLog)
-class ReconciliationLogAdmin(admin.ModelAdmin):
-	list_display = ('transaction', 'action', 'performed_by', 'performed_at')
-	list_filter = ('action', 'performed_at')
-	search_fields = ('transaction__reference', 'performed_by')
-	readonly_fields = ('performed_at',)
-	
-	fieldsets = (
-		('Información', {
-			'fields': ('transaction', 'action', 'performed_by')
-		}),
-		('Detalles', {
-			'fields': ('description', 'performed_at')
-		}),
-	)
-	
-	ordering = ('-performed_at',)
+@admin.register(BankStatementTransaction)
+class BankStatementTransactionAdmin(admin.ModelAdmin):
+    list_display = (
+        'current_reference',
+        'bank_statement',
+        'bank_account',
+        'amount',
+        'currency',
+        'date',
+    )
+    list_filter = ('currency', 'bank_account', 'date')
+    search_fields = ('current_reference', 'original_reference', 'name')
+    readonly_fields = ('created_at', 'updated_at', 'date')
+    ordering = ('-date', 'current_reference')

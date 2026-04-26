@@ -1,81 +1,84 @@
+import uuid
+
 from django.db import models
-
-# Create your models here.
-
-class Bank(models.Model):
-	"""Modelo para bancos"""
-	BANK_CHOICES = [
-		('BM', 'Banco Metropolitano'),
-		('BC', 'BANDEC'),
-		('BP', 'BPA'),
-	]
-	
-	code = models.CharField(max_length=10, unique=True)
-	name = models.CharField(max_length=100)
-	short_code = models.CharField(max_length=5, choices=BANK_CHOICES)
-	
-	class Meta:
-		verbose_name = "Banco"
-		verbose_name_plural = "Bancos"
-	
-	def __str__(self):
-		return self.name
+from django.utils.translation import gettext_lazy as _
 
 
-class BankTransaction(models.Model):
-	"""Modelo para transacciones bancarias"""
-	STATUS_CHOICES = [
-		('pending', 'Pending'),
-		('matched', 'Matched'),
-		('flagged', 'Flagged'),
-		('rejected', 'Rejected'),
-	]
-	
-	reference = models.CharField(max_length=50, unique=True, db_index=True)
-	bank = models.ForeignKey(Bank, on_delete=models.PROTECT, related_name='transactions')
-	entity = models.CharField(max_length=200)
-	amount = models.DecimalField(max_digits=15, decimal_places=2)
-	transaction_date = models.DateField()
-	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
-	notes = models.TextField(blank=True, null=True)
-	
-	created_at = models.DateTimeField(auto_now_add=True)
-	updated_at = models.DateTimeField(auto_now=True)
-	
-	class Meta:
-		verbose_name = "Transacción Bancaria"
-		verbose_name_plural = "Transacciones Bancarias"
-		ordering = ['-transaction_date', '-created_at']
-		indexes = [
-			models.Index(fields=['transaction_date']),
-			models.Index(fields=['status']),
-			models.Index(fields=['bank']),
-		]
-	
-	def __str__(self):
-		return f"{self.reference} - {self.entity} ({self.amount})"
+class BankStatement(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    bank_account = models.ForeignKey(
+        'bank_accounts.BankAccount',
+        on_delete=models.PROTECT,
+        related_name='bank_statements',
+    )
+    file_name = models.CharField(max_length=255)
+    file_extension = models.CharField(max_length=10)
+    statement_date = models.DateField()
+    period_start = models.DateField()
+    period_end = models.DateField()
+    starting_balance = models.DecimalField(max_digits=20, decimal_places=4)
+    ending_balance = models.DecimalField(max_digits=20, decimal_places=4)
+    overdraft_balance = models.DecimalField(max_digits=20, decimal_places=4)
+    reserved_balance = models.DecimalField(max_digits=20, decimal_places=4)
+    available_balance = models.DecimalField(max_digits=20, decimal_places=4)
+    entry_count = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Bank Statement')
+        verbose_name_plural = _('Bank Statements')
+        ordering = ['-statement_date']
+        indexes = [
+            models.Index(fields=['statement_date']),
+            models.Index(fields=['bank_account']),
+        ]
+
+    def __str__(self):
+        return f"{self.bank_account.code} - {self.statement_date.isoformat()}"
 
 
-class ReconciliationLog(models.Model):
-	"""Registro de acciones de conciliación"""
-	ACTION_CHOICES = [
-		('created', 'Creada'),
-		('matched', 'Conciliada'),
-		('reviewed', 'Revisada'),
-		('flagged', 'Marcada'),
-		('resolved', 'Resuelta'),
-	]
-	
-	transaction = models.ForeignKey(BankTransaction, on_delete=models.CASCADE, related_name='reconciliation_logs')
-	action = models.CharField(max_length=20, choices=ACTION_CHOICES)
-	description = models.TextField(blank=True)
-	performed_by = models.CharField(max_length=100, blank=True)
-	performed_at = models.DateTimeField(auto_now_add=True)
-	
-	class Meta:
-		verbose_name = "Log de Conciliación"
-		verbose_name_plural = "Logs de Conciliación"
-		ordering = ['-performed_at']
-	
-	def __str__(self):
-		return f"{self.transaction.reference} - {self.action} ({self.performed_at.strftime('%Y-%m-%d')})"
+class BankStatementTransaction(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    bank_statement = models.ForeignKey(
+        'reconciliation.BankStatement',
+        on_delete=models.PROTECT,
+        related_name='transactions',
+    )
+    current_reference = models.CharField(max_length=255)
+    original_reference = models.CharField(max_length=255, blank=True, null=True)
+    name = models.CharField(max_length=255)
+    bank_account = models.ForeignKey(
+        'bank_accounts.BankAccount',
+        on_delete=models.PROTECT,
+        related_name='statement_transactions',
+    )
+    office_code = models.CharField(max_length=50, blank=True, null=True)
+    entry_type = models.CharField(max_length=50)
+    bank_fee = models.DecimalField(max_digits=20, decimal_places=4)
+    amount = models.DecimalField(max_digits=20, decimal_places=4)
+    currency = models.CharField(max_length=3)
+    date = models.DateField(editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Bank Statement Transaction')
+        verbose_name_plural = _('Bank Statement Transactions')
+        ordering = ['-bank_statement__statement_date', 'current_reference']
+        indexes = [
+            models.Index(fields=['current_reference']),
+            models.Index(fields=['bank_statement']),
+            models.Index(fields=['date']),
+        ]
+
+    def __str__(self):
+        return f"{self.current_reference} - {self.name}"
+
+    @property
+    def transaction_date(self):
+        return self.bank_statement.statement_date
+
+    def save(self, *args, **kwargs):
+        self.date = self.bank_statement.statement_date
+        super().save(*args, **kwargs)

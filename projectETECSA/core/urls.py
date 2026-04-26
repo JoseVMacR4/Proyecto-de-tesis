@@ -21,6 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('apps.users.urls')),
     path('bank-accounts/', include('apps.bank_accounts.urls')),
-    path('transactions/', include('apps.transactions.urls')),
+    path('reporting/', include('apps.reporting.urls')),
     path('reconciliation/', include('apps.reconciliation.urls')),
 ]

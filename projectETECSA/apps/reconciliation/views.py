@@ -5,9 +5,6 @@ from django.contrib.auth.decorators import login_required
 import json
 
 # Create your views here.
-def inicio(request):
-	return render(request, 'index.html')
-
 @login_required
 def reconciliation_view(request):
 	"""
