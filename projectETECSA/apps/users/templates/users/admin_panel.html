@@ -111,19 +111,25 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for operation in operations %}
                                     <tr>
-                                        <td class="font-monospace fw-bold text-primary">{{ operation.code }}</td>
-                                        <td class="fw-bold">{{ operation.name }}</td>
+                                        <td class="font-monospace fw-bold text-primary">OP-001</td>
+                                        <td class="fw-bold">Transferencia Nacional</td>
+                                        <td class="text-muted small">Transferencias entre bancos nacionales</td>
+                                        <td><span class="status-badge status-matched">Activo</span></td>
                                         <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-view-operation" data-operation-id="{{ operation.id }}"><span class="material-symbols-outlined">visibility</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-edit-operation" data-operation-id="{{ operation.id }}"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-operation" data-operation-id="{{ operation.id }}"><span class="material-symbols-outlined">delete</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-edit-operation"><span class="material-symbols-outlined">edit</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-delete-operation"><span class="material-symbols-outlined">delete</span></button>
                                         </td>
                                     </tr>
-                                    {% empty %}
                                     <tr>
-                                        <td colspan="3" class="text-center text-muted">No hay operaciones registradas</td>
+                                        <td class="font-monospace fw-bold text-primary">OP-002</td>
+                                        <td class="fw-bold">Pago a Proveedores</td>
+                                        <td class="text-muted small">Pagos realizados a proveedores externos</td>
+                                        <td><span class="status-badge status-matched">Activo</span></td>
+                                        <td class="text-end">
+                                            <button class="btn btn-link p-0 text-muted btn-edit-operation"><span class="material-symbols-outlined">edit</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-delete-operation"><span class="material-symbols-outlined">delete</span></button>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -184,9 +190,9 @@
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <button class="btn btn-bank-action btn-view-bank" data-bank-id="{{ bank_account.id }}"><span class="material-symbols-outlined">visibility</span></button>
-                                    <button class="btn btn-bank-action btn-edit-bank" data-bank-id="{{ bank_account.id }}"><span class="material-symbols-outlined">edit</span></button>
-                                    <button class="btn btn-bank-action btn-delete-bank" data-bank-id="{{ bank_account.id }}"><span class="material-symbols-outlined">delete</span></button>
+                                    <span class="bank-status active">Activa</span>
+                                    <button class="btn btn-bank-action btn-edit-bank"><span class="material-symbols-outlined">edit</span></button>
+                                    <button class="btn btn-bank-action btn-delete-bank"><span class="material-symbols-outlined">delete</span></button>
                                 </div>
                             </div>
                             {% empty %}
@@ -245,19 +251,27 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for office in offices %}
                                     <tr>
-                                        <td class="font-monospace fw-bold text-primary">{{ office.code }}</td>
-                                        <td class="fw-bold">{{ office.name }}</td>
+                                        <td class="font-monospace fw-bold text-primary">OF-001</td>
+                                        <td class="fw-bold">Oficina Central</td>
+                                        <td class="text-muted">La Habana</td>
+                                        <td>Ing. Carlos Martínez</td>
+                                        <td><span class="status-badge status-matched">Activa</span></td>
                                         <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-view-office" data-office-id="{{ office.id }}"><span class="material-symbols-outlined">visibility</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-edit-office" data-office-id="{{ office.id }}"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-office" data-office-id="{{ office.id }}"><span class="material-symbols-outlined">delete</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-edit-office"><span class="material-symbols-outlined">edit</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-delete-office"><span class="material-symbols-outlined">delete</span></button>
                                         </td>
                                     </tr>
-                                    {% empty %}
                                     <tr>
-                                        <td colspan="3" class="text-center text-muted">No hay oficinas registradas</td>
+                                        <td class="font-monospace fw-bold text-primary">OF-002</td>
+                                        <td class="fw-bold">Sucursal Santiago</td>
+                                        <td class="text-muted">Santiago de Cuba</td>
+                                        <td>Lic. Ana García</td>
+                                        <td><span class="status-badge status-matched">Activa</span></td>
+                                        <td class="text-end">
+                                            <button class="btn btn-link p-0 text-muted btn-edit-office"><span class="material-symbols-outlined">edit</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-delete-office"><span class="material-symbols-outlined">delete</span></button>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
