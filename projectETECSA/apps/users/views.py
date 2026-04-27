@@ -315,6 +315,120 @@ def delete_office(request, office_id):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
+def get_users(request):
+    """API endpoint para obtener la lista de usuarios"""
+    try:
+        users = User.objects.all().select_related()
+        user_roles = {}
+        for ur in UserRole.objects.select_related('role').filter(user__in=users):
+            if ur.user.id not in user_roles:
+                user_roles[ur.user.id] = []
+            user_roles[ur.user.id].append(ur.role.name)
+        
+        users_data = []
+        for user in users:
+            roles = user_roles.get(user.id, [])
+            main_role = roles[0] if roles else 'Sin rol'
+            users_data.append({
+                'id': str(user.id),
+                'username': user.username,
+                'email': user.email or '—',
+                'main_role': main_role,
+                'is_active': user.is_active
+            })
+        
+        # Estadísticas
+        total_users = users.count()
+        active_users = users.filter(is_active=True).count()
+        inactive_users = users.filter(is_active=False).count()
+        admin_count = UserRole.objects.filter(role__name='Administrador').count()
+        
+        return JsonResponse({
+            'success': True,
+            'users': users_data,
+            'stats': {
+                'total_users': total_users,
+                'active_users': active_users,
+                'inactive_users': inactive_users,
+                'admin_count': admin_count
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+def get_operations(request):
+    """API endpoint para obtener la lista de operaciones"""
+    try:
+        operations = Operation.objects.all().order_by('code')
+        operations_data = []
+        for op in operations:
+            operations_data.append({
+                'id': str(op.id),
+                'code': op.code,
+                'name': op.name,
+                'description': op.description or '—'
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'operations': operations_data,
+            'stats': {
+                'total_operations': operations.count(),
+                'active_operations': operations.count()
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+def get_bank_accounts(request):
+    """API endpoint para obtener la lista de cuentas bancarias"""
+    try:
+        bank_accounts = BankAccount.objects.all().order_by('code')
+        banks_data = []
+        for bank in bank_accounts:
+            banks_data.append({
+                'id': str(bank.id),
+                'code': bank.code,
+                'name': bank.name
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'banks': banks_data,
+            'stats': {
+                'total_bank_accounts': bank_accounts.count()
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+def get_offices(request):
+    """API endpoint para obtener la lista de oficinas"""
+    try:
+        offices = Office.objects.all().order_by('code')
+        offices_data = []
+        for office in offices:
+            offices_data.append({
+                'id': str(office.id),
+                'code': office.code,
+                'name': office.name
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'offices': offices_data,
+            'stats': {
+                'total_offices': offices.count(),
+                'active_offices': offices.count()
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
 def logout_view(request):
     logout(request)
     return redirect('login')
