@@ -50,36 +50,22 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% for user_data in users_with_roles %}
                                     <tr>
-                                        <td class="fw-bold text-primary">admin</td>
-                                        <td class="text-muted">admin@etecsa.cu</td>
-                                        <td><span class="badge rounded-pill fw-bold" style="background-color: var(--primary-container); color: var(--on-primary-container); font-size: 0.65rem;">Administrador</span></td>
-                                        <td><span class="status-badge status-matched">Activo</span></td>
+                                        <td class="fw-bold text-primary">{{ user_data.user.username }}</td>
+                                        <td class="text-muted">{{ user_data.user.email|default:"—" }}</td>
+                                        <td><span class="badge rounded-pill fw-bold" style="background-color: var(--primary-container); color: var(--on-primary-container); font-size: 0.65rem;">{{ user_data.main_role }}</span></td>
+                                        <td><span class="status-badge {% if user_data.user.is_active %}status-matched{% else %}status-pending{% endif %}">{% if user_data.user.is_active %}Activo{% else %}Inactivo{% endif %}</span></td>
                                         <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-user"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-user"><span class="material-symbols-outlined">delete</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-edit-user" data-user-id="{{ user_data.user.id }}"><span class="material-symbols-outlined">edit</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-delete-user" data-user-id="{{ user_data.user.id }}"><span class="material-symbols-outlined">delete</span></button>
                                         </td>
                                     </tr>
+                                    {% empty %}
                                     <tr>
-                                        <td class="fw-bold text-primary">jperez</td>
-                                        <td class="text-muted">jperez@etecsa.cu</td>
-                                        <td><span class="badge rounded-pill fw-bold" style="background-color: var(--secondary-container); color: var(--on-secondary-container); font-size: 0.65rem;">Analista</span></td>
-                                        <td><span class="status-badge status-matched">Activo</span></td>
-                                        <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-user"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-user"><span class="material-symbols-outlined">delete</span></button>
-                                        </td>
+                                        <td colspan="5" class="text-center text-muted">No hay usuarios registrados</td>
                                     </tr>
-                                    <tr>
-                                        <td class="fw-bold text-primary">mrodriguez</td>
-                                        <td class="text-muted">mrodriguez@etecsa.cu</td>
-                                        <td><span class="badge rounded-pill fw-bold" style="background-color: var(--tertiary-fixed); color: var(--on-tertiary-fixed); font-size: 0.65rem;">Auditor</span></td>
-                                        <td><span class="status-badge status-pending">Inactivo</span></td>
-                                        <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-user"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-user"><span class="material-symbols-outlined">delete</span></button>
-                                        </td>
-                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>
@@ -97,19 +83,19 @@
                         <div class="d-flex flex-column gap-3">
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Total Usuarios</span>
-                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">24</div>
+                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">{{ total_users }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Activos</span>
-                                <div class="profile-info-value font-manrope fw-bold text-success">18</div>
+                                <div class="profile-info-value font-manrope fw-bold text-success">{{ active_users }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Inactivos</span>
-                                <div class="profile-info-value font-manrope fw-bold text-danger">6</div>
+                                <div class="profile-info-value font-manrope fw-bold text-danger">{{ inactive_users }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Administradores</span>
-                                <div class="profile-info-value font-manrope fw-bold text-primary">3</div>
+                                <div class="profile-info-value font-manrope fw-bold text-primary">{{ admin_count }}</div>
                             </div>
                         </div>
                     </div>
@@ -142,36 +128,22 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% for operation in operations %}
                                     <tr>
-                                        <td class="font-monospace fw-bold text-primary">OP-001</td>
-                                        <td class="fw-bold">Transferencia Nacional</td>
-                                        <td class="text-muted small">Transferencias entre bancos nacionales</td>
+                                        <td class="font-monospace fw-bold text-primary">{{ operation.code }}</td>
+                                        <td class="fw-bold">{{ operation.name }}</td>
+                                        <td class="text-muted small">{{ operation.description|default:"—" }}</td>
                                         <td><span class="status-badge status-matched">Activo</span></td>
                                         <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-operation"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-operation"><span class="material-symbols-outlined">delete</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-edit-operation" data-operation-id="{{ operation.id }}"><span class="material-symbols-outlined">edit</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-delete-operation" data-operation-id="{{ operation.id }}"><span class="material-symbols-outlined">delete</span></button>
                                         </td>
                                     </tr>
+                                    {% empty %}
                                     <tr>
-                                        <td class="font-monospace fw-bold text-primary">OP-002</td>
-                                        <td class="fw-bold">Pago a Proveedores</td>
-                                        <td class="text-muted small">Pagos realizados a proveedores externos</td>
-                                        <td><span class="status-badge status-matched">Activo</span></td>
-                                        <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-operation"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-operation"><span class="material-symbols-outlined">delete</span></button>
-                                        </td>
+                                        <td colspan="5" class="text-center text-muted">No hay operaciones registradas</td>
                                     </tr>
-                                    <tr>
-                                        <td class="font-monospace fw-bold text-primary">OP-003</td>
-                                        <td class="fw-bold">Conciliación Automática</td>
-                                        <td class="text-muted small">Proceso automático de conciliación bancaria</td>
-                                        <td><span class="status-badge status-pending">En revisión</span></td>
-                                        <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-operation"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-operation"><span class="material-symbols-outlined">delete</span></button>
-                                        </td>
-                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>
@@ -188,15 +160,15 @@
                         <div class="d-flex flex-column gap-3">
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Total Operaciones</span>
-                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">15</div>
+                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">{{ active_operations }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Operaciones Activas</span>
-                                <div class="profile-info-value font-manrope fw-bold text-success">12</div>
+                                <div class="profile-info-value font-manrope fw-bold text-success">{{ active_operations }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Última Actualización</span>
-                                <div class="profile-info-value font-manrope fw-medium">Hoy, 10:30 AM</div>
+                                <div class="profile-info-value font-manrope fw-medium">Hoy</div>
                             </div>
                         </div>
                     </div>
@@ -218,56 +190,26 @@
                         </div>
 
                         <div class="bank-list">
+                            {% for bank_account in bank_accounts %}
                             <div class="bank-item">
                                 <div class="bank-item-left">
                                     <div class="bank-icon-container">
                                         <span class="material-symbols-outlined">account_balance</span>
                                     </div>
                                     <div>
-                                        <div class="bank-name">Banco Metropolitano S.A.</div>
-                                        <div class="bank-description">Cuenta Corriente - 1234567890</div>
+                                        <div class="bank-name">{{ bank_account.name }}</div>
+                                        <div class="bank-description">{{ bank_account.code }}</div>
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="bank-status active">Activa</span>
-                                    <button class="btn btn-bank-action btn-edit-bank"><span class="material-symbols-outlined">edit</span></button>
-                                    <button class="btn btn-bank-action btn-delete-bank"><span class="material-symbols-outlined">delete</span></button>
+                                    <button class="btn btn-bank-action btn-edit-bank" data-bank-id="{{ bank_account.id }}"><span class="material-symbols-outlined">edit</span></button>
+                                    <button class="btn btn-bank-action btn-delete-bank" data-bank-id="{{ bank_account.id }}"><span class="material-symbols-outlined">delete</span></button>
                                 </div>
                             </div>
-
-                            <div class="bank-item">
-                                <div class="bank-item-left">
-                                    <div class="bank-icon-container">
-                                        <span class="material-symbols-outlined">account_balance</span>
-                                    </div>
-                                    <div>
-                                        <div class="bank-name">BANDEC Sucursal 12</div>
-                                        <div class="bank-description">Cuenta de Ahorros - 9876543210</div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="bank-status active">Activa</span>
-                                    <button class="btn btn-bank-action btn-edit-bank"><span class="material-symbols-outlined">edit</span></button>
-                                    <button class="btn btn-bank-action btn-delete-bank"><span class="material-symbols-outlined">delete</span></button>
-                                </div>
-                            </div>
-
-                            <div class="bank-item">
-                                <div class="bank-item-left">
-                                    <div class="bank-icon-container">
-                                        <span class="material-symbols-outlined">account_balance</span>
-                                    </div>
-                                    <div>
-                                        <div class="bank-name">BFI Banco Financiero</div>
-                                        <div class="bank-description">Cuenta Corriente - 5678901234</div>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="bank-status pending">Pendiente</span>
-                                    <button class="btn btn-bank-action btn-edit-bank"><span class="material-symbols-outlined">edit</span></button>
-                                    <button class="btn btn-bank-action btn-delete-bank"><span class="material-symbols-outlined">delete</span></button>
-                                </div>
-                            </div>
+                            {% empty %}
+                            <div class="text-center text-muted py-4">No hay cuentas bancarias registradas</div>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -282,15 +224,15 @@
                         <div class="d-flex flex-column gap-3">
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Total Cuentas</span>
-                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">8</div>
+                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">{{ total_bank_accounts }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Cuentas Activas</span>
-                                <div class="profile-info-value font-manrope fw-bold text-success">6</div>
+                                <div class="profile-info-value font-manrope fw-bold text-success">{{ total_bank_accounts }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Bancos Registrados</span>
-                                <div class="profile-info-value font-manrope fw-bold text-primary">4</div>
+                                <div class="profile-info-value font-manrope fw-bold text-primary">{{ total_bank_accounts }}</div>
                             </div>
                         </div>
                     </div>
@@ -324,39 +266,23 @@
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {% for office in offices %}
                                     <tr>
-                                        <td class="font-monospace fw-bold text-primary">OF-001</td>
-                                        <td class="fw-bold">Oficina Central</td>
-                                        <td class="text-muted">La Habana</td>
-                                        <td>Ing. Carlos Martínez</td>
+                                        <td class="font-monospace fw-bold text-primary">{{ office.code }}</td>
+                                        <td class="fw-bold">{{ office.name }}</td>
+                                        <td class="text-muted">—</td>
+                                        <td>—</td>
                                         <td><span class="status-badge status-matched">Activa</span></td>
                                         <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-office"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-office"><span class="material-symbols-outlined">delete</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-edit-office" data-office-id="{{ office.id }}"><span class="material-symbols-outlined">edit</span></button>
+                                            <button class="btn btn-link p-0 text-muted btn-delete-office" data-office-id="{{ office.id }}"><span class="material-symbols-outlined">delete</span></button>
                                         </td>
                                     </tr>
+                                    {% empty %}
                                     <tr>
-                                        <td class="font-monospace fw-bold text-primary">OF-002</td>
-                                        <td class="fw-bold">Sucursal Santiago</td>
-                                        <td class="text-muted">Santiago de Cuba</td>
-                                        <td>Lic. Ana García</td>
-                                        <td><span class="status-badge status-matched">Activa</span></td>
-                                        <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-office"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-office"><span class="material-symbols-outlined">delete</span></button>
-                                        </td>
+                                        <td colspan="6" class="text-center text-muted">No hay oficinas registradas</td>
                                     </tr>
-                                    <tr>
-                                        <td class="font-monospace fw-bold text-primary">OF-003</td>
-                                        <td class="fw-bold">Sucursal Camagüey</td>
-                                        <td class="text-muted">Camagüey</td>
-                                        <td>Econ. Roberto Díaz</td>
-                                        <td><span class="status-badge status-pending">En mantenimiento</span></td>
-                                        <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-office"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-office"><span class="material-symbols-outlined">delete</span></button>
-                                        </td>
-                                    </tr>
+                                    {% endfor %}
                                 </tbody>
                             </table>
                         </div>
@@ -373,15 +299,15 @@
                         <div class="d-flex flex-column gap-3">
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Total Oficinas</span>
-                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">12</div>
+                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">{{ total_offices }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Oficinas Activas</span>
-                                <div class="profile-info-value font-manrope fw-bold text-success">10</div>
+                                <div class="profile-info-value font-manrope fw-bold text-success">{{ active_offices }}</div>
                             </div>
                             <div class="profile-info-item">
                                 <span class="profile-info-label">Provincias Cubiertas</span>
-                                <div class="profile-info-value font-manrope fw-bold text-primary">8</div>
+                                <div class="profile-info-value font-manrope fw-bold text-primary">{{ total_offices }}</div>
                             </div>
                         </div>
                     </div>
