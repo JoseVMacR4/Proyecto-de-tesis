@@ -50,22 +50,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for user_data in users_with_roles %}
-                                    <tr>
-                                        <td class="fw-bold text-primary">{{ user_data.user.username }}</td>
-                                        <td class="text-muted">{{ user_data.user.email|default:"—" }}</td>
-                                        <td><span class="badge rounded-pill fw-bold" style="background-color: var(--primary-container); color: var(--on-primary-container); font-size: 0.65rem;">{{ user_data.main_role }}</span></td>
-                                        <td><span class="status-badge {% if user_data.user.is_active %}status-matched{% else %}status-pending{% endif %}">{% if user_data.user.is_active %}Activo{% else %}Inactivo{% endif %}</span></td>
-                                        <td class="text-end">
-                                            <button class="btn btn-link p-0 text-muted btn-edit-user" data-user-id="{{ user_data.user.id }}"><span class="material-symbols-outlined">edit</span></button>
-                                            <button class="btn btn-link p-0 text-muted btn-delete-user" data-user-id="{{ user_data.user.id }}"><span class="material-symbols-outlined">delete</span></button>
-                                        </td>
-                                    </tr>
-                                    {% empty %}
-                                    <tr>
-                                        <td colspan="5" class="text-center text-muted">No hay usuarios registrados</td>
-                                    </tr>
-                                    {% endfor %}
+                                    <!-- Los usuarios se cargan dinámicamente via JavaScript -->
                                 </tbody>
                             </table>
                         </div>
@@ -122,8 +107,6 @@
                                     <tr>
                                         <th>Código</th>
                                         <th>Nombre</th>
-                                        <th>Descripción</th>
-                                        <th>Estado</th>
                                         <th class="text-end">Acciones</th>
                                     </tr>
                                 </thead>
@@ -132,16 +115,15 @@
                                     <tr>
                                         <td class="font-monospace fw-bold text-primary">{{ operation.code }}</td>
                                         <td class="fw-bold">{{ operation.name }}</td>
-                                        <td class="text-muted small">{{ operation.description|default:"—" }}</td>
-                                        <td><span class="status-badge status-matched">Activo</span></td>
                                         <td class="text-end">
+                                            <button class="btn btn-link p-0 text-muted btn-view-operation" data-operation-id="{{ operation.id }}"><span class="material-symbols-outlined">visibility</span></button>
                                             <button class="btn btn-link p-0 text-muted btn-edit-operation" data-operation-id="{{ operation.id }}"><span class="material-symbols-outlined">edit</span></button>
                                             <button class="btn btn-link p-0 text-muted btn-delete-operation" data-operation-id="{{ operation.id }}"><span class="material-symbols-outlined">delete</span></button>
                                         </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted">No hay operaciones registradas</td>
+                                        <td colspan="3" class="text-center text-muted">No hay operaciones registradas</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -202,7 +184,7 @@
                                     </div>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <span class="bank-status active">Activa</span>
+                                    <button class="btn btn-bank-action btn-view-bank" data-bank-id="{{ bank_account.id }}"><span class="material-symbols-outlined">visibility</span></button>
                                     <button class="btn btn-bank-action btn-edit-bank" data-bank-id="{{ bank_account.id }}"><span class="material-symbols-outlined">edit</span></button>
                                     <button class="btn btn-bank-action btn-delete-bank" data-bank-id="{{ bank_account.id }}"><span class="material-symbols-outlined">delete</span></button>
                                 </div>
@@ -259,9 +241,6 @@
                                     <tr>
                                         <th>Código</th>
                                         <th>Nombre</th>
-                                        <th>Ubicación</th>
-                                        <th>Responsable</th>
-                                        <th>Estado</th>
                                         <th class="text-end">Acciones</th>
                                     </tr>
                                 </thead>
@@ -270,17 +249,15 @@
                                     <tr>
                                         <td class="font-monospace fw-bold text-primary">{{ office.code }}</td>
                                         <td class="fw-bold">{{ office.name }}</td>
-                                        <td class="text-muted">—</td>
-                                        <td>—</td>
-                                        <td><span class="status-badge status-matched">Activa</span></td>
                                         <td class="text-end">
+                                            <button class="btn btn-link p-0 text-muted btn-view-office" data-office-id="{{ office.id }}"><span class="material-symbols-outlined">visibility</span></button>
                                             <button class="btn btn-link p-0 text-muted btn-edit-office" data-office-id="{{ office.id }}"><span class="material-symbols-outlined">edit</span></button>
                                             <button class="btn btn-link p-0 text-muted btn-delete-office" data-office-id="{{ office.id }}"><span class="material-symbols-outlined">delete</span></button>
                                         </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted">No hay oficinas registradas</td>
+                                        <td colspan="3" class="text-center text-muted">No hay oficinas registradas</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -341,12 +318,12 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label for="userFirstName" class="form-label fw-bold small">Nombre</label>
-                                    <input type="text" class="form-control" id="userFirstName">
+                                    <label for="userFirstName" class="form-label fw-bold small">Nombre *</label>
+                                    <input type="text" class="form-control" id="userFirstName" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label for="userLastName" class="form-label fw-bold small">Apellido</label>
-                                    <input type="text" class="form-control" id="userLastName">
+                                    <label for="userLastName" class="form-label fw-bold small">Apellido *</label>
+                                    <input type="text" class="form-control" id="userLastName" required>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -391,10 +368,6 @@
                             <div class="mb-3">
                                 <label for="operationName" class="form-label fw-bold small">Nombre *</label>
                                 <input type="text" class="form-control" id="operationName" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="operationDescription" class="form-label fw-bold small">Descripción</label>
-                                <textarea class="form-control" id="operationDescription" rows="2"></textarea>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -466,8 +439,187 @@
             </div>
         </div>
 
+        <!-- Modal de Confirmación de Eliminación -->
+        <div class="modal fade" id="modalDelete" tabindex="-1" aria-labelledby="modalDeleteLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalDeleteLabel">Confirmar Eliminación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p id="deleteMessage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="btnConfirmDelete">Eliminar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalles Usuario -->
+        <div class="modal fade" id="modalUserDetails" tabindex="-1" aria-labelledby="modalUserDetailsLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalUserDetailsLabel">Detalles del Usuario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Usuario</label>
+                            <input type="text" class="form-control" id="detailUsername" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Email</label>
+                            <input type="email" class="form-control" id="detailEmail" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Rol</label>
+                            <input type="text" class="form-control" id="detailRole" readonly>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Nombre</label>
+                                <input type="text" class="form-control" id="detailFirstName" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Apellido</label>
+                                <input type="text" class="form-control" id="detailLastName" readonly>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Estado</label>
+                            <input type="text" class="form-control" id="detailIsActive" readonly>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Fecha de Creación</label>
+                                <input type="text" class="form-control" id="detailCreatedAt" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Última Edición</label>
+                                <input type="text" class="form-control" id="detailUpdatedAt" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalles Operación -->
+        <div class="modal fade" id="modalOperationDetails" tabindex="-1" aria-labelledby="modalOperationDetailsLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalOperationDetailsLabel">Detalles de la Operación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Código</label>
+                            <input type="text" class="form-control" id="detailOperationCode" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Nombre</label>
+                            <input type="text" class="form-control" id="detailOperationName" readonly>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Fecha de Creación</label>
+                                <input type="text" class="form-control" id="detailOperationCreatedAt" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Última Edición</label>
+                                <input type="text" class="form-control" id="detailOperationUpdatedAt" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalles Cuenta Bancaria -->
+        <div class="modal fade" id="modalBankDetails" tabindex="-1" aria-labelledby="modalBankDetailsLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalBankDetailsLabel">Detalles de la Cuenta Bancaria</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Código</label>
+                            <input type="text" class="form-control" id="detailBankCode" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Nombre</label>
+                            <input type="text" class="form-control" id="detailBankName" readonly>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Fecha de Creación</label>
+                                <input type="text" class="form-control" id="detailBankCreatedAt" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Última Edición</label>
+                                <input type="text" class="form-control" id="detailBankUpdatedAt" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Detalles Oficina -->
+        <div class="modal fade" id="modalOfficeDetails" tabindex="-1" aria-labelledby="modalOfficeDetailsLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalOfficeDetailsLabel">Detalles de la Oficina</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Código</label>
+                            <input type="text" class="form-control" id="detailOfficeCode" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Nombre</label>
+                            <input type="text" class="form-control" id="detailOfficeName" readonly>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Fecha de Creación</label>
+                                <input type="text" class="form-control" id="detailOfficeCreatedAt" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold small">Última Edición</label>
+                                <input type="text" class="form-control" id="detailOfficeUpdatedAt" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 {% endblock %}
 
 {% block extra_js %}
     <script src="{% static 'users/js/admin_panel.js' %}"></script>
+    <script>
+        window.currentUserId = '{{ current_user_id }}';
+    </script>
 {% endblock %}

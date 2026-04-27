@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'apps.bank_accounts',
     'apps.reconciliation',
     'apps.reporting',
-    'django_bootstrap5',
+    'bootstrap5',
 ]
 
 AUTH_USER_MODEL = 'users.User'

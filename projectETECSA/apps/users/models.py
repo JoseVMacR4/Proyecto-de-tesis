@@ -33,8 +33,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True, null=True, blank=True)
     password = models.CharField(max_length=128)
     is_active = models.BooleanField(default=True)
-    first_name = models.CharField(max_length=150, blank=True)
-    last_name = models.CharField(max_length=150, blank=True)
+    first_name = models.CharField(max_length=150)
+    last_name = models.CharField(max_length=150)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -95,12 +95,12 @@ class Permission(models.Model):
 class UserRole(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name='user_roles',
     )
     role = models.ForeignKey(
         'users.Role',
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name='user_roles',
     )
 

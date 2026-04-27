@@ -4,7 +4,7 @@
  */
 
 // Variables globales para los modales
-let userModal, operationModal, bankModal, officeModal;
+let userModal, operationModal, operationDetailsModal, bankModal, bankDetailsModal, officeModal, officeDetailsModal, deleteModal, userDetailsModal;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar tabs
@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inicializar formularios
     initForms();
+
+    // Cargar datos iniciales
+    loadUsersTable();
+    loadOperationsTable();
+    loadBanksList();
+    loadOfficesTable();
 });
 
 /**
@@ -26,6 +32,17 @@ document.addEventListener('DOMContentLoaded', function() {
 function initTabs() {
     const tabs = document.querySelectorAll('.settings-tab');
     const tabContents = document.querySelectorAll('.tab-content');
+
+    // Leer la pestaña activa desde localStorage
+    const activeTab = localStorage.getItem('activeAdminTab') || 'users';
+    const targetContent = document.getElementById(`tab-${activeTab}`);
+    if (targetContent) {
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        const activeTabElement = document.querySelector(`[data-tab="${activeTab}"]`);
+        if (activeTabElement) activeTabElement.classList.add('active');
+        targetContent.classList.add('active');
+    }
 
     tabs.forEach(tab => {
         tab.addEventListener('click', function() {
@@ -41,6 +58,9 @@ function initTabs() {
             if (targetContent) {
                 targetContent.classList.add('active');
             }
+
+            // Guardar en localStorage
+            localStorage.setItem('activeAdminTab', targetTab);
         });
     });
 }
@@ -52,8 +72,13 @@ function initModals() {
     if (typeof bootstrap !== 'undefined') {
         userModal = new bootstrap.Modal(document.getElementById('modalUser'));
         operationModal = new bootstrap.Modal(document.getElementById('modalOperation'));
+        operationDetailsModal = new bootstrap.Modal(document.getElementById('modalOperationDetails'));
         bankModal = new bootstrap.Modal(document.getElementById('modalBank'));
+        bankDetailsModal = new bootstrap.Modal(document.getElementById('modalBankDetails'));
         officeModal = new bootstrap.Modal(document.getElementById('modalOffice'));
+        officeDetailsModal = new bootstrap.Modal(document.getElementById('modalOfficeDetails'));
+        deleteModal = new bootstrap.Modal(document.getElementById('modalDelete'));
+        userDetailsModal = new bootstrap.Modal(document.getElementById('modalUserDetails'));
     }
 }
 
@@ -147,8 +172,7 @@ async function handleOperationSubmit(e) {
     
     const data = {
         code: document.getElementById('operationCode').value,
-        name: document.getElementById('operationName').value,
-        description: document.getElementById('operationDescription').value
+        name: document.getElementById('operationName').value
     };
     
     try {
@@ -304,34 +328,19 @@ function initActionButtons() {
         });
     }
 
+    // Botones de Ver Usuario
+    document.querySelectorAll('.btn-view-user').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            viewUserDetails(userId);
+        });
+    });
+
     // Botones de Editar Usuario
     document.querySelectorAll('.btn-edit-user').forEach(btn => {
         btn.addEventListener('click', function() {
             const userId = this.getAttribute('data-user-id');
-            const row = this.closest('tr');
-            const username = row.querySelector('td:first-child').textContent;
-            const email = row.querySelector('td:nth-child(2)').textContent;
-            const role = row.querySelector('td:nth-child(3)').textContent.trim();
-            const isActive = row.querySelector('.status-badge').classList.contains('status-matched');
-            
-            document.getElementById('userId').value = userId;
-            document.getElementById('userFormAction').value = 'edit';
-            document.getElementById('userUsername').value = username;
-            document.getElementById('userEmail').value = email !== '—' ? email : '';
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userIsActive').checked = isActive;
-            
-            // Seleccionar el rol correspondiente
-            const roleSelect = document.getElementById('userRole');
-            for (let option of roleSelect.options) {
-                if (option.text === role) {
-                    option.selected = true;
-                    break;
-                }
-            }
-            
-            document.getElementById('modalUserLabel').textContent = 'Editar Usuario';
-            userModal.show();
+            editUser(userId);
         });
     });
 
@@ -342,9 +351,12 @@ function initActionButtons() {
             const row = this.closest('tr');
             const username = row.querySelector('td:first-child').textContent;
             
-            if (confirm(`¿Está seguro que desea eliminar el usuario "${username}"?`)) {
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar el usuario "${username}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
                 deleteItem(`/admin-panel/users/${userId}/delete/`, 'usuario');
-            }
+                deleteModal.hide();
+            };
+            deleteModal.show();
         });
     });
 
@@ -355,13 +367,11 @@ function initActionButtons() {
             const row = this.closest('tr');
             const code = row.querySelector('td:first-child').textContent;
             const name = row.querySelector('td:nth-child(2)').textContent;
-            const description = row.querySelector('td:nth-child(3)').textContent;
             
             document.getElementById('operationId').value = operationId;
             document.getElementById('operationFormAction').value = 'edit';
             document.getElementById('operationCode').value = code;
             document.getElementById('operationName').value = name;
-            document.getElementById('operationDescription').value = description !== '—' ? description : '';
             
             document.getElementById('modalOperationLabel').textContent = 'Editar Operación';
             operationModal.show();
@@ -375,9 +385,12 @@ function initActionButtons() {
             const row = this.closest('tr');
             const operationName = row.querySelector('td:nth-child(2)').textContent;
             
-            if (confirm(`¿Está seguro que desea eliminar la operación "${operationName}"?`)) {
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la operación "${operationName}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
                 deleteItem(`/admin-panel/operations/${operationId}/delete/`, 'operación');
-            }
+                deleteModal.hide();
+            };
+            deleteModal.show();
         });
     });
 
@@ -406,9 +419,12 @@ function initActionButtons() {
             const bankItem = this.closest('.bank-item');
             const bankName = bankItem.querySelector('.bank-name').textContent;
             
-            if (confirm(`¿Está seguro que desea eliminar la cuenta bancaria "${bankName}"?`)) {
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la cuenta bancaria "${bankName}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
                 deleteItem(`/admin-panel/bank-accounts/${bankId}/delete/`, 'cuenta bancaria');
-            }
+                deleteModal.hide();
+            };
+            deleteModal.show();
         });
     });
 
@@ -437,9 +453,12 @@ function initActionButtons() {
             const row = this.closest('tr');
             const officeName = row.querySelector('td:nth-child(2)').textContent;
             
-            if (confirm(`¿Está seguro que desea eliminar la oficina "${officeName}"?`)) {
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la oficina "${officeName}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
                 deleteItem(`/admin-panel/offices/${officeId}/delete/`, 'oficina');
-            }
+                deleteModal.hide();
+            };
+            deleteModal.show();
         });
     });
 }
@@ -463,7 +482,6 @@ function resetForm(type) {
         document.getElementById('operationFormAction').value = 'create';
         document.getElementById('operationCode').value = '';
         document.getElementById('operationName').value = '';
-        document.getElementById('operationDescription').value = '';
     } else if (type === 'bank') {
         document.getElementById('bankId').value = '';
         document.getElementById('bankFormAction').value = 'create';
@@ -509,6 +527,43 @@ async function deleteItem(url, itemName) {
     } catch (error) {
         showAlert('danger', 'Error de conexión: ' + error.message);
     }
+}
+
+/**
+ * Re-inicializa los event listeners para los botones de usuario después de cargar la tabla dinámicamente
+ */
+function reinitializeUserButtons() {
+    // Botones de Ver Usuario
+    document.querySelectorAll('.btn-view-user').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            viewUserDetails(userId);
+        });
+    });
+
+    // Botones de Editar Usuario
+    document.querySelectorAll('.btn-edit-user').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            editUser(userId);
+        });
+    });
+
+    // Botones de Eliminar Usuario
+    document.querySelectorAll('.btn-delete-user').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            const row = this.closest('tr');
+            const username = row.querySelector('td:first-child').textContent;
+            
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar el usuario "${username}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
+                deleteItem(`/admin-panel/users/${userId}/delete/`, 'usuario');
+                deleteModal.hide();
+            };
+            deleteModal.show();
+        });
+    });
 }
 
 /**
@@ -571,16 +626,18 @@ async function loadUsersTable() {
             if (result.users.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay usuarios registrados</td></tr>';
             } else {
+                window.usersData = result.users; // Guardar datos para uso en modales
                 result.users.forEach(user => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="fw-bold text-primary">${user.username}</td>
                         <td class="text-muted">${user.email}</td>
-                        <td><span class="badge rounded-pill fw-bold" style="background-color: var(--primary-container); color: var(--on-primary-container); font-size: 0.65rem;">${user.main_role}</span></td>
+                        <td>${user.role_name}</td>
                         <td><span class="status-badge ${user.is_active ? 'status-matched' : 'status-pending'}">${user.is_active ? 'Activo' : 'Inactivo'}</span></td>
                         <td class="text-end">
+                            <button class="btn btn-link p-0 text-muted btn-view-user" data-user-id="${user.id}"><span class="material-symbols-outlined">visibility</span></button>
                             <button class="btn btn-link p-0 text-muted btn-edit-user" data-user-id="${user.id}"><span class="material-symbols-outlined">edit</span></button>
-                            <button class="btn btn-link p-0 text-muted btn-delete-user" data-user-id="${user.id}"><span class="material-symbols-outlined">delete</span></button>
+                            ${user.id !== window.currentUserId ? `<button class="btn btn-link p-0 text-muted btn-delete-user" data-user-id="${user.id}"><span class="material-symbols-outlined">delete</span></button>` : ''}
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -620,16 +677,16 @@ async function loadOperationsTable() {
             tbody.innerHTML = '';
             
             if (result.operations.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay operaciones registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No hay operaciones registradas</td></tr>';
             } else {
+                window.operationsData = result.operations;
                 result.operations.forEach(op => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="font-monospace fw-bold text-primary">${op.code}</td>
                         <td class="fw-bold">${op.name}</td>
-                        <td class="text-muted small">${op.description}</td>
-                        <td><span class="status-badge status-matched">Activo</span></td>
                         <td class="text-end">
+                            <button class="btn btn-link p-0 text-muted btn-view-operation" data-operation-id="${op.id}"><span class="material-symbols-outlined">visibility</span></button>
                             <button class="btn btn-link p-0 text-muted btn-edit-operation" data-operation-id="${op.id}"><span class="material-symbols-outlined">edit</span></button>
                             <button class="btn btn-link p-0 text-muted btn-delete-operation" data-operation-id="${op.id}"><span class="material-symbols-outlined">delete</span></button>
                         </td>
@@ -673,6 +730,7 @@ async function loadBanksList() {
             if (result.banks.length === 0) {
                 bankList.innerHTML = '<div class="text-center text-muted py-4">No hay cuentas bancarias registradas</div>';
             } else {
+                window.banksData = result.banks;
                 result.banks.forEach(bank => {
                     const div = document.createElement('div');
                     div.className = 'bank-item';
@@ -687,7 +745,7 @@ async function loadBanksList() {
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="bank-status active">Activa</span>
+                            <button class="btn btn-bank-action btn-view-bank" data-bank-id="${bank.id}"><span class="material-symbols-outlined">visibility</span></button>
                             <button class="btn btn-bank-action btn-edit-bank" data-bank-id="${bank.id}"><span class="material-symbols-outlined">edit</span></button>
                             <button class="btn btn-bank-action btn-delete-bank" data-bank-id="${bank.id}"><span class="material-symbols-outlined">delete</span></button>
                         </div>
@@ -729,17 +787,16 @@ async function loadOfficesTable() {
             tbody.innerHTML = '';
             
             if (result.offices.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay oficinas registradas</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No hay oficinas registradas</td></tr>';
             } else {
+                window.officesData = result.offices;
                 result.offices.forEach(office => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td class="font-monospace fw-bold text-primary">${office.code}</td>
                         <td class="fw-bold">${office.name}</td>
-                        <td class="text-muted">—</td>
-                        <td class="text-muted">—</td>
-                        <td><span class="status-badge status-matched">Activo</span></td>
                         <td class="text-end">
+                            <button class="btn btn-link p-0 text-muted btn-view-office" data-office-id="${office.id}"><span class="material-symbols-outlined">visibility</span></button>
                             <button class="btn btn-link p-0 text-muted btn-edit-office" data-office-id="${office.id}"><span class="material-symbols-outlined">edit</span></button>
                             <button class="btn btn-link p-0 text-muted btn-delete-office" data-office-id="${office.id}"><span class="material-symbols-outlined">delete</span></button>
                         </td>
@@ -800,48 +857,35 @@ function updateStats(section, stats) {
  * Re-inicializa los botones de editar/eliminar usuario después de actualizar la tabla
  */
 function reinitializeUserButtons() {
-    // Botones de Editar Usuario
-    document.querySelectorAll('.btn-edit-user').forEach(btn => {
-        btn.removeEventListener('click', arguments.callee);
+    // Botones de Ver Usuario
+    document.querySelectorAll('.btn-view-user').forEach(btn => {
         btn.addEventListener('click', function() {
             const userId = this.getAttribute('data-user-id');
-            const row = this.closest('tr');
-            const username = row.querySelector('td:first-child').textContent;
-            const email = row.querySelector('td:nth-child(2)').textContent;
-            const role = row.querySelector('td:nth-child(3)').textContent.trim();
-            const isActive = row.querySelector('.status-badge').classList.contains('status-matched');
-            
-            document.getElementById('userId').value = userId;
-            document.getElementById('userFormAction').value = 'edit';
-            document.getElementById('userUsername').value = username;
-            document.getElementById('userEmail').value = email !== '—' ? email : '';
-            document.getElementById('userPassword').value = '';
-            document.getElementById('userIsActive').checked = isActive;
-            
-            const roleSelect = document.getElementById('userRole');
-            for (let option of roleSelect.options) {
-                if (option.text === role) {
-                    option.selected = true;
-                    break;
-                }
-            }
-            
-            document.getElementById('modalUserLabel').textContent = 'Editar Usuario';
-            userModal.show();
+            viewUserDetails(userId);
+        });
+    });
+
+    // Botones de Editar Usuario
+    document.querySelectorAll('.btn-edit-user').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const userId = this.getAttribute('data-user-id');
+            editUser(userId);
         });
     });
 
     // Botones de Eliminar Usuario
     document.querySelectorAll('.btn-delete-user').forEach(btn => {
-        btn.removeEventListener('click', arguments.callee);
         btn.addEventListener('click', function() {
             const userId = this.getAttribute('data-user-id');
             const row = this.closest('tr');
             const username = row.querySelector('td:first-child').textContent;
             
-            if (confirm(`¿Está seguro que desea eliminar el usuario "${username}"?`)) {
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar el usuario "${username}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
                 deleteItem(`/admin-panel/users/${userId}/delete/`, 'usuario');
-            }
+                deleteModal.hide();
+            };
+            deleteModal.show();
         });
     });
 }
@@ -850,20 +894,24 @@ function reinitializeUserButtons() {
  * Re-inicializa los botones de editar/eliminar operación después de actualizar la tabla
  */
 function reinitializeOperationButtons() {
+    document.querySelectorAll('.btn-view-operation').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const operationId = this.getAttribute('data-operation-id');
+            viewOperationDetails(operationId);
+        });
+    });
+
     document.querySelectorAll('.btn-edit-operation').forEach(btn => {
-        btn.removeEventListener('click', arguments.callee);
         btn.addEventListener('click', function() {
             const operationId = this.getAttribute('data-operation-id');
             const row = this.closest('tr');
             const code = row.querySelector('td:first-child').textContent;
             const name = row.querySelector('td:nth-child(2)').textContent;
-            const description = row.querySelector('td:nth-child(3)').textContent;
             
             document.getElementById('operationId').value = operationId;
             document.getElementById('operationFormAction').value = 'edit';
             document.getElementById('operationCode').value = code;
             document.getElementById('operationName').value = name;
-            document.getElementById('operationDescription').value = description !== '—' ? description : '';
             
             document.getElementById('modalOperationLabel').textContent = 'Editar Operación';
             operationModal.show();
@@ -871,15 +919,17 @@ function reinitializeOperationButtons() {
     });
 
     document.querySelectorAll('.btn-delete-operation').forEach(btn => {
-        btn.removeEventListener('click', arguments.callee);
         btn.addEventListener('click', function() {
             const operationId = this.getAttribute('data-operation-id');
             const row = this.closest('tr');
             const operationName = row.querySelector('td:nth-child(2)').textContent;
             
-            if (confirm(`¿Está seguro que desea eliminar la operación "${operationName}"?`)) {
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la operación "${operationName}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
                 deleteItem(`/admin-panel/operations/${operationId}/delete/`, 'operación');
-            }
+                deleteModal.hide();
+            };
+            deleteModal.show();
         });
     });
 }
@@ -888,8 +938,14 @@ function reinitializeOperationButtons() {
  * Re-inicializa los botones de editar/eliminar banco después de actualizar la lista
  */
 function reinitializeBankButtons() {
+    document.querySelectorAll('.btn-view-bank').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const bankId = this.getAttribute('data-bank-id');
+            viewBankDetails(bankId);
+        });
+    });
+
     document.querySelectorAll('.btn-edit-bank').forEach(btn => {
-        btn.removeEventListener('click', arguments.callee);
         btn.addEventListener('click', function() {
             const bankId = this.getAttribute('data-bank-id');
             const bankItem = this.closest('.bank-item');
@@ -907,15 +963,17 @@ function reinitializeBankButtons() {
     });
 
     document.querySelectorAll('.btn-delete-bank').forEach(btn => {
-        btn.removeEventListener('click', arguments.callee);
         btn.addEventListener('click', function() {
             const bankId = this.getAttribute('data-bank-id');
             const bankItem = this.closest('.bank-item');
             const bankName = bankItem.querySelector('.bank-name').textContent;
             
-            if (confirm(`¿Está seguro que desea eliminar la cuenta bancaria "${bankName}"?`)) {
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la cuenta bancaria "${bankName}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
                 deleteItem(`/admin-panel/bank-accounts/${bankId}/delete/`, 'cuenta bancaria');
-            }
+                deleteModal.hide();
+            };
+            deleteModal.show();
         });
     });
 }
@@ -924,8 +982,14 @@ function reinitializeBankButtons() {
  * Re-inicializa los botones de editar/eliminar oficina después de actualizar la tabla
  */
 function reinitializeOfficeButtons() {
+    document.querySelectorAll('.btn-view-office').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const officeId = this.getAttribute('data-office-id');
+            viewOfficeDetails(officeId);
+        });
+    });
+
     document.querySelectorAll('.btn-edit-office').forEach(btn => {
-        btn.removeEventListener('click', arguments.callee);
         btn.addEventListener('click', function() {
             const officeId = this.getAttribute('data-office-id');
             const row = this.closest('tr');
@@ -943,16 +1007,125 @@ function reinitializeOfficeButtons() {
     });
 
     document.querySelectorAll('.btn-delete-office').forEach(btn => {
-        btn.removeEventListener('click', arguments.callee);
         btn.addEventListener('click', function() {
             const officeId = this.getAttribute('data-office-id');
             const row = this.closest('tr');
             const officeName = row.querySelector('td:nth-child(2)').textContent;
             
-            if (confirm(`¿Está seguro que desea eliminar la oficina "${officeName}"?`)) {
+            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la oficina "${officeName}"?`;
+            document.getElementById('btnConfirmDelete').onclick = function() {
                 deleteItem(`/admin-panel/offices/${officeId}/delete/`, 'oficina');
-            }
+                deleteModal.hide();
+            };
+            deleteModal.show();
         });
     });
 }
+
+/**
+ * Muestra los detalles de un usuario en el modal de solo lectura
+ */
+async function viewUserDetails(userId) {
+    try {
+        // Buscar el usuario en los datos cargados
+        const user = window.usersData.find(u => u.id === userId);
+        if (!user) {
+            console.error('Usuario no encontrado');
+            return;
+        }
+        
+        document.getElementById('detailUsername').value = user.username;
+        document.getElementById('detailEmail').value = user.email !== '—' ? user.email : '';
+        document.getElementById('detailRole').value = user.role_name || 'Sin rol';
+        document.getElementById('detailFirstName').value = user.first_name || '';
+        document.getElementById('detailLastName').value = user.last_name || '';
+        document.getElementById('detailIsActive').value = user.is_active ? 'Activo' : 'Inactivo';
+        document.getElementById('detailCreatedAt').value = user.created_at || '—';
+        document.getElementById('detailUpdatedAt').value = user.updated_at || '—';
+        
+        userDetailsModal.show();
+    } catch (error) {
+        console.error('Error viewing user details:', error);
+    }
+}
+
+function viewOperationDetails(operationId) {
+    try {
+        const operation = window.operationsData.find(op => op.id === operationId);
+        if (!operation) {
+            console.error('Operación no encontrada');
+            return;
+        }
+
+        document.getElementById('detailOperationCode').value = operation.code;
+        document.getElementById('detailOperationName').value = operation.name;
+        document.getElementById('detailOperationCreatedAt').value = operation.created_at || '—';
+        document.getElementById('detailOperationUpdatedAt').value = operation.updated_at || '—';
+
+        operationDetailsModal.show();
+    } catch (error) {
+        console.error('Error viewing operation details:', error);
+    }
+}
+
+function viewBankDetails(bankId) {
+    try {
+        const bank = window.banksData.find(b => b.id === bankId);
+        if (!bank) {
+            console.error('Cuenta bancaria no encontrada');
+            return;
+        }
+
+        document.getElementById('detailBankCode').value = bank.code;
+        document.getElementById('detailBankName').value = bank.name;
+        document.getElementById('detailBankCreatedAt').value = bank.created_at || '—';
+        document.getElementById('detailBankUpdatedAt').value = bank.updated_at || '—';
+
+        bankDetailsModal.show();
+    } catch (error) {
+        console.error('Error viewing bank details:', error);
+    }
+}
+
+function viewOfficeDetails(officeId) {
+    try {
+        const office = window.officesData.find(o => o.id === officeId);
+        if (!office) {
+            console.error('Oficina no encontrada');
+            return;
+        }
+
+        document.getElementById('detailOfficeCode').value = office.code;
+        document.getElementById('detailOfficeName').value = office.name;
+        document.getElementById('detailOfficeCreatedAt').value = office.created_at || '—';
+        document.getElementById('detailOfficeUpdatedAt').value = office.updated_at || '—';
+
+        officeDetailsModal.show();
+    } catch (error) {
+        console.error('Error viewing office details:', error);
+    }
+}
+
+/**
+ * Edita un usuario (abre el modal con datos precargados)
+ */
+function editUser(userId) {
+    const user = window.usersData.find(u => u.id === userId);
+    if (!user) {
+        console.error('Usuario no encontrado');
+        return;
+    }
+    
+    document.getElementById('userId').value = user.id;
+    document.getElementById('userFormAction').value = 'edit';
+    document.getElementById('userUsername').value = user.username;
+    document.getElementById('userEmail').value = user.email !== '—' ? user.email : '';
+    document.getElementById('userPassword').value = '';
+    document.getElementById('userFirstName').value = user.first_name || '';
+    document.getElementById('userLastName').value = user.last_name || '';
+    document.getElementById('userRole').value = user.role_id || '';
+    document.getElementById('userIsActive').checked = user.is_active;
+    
+    document.getElementById('modalUserLabel').textContent = 'Editar Usuario';
+    userModal.show();
 }

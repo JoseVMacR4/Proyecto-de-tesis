@@ -8,6 +8,19 @@ import json
 from apps.users.models import User, UserRole, Role
 from apps.bank_accounts.models import BankAccount, Office, Operation
 
+DEFAULT_USER_ROLES = [
+    'Administrador',
+    'Analista Económico',
+    'Analista Comercial',
+    'Analista Financiero',
+]
+
+
+def ensure_default_roles():
+    if not Role.objects.exists():
+        for role_name in DEFAULT_USER_ROLES:
+            Role.objects.get_or_create(name=role_name)
+
 
 # Create your views here.
 def login_view(request):
@@ -87,11 +100,11 @@ def admin_panel(request):
     active_offices = offices.count()  # Se puede ajustar si hay campo de estado
     
     # Obtener roles disponibles
+    ensure_default_roles()
     roles_available = Role.objects.all()
     
     context = {
         'current_page': 'admin_panel',
-        'users_with_roles': users_with_roles,
         'total_users': total_users,
         'active_users': active_users,
         'inactive_users': inactive_users,
@@ -104,6 +117,7 @@ def admin_panel(request):
         'total_offices': total_offices,
         'active_offices': active_offices,
         'roles_available': roles_available,
+        'current_user_id': request.user.id,
     }
     return render(request, 'users/admin_panel.html', context)
 
@@ -161,10 +175,11 @@ def update_user(request, user_id):
         
         user.save()
         
-        if data.get('role_id'):
-            role = get_object_or_404(Role, id=data.get('role_id'))
+        if data.get('role_id') is not None:
             UserRole.objects.filter(user=user).delete()
-            UserRole.objects.create(user=user, role=role)
+            if data.get('role_id'):
+                role = get_object_or_404(Role, id=data.get('role_id'))
+                UserRole.objects.create(user=user, role=role)
         
         return JsonResponse({'success': True, 'message': 'Usuario actualizado exitosamente'})
     except Exception as e:
@@ -187,7 +202,6 @@ def create_operation(request):
         data = json.loads(request.body)
         code = data.get('code')
         name = data.get('name')
-        description = data.get('description', '')
         
         if not code or not name:
             return JsonResponse({'success': False, 'error': 'Código y nombre son requeridos'}, status=400)
@@ -195,7 +209,7 @@ def create_operation(request):
         if Operation.objects.filter(code=code).exists():
             return JsonResponse({'success': False, 'error': 'El código ya existe'}, status=400)
         
-        Operation.objects.create(code=code, name=name, description=description)
+        Operation.objects.create(code=code, name=name)
         return JsonResponse({'success': True, 'message': 'Operación creada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -209,7 +223,6 @@ def update_operation(request, operation_id):
         
         operation.code = data.get('code', operation.code)
         operation.name = data.get('name', operation.name)
-        operation.description = data.get('description', operation.description)
         operation.save()
         
         return JsonResponse({'success': True, 'message': 'Operación actualizada exitosamente'})
@@ -223,6 +236,33 @@ def delete_operation(request, operation_id):
         operation = get_object_or_404(Operation, id=operation_id)
         operation.delete()
         return JsonResponse({'success': True, 'message': 'Operación eliminada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["GET"])
+def get_operations(request):
+    try:
+        operations = Operation.objects.all().order_by('code')
+        
+        operations_data = []
+        for op in operations:
+            operations_data.append({
+                'id': str(op.id),
+                'code': op.code,
+                'name': op.name
+            })
+        
+        stats = {
+            'total_operations': operations.count(),
+            'active_operations': operations.count()  # Asumiendo todas activas
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'operations': operations_data,
+            'stats': stats
+        })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
@@ -271,6 +311,33 @@ def delete_bank_account(request, account_id):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
+@require_http_methods(["GET"])
+def get_bank_accounts(request):
+    try:
+        banks = BankAccount.objects.all().order_by('code')
+        
+        banks_data = []
+        for bank in banks:
+            banks_data.append({
+                'id': str(bank.id),
+                'code': bank.code,
+                'name': bank.name
+            })
+        
+        stats = {
+            'total_banks': banks.count(),
+            'active_banks': banks.count()  # Asumiendo todas activas
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'banks': banks_data,
+            'stats': stats
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
 @require_http_methods(["POST"])
 def create_office(request):
     try:
@@ -315,6 +382,33 @@ def delete_office(request, office_id):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
+@require_http_methods(["GET"])
+def get_offices(request):
+    try:
+        offices = Office.objects.all().order_by('code')
+        
+        offices_data = []
+        for office in offices:
+            offices_data.append({
+                'id': str(office.id),
+                'code': office.code,
+                'name': office.name
+            })
+        
+        stats = {
+            'total_offices': offices.count(),
+            'active_offices': offices.count()  # Asumiendo todas activas
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'offices': offices_data,
+            'stats': stats
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
 def get_users(request):
     """API endpoint para obtener la lista de usuarios"""
     try:
@@ -323,18 +417,24 @@ def get_users(request):
         for ur in UserRole.objects.select_related('role').filter(user__in=users):
             if ur.user.id not in user_roles:
                 user_roles[ur.user.id] = []
-            user_roles[ur.user.id].append(ur.role.name)
+            user_roles[ur.user.id].append({'id': str(ur.role.id), 'name': ur.role.name})
         
         users_data = []
         for user in users:
-            roles = user_roles.get(user.id, [])
-            main_role = roles[0] if roles else 'Sin rol'
+            role_info = user_roles.get(user.id, [])
+            main_role = role_info[0]['name'] if role_info else 'Sin rol'
             users_data.append({
                 'id': str(user.id),
                 'username': user.username,
                 'email': user.email or '—',
-                'main_role': main_role,
-                'is_active': user.is_active
+                'first_name': user.first_name or '',
+                'last_name': user.last_name or '',
+                'role_id': role_info[0]['id'] if role_info else '',
+                'role_name': main_role,
+                'roles': [r['name'] for r in role_info],
+                'is_active': user.is_active,
+                'created_at': user.created_at.strftime('%d/%m/%Y %H:%M'),
+                'updated_at': user.updated_at.strftime('%d/%m/%Y %H:%M')
             })
         
         # Estadísticas
@@ -367,7 +467,8 @@ def get_operations(request):
                 'id': str(op.id),
                 'code': op.code,
                 'name': op.name,
-                'description': op.description or '—'
+                'created_at': op.created_at.strftime('%d/%m/%Y %H:%M'),
+                'updated_at': op.updated_at.strftime('%d/%m/%Y %H:%M')
             })
         
         return JsonResponse({
@@ -391,7 +492,9 @@ def get_bank_accounts(request):
             banks_data.append({
                 'id': str(bank.id),
                 'code': bank.code,
-                'name': bank.name
+                'name': bank.name,
+                'created_at': bank.created_at.strftime('%d/%m/%Y %H:%M'),
+                'updated_at': bank.updated_at.strftime('%d/%m/%Y %H:%M')
             })
         
         return JsonResponse({
@@ -414,7 +517,9 @@ def get_offices(request):
             offices_data.append({
                 'id': str(office.id),
                 'code': office.code,
-                'name': office.name
+                'name': office.name,
+                'created_at': office.created_at.strftime('%d/%m/%Y %H:%M'),
+                'updated_at': office.updated_at.strftime('%d/%m/%Y %H:%M')
             })
         
         return JsonResponse({
