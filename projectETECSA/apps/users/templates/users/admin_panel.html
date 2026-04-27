@@ -315,6 +315,157 @@
             </div>
         </div>
 
+        <!-- Modal Usuario -->
+        <div class="modal fade" id="modalUser" tabindex="-1" aria-labelledby="modalUserLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalUserLabel">Nuevo Usuario</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="formUser">
+                        <div class="modal-body">
+                            <input type="hidden" id="userId">
+                            <input type="hidden" id="userFormAction" value="create">
+                            <div class="mb-3">
+                                <label for="userUsername" class="form-label fw-bold small">Usuario *</label>
+                                <input type="text" class="form-control" id="userUsername" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="userEmail" class="form-label fw-bold small">Email</label>
+                                <input type="email" class="form-control" id="userEmail">
+                            </div>
+                            <div class="mb-3">
+                                <label for="userPassword" class="form-label fw-bold small">Contraseña</label>
+                                <input type="password" class="form-control" id="userPassword" placeholder="Dejar en blanco para mantener la actual (solo edición)">
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="userFirstName" class="form-label fw-bold small">Nombre</label>
+                                    <input type="text" class="form-control" id="userFirstName">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="userLastName" class="form-label fw-bold small">Apellido</label>
+                                    <input type="text" class="form-control" id="userLastName">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="userRole" class="form-label fw-bold small">Rol</label>
+                                <select class="form-select" id="userRole">
+                                    <option value="">Seleccione un rol</option>
+                                    {% for role in roles_available %}
+                                    <option value="{{ role.id }}">{{ role.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="userIsActive" checked>
+                                <label class="form-check-label fw-bold small" for="userIsActive">Activo</label>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary fw-bold">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Operación -->
+        <div class="modal fade" id="modalOperation" tabindex="-1" aria-labelledby="modalOperationLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalOperationLabel">Nueva Operación</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="formOperation">
+                        <div class="modal-body">
+                            <input type="hidden" id="operationId">
+                            <input type="hidden" id="operationFormAction" value="create">
+                            <div class="mb-3">
+                                <label for="operationCode" class="form-label fw-bold small">Código *</label>
+                                <input type="text" class="form-control" id="operationCode" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="operationName" class="form-label fw-bold small">Nombre *</label>
+                                <input type="text" class="form-control" id="operationName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="operationDescription" class="form-label fw-bold small">Descripción</label>
+                                <textarea class="form-control" id="operationDescription" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary fw-bold">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Cuenta Bancaria -->
+        <div class="modal fade" id="modalBank" tabindex="-1" aria-labelledby="modalBankLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalBankLabel">Nueva Cuenta Bancaria</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="formBank">
+                        <div class="modal-body">
+                            <input type="hidden" id="bankId">
+                            <input type="hidden" id="bankFormAction" value="create">
+                            <div class="mb-3">
+                                <label for="bankCode" class="form-label fw-bold small">Código *</label>
+                                <input type="text" class="form-control" id="bankCode" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="bankName" class="form-label fw-bold small">Nombre *</label>
+                                <input type="text" class="form-control" id="bankName" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary fw-bold">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Oficina -->
+        <div class="modal fade" id="modalOffice" tabindex="-1" aria-labelledby="modalOfficeLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title font-manrope fw-bold" id="modalOfficeLabel">Nueva Oficina</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="formOffice">
+                        <div class="modal-body">
+                            <input type="hidden" id="officeId">
+                            <input type="hidden" id="officeFormAction" value="create">
+                            <div class="mb-3">
+                                <label for="officeCode" class="form-label fw-bold small">Código *</label>
+                                <input type="text" class="form-control" id="officeCode" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="officeName" class="form-label fw-bold small">Nombre *</label>
+                                <input type="text" class="form-control" id="officeName" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-primary fw-bold">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
 {% endblock %}
 
 {% block extra_js %}

@@ -1,7 +1,10 @@
 from django.contrib import messages
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+import json
 from apps.users.models import User, UserRole, Role
 from apps.bank_accounts.models import BankAccount, Office, Operation
 
@@ -83,6 +86,9 @@ def admin_panel(request):
     total_offices = offices.count()
     active_offices = offices.count()  # Se puede ajustar si hay campo de estado
     
+    # Obtener roles disponibles
+    roles_available = Role.objects.all()
+    
     context = {
         'current_page': 'admin_panel',
         'users_with_roles': users_with_roles,
@@ -97,8 +103,216 @@ def admin_panel(request):
         'offices': offices,
         'total_offices': total_offices,
         'active_offices': active_offices,
+        'roles_available': roles_available,
     }
     return render(request, 'users/admin_panel.html', context)
+
+@login_required
+@require_http_methods(["POST"])
+def create_user(request):
+    try:
+        data = json.loads(request.body)
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+        first_name = data.get('first_name', '')
+        last_name = data.get('last_name', '')
+        role_id = data.get('role_id')
+        is_active = data.get('is_active', True)
+        
+        if not username or not password:
+            return JsonResponse({'success': False, 'error': 'Username y password son requeridos'}, status=400)
+        
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({'success': False, 'error': 'El username ya existe'}, status=400)
+        
+        user = User.objects.create_user(
+            username=username,
+            password=password,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            is_active=is_active
+        )
+        
+        if role_id:
+            role = get_object_or_404(Role, id=role_id)
+            UserRole.objects.create(user=user, role=role)
+        
+        return JsonResponse({'success': True, 'message': 'Usuario creado exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def update_user(request, user_id):
+    try:
+        user = get_object_or_404(User, id=user_id)
+        data = json.loads(request.body)
+        
+        user.username = data.get('username', user.username)
+        user.email = data.get('email', user.email)
+        user.first_name = data.get('first_name', user.first_name)
+        user.last_name = data.get('last_name', user.last_name)
+        user.is_active = data.get('is_active', user.is_active)
+        
+        if data.get('password'):
+            user.set_password(data.get('password'))
+        
+        user.save()
+        
+        if data.get('role_id'):
+            role = get_object_or_404(Role, id=data.get('role_id'))
+            UserRole.objects.filter(user=user).delete()
+            UserRole.objects.create(user=user, role=role)
+        
+        return JsonResponse({'success': True, 'message': 'Usuario actualizado exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def delete_user(request, user_id):
+    try:
+        user = get_object_or_404(User, id=user_id)
+        user.delete()
+        return JsonResponse({'success': True, 'message': 'Usuario eliminado exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def create_operation(request):
+    try:
+        data = json.loads(request.body)
+        code = data.get('code')
+        name = data.get('name')
+        description = data.get('description', '')
+        
+        if not code or not name:
+            return JsonResponse({'success': False, 'error': 'Código y nombre son requeridos'}, status=400)
+        
+        if Operation.objects.filter(code=code).exists():
+            return JsonResponse({'success': False, 'error': 'El código ya existe'}, status=400)
+        
+        Operation.objects.create(code=code, name=name, description=description)
+        return JsonResponse({'success': True, 'message': 'Operación creada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def update_operation(request, operation_id):
+    try:
+        operation = get_object_or_404(Operation, id=operation_id)
+        data = json.loads(request.body)
+        
+        operation.code = data.get('code', operation.code)
+        operation.name = data.get('name', operation.name)
+        operation.description = data.get('description', operation.description)
+        operation.save()
+        
+        return JsonResponse({'success': True, 'message': 'Operación actualizada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def delete_operation(request, operation_id):
+    try:
+        operation = get_object_or_404(Operation, id=operation_id)
+        operation.delete()
+        return JsonResponse({'success': True, 'message': 'Operación eliminada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def create_bank_account(request):
+    try:
+        data = json.loads(request.body)
+        code = data.get('code')
+        name = data.get('name')
+        
+        if not code or not name:
+            return JsonResponse({'success': False, 'error': 'Código y nombre son requeridos'}, status=400)
+        
+        if BankAccount.objects.filter(code=code).exists():
+            return JsonResponse({'success': False, 'error': 'El código ya existe'}, status=400)
+        
+        BankAccount.objects.create(code=code, name=name)
+        return JsonResponse({'success': True, 'message': 'Cuenta bancaria creada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def update_bank_account(request, account_id):
+    try:
+        account = get_object_or_404(BankAccount, id=account_id)
+        data = json.loads(request.body)
+        
+        account.code = data.get('code', account.code)
+        account.name = data.get('name', account.name)
+        account.save()
+        
+        return JsonResponse({'success': True, 'message': 'Cuenta bancaria actualizada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def delete_bank_account(request, account_id):
+    try:
+        account = get_object_or_404(BankAccount, id=account_id)
+        account.delete()
+        return JsonResponse({'success': True, 'message': 'Cuenta bancaria eliminada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def create_office(request):
+    try:
+        data = json.loads(request.body)
+        code = data.get('code')
+        name = data.get('name')
+        
+        if not code or not name:
+            return JsonResponse({'success': False, 'error': 'Código y nombre son requeridos'}, status=400)
+        
+        if Office.objects.filter(code=code).exists():
+            return JsonResponse({'success': False, 'error': 'El código ya existe'}, status=400)
+        
+        Office.objects.create(code=code, name=name)
+        return JsonResponse({'success': True, 'message': 'Oficina creada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def update_office(request, office_id):
+    try:
+        office = get_object_or_404(Office, id=office_id)
+        data = json.loads(request.body)
+        
+        office.code = data.get('code', office.code)
+        office.name = data.get('name', office.name)
+        office.save()
+        
+        return JsonResponse({'success': True, 'message': 'Oficina actualizada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST", "DELETE"])
+def delete_office(request, office_id):
+    try:
+        office = get_object_or_404(Office, id=office_id)
+        office.delete()
+        return JsonResponse({'success': True, 'message': 'Oficina eliminada exitosamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @login_required
 def logout_view(request):
