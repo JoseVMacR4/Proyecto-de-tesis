@@ -3,89 +3,91 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Settings Tabs Navigation
+    // ===== TABS NAVIGATION =====
     const tabs = document.querySelectorAll('.settings-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
     
     tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            // Remove active class from all tabs
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const tabName = this.getAttribute('data-tab');
+            
+            // Remove active class from all tabs and contents
             tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
             // Add active class to clicked tab
             this.classList.add('active');
             
-            // Here you could add logic to show/hide different settings sections
-            // based on the selected tab
-            console.log(`Settings tab clicked: ${this.textContent.trim()}`);
+            // Show corresponding content
+            const activeContent = document.querySelector(`[data-tab-content="${tabName}"]`);
+            if (activeContent) {
+                activeContent.classList.add('active');
+            }
+            
+            console.log(`Settings tab switched to: ${tabName}`);
         });
     });
 
-    // Toggle Switch Functionality
-    const toggleSwitches = document.querySelectorAll('.toggle-switch');
-    
-    toggleSwitches.forEach(toggle => {
-        toggle.addEventListener('click', function() {
-            this.classList.toggle('inactive');
-            
-            // Get the current state
-            const isActive = !this.classList.contains('inactive');
-            console.log(`Toggle switched: ${isActive ? 'ON' : 'OFF'}`);
-            
-            // Here you could add AJAX call to save the setting
-        });
-    });
-
-    // Edit Profile Button
+    // ===== PROFILE SECTION =====
     const editProfileBtn = document.querySelector('.btn-edit-profile');
-    
     if (editProfileBtn) {
         editProfileBtn.addEventListener('click', function() {
             console.log('Edit profile clicked');
-            // Here you could open a modal or redirect to edit profile page
+            // TODO: Open modal or redirect to edit profile page
         });
     }
 
-    // Add Bank Button
+    // ===== BANKS SECTION =====
     const addBankBtn = document.querySelector('.btn-add-bank');
-    
     if (addBankBtn) {
         addBankBtn.addEventListener('click', function() {
             console.log('Add bank clicked');
-            // Here you could open a modal to add a new bank
+            // TODO: Open modal to add new bank
         });
     }
 
-    // Bank Edit Buttons
     const bankEditBtns = document.querySelectorAll('.btn-bank-action');
-    
     bankEditBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const bankItem = this.closest('.bank-item');
             const bankName = bankItem.querySelector('.bank-name').textContent;
             console.log(`Edit bank: ${bankName}`);
-            // Here you could open a modal to edit the bank
+            // TODO: Open modal to edit bank
         });
     });
 
-    // View Permissions Button
-    const viewPermissionsBtn = document.querySelector('.btn-view-permissions');
-    
-    if (viewPermissionsBtn) {
-        viewPermissionsBtn.addEventListener('click', function() {
-            console.log('View permissions clicked');
-            // Here you could open a modal or redirect to permissions page
+    // ===== SECURITY SECTION =====
+    const toggleSwitches = document.querySelectorAll('.toggle-switch');
+    toggleSwitches.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+            this.classList.toggle('inactive');
+            
+            const isActive = !this.classList.contains('inactive');
+            console.log(`2FA Authentication: ${isActive ? 'ON' : 'OFF'}`);
+            // TODO: Send AJAX request to save setting
         });
-    }
+    });
 
-    // Change Password Link
     const changePasswordLink = document.querySelector('.security-link');
-    
     if (changePasswordLink) {
         changePasswordLink.addEventListener('click', function(e) {
             e.preventDefault();
             console.log('Change password clicked');
-            // Here you could open a modal to change password
+            // TODO: Open modal to change password
         });
     }
 
-    console.log('Settings Page Initialized');
+    // ===== PERMISSIONS SECTION =====
+    const viewPermissionsBtn = document.querySelector('.btn-view-permissions');
+    if (viewPermissionsBtn) {
+        viewPermissionsBtn.addEventListener('click', function() {
+            console.log('View permissions clicked');
+            // TODO: Open modal or redirect to permissions page
+        });
+    }
+
+    // ===== INITIALIZATION LOG =====
+    console.log('Settings Page Initialized Successfully');
 });

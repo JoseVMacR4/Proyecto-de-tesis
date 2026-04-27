@@ -8,17 +8,6 @@
     margin-bottom: 2.5rem;
 }
 
-.settings-header h1 {
-    font-size: 2.25rem;
-    letter-spacing: -0.02em;
-    margin-bottom: 0.5rem;
-}
-
-.settings-header p {
-    color: var(--outline);
-    font-weight: 500;
-}
-
 /* Navigation Tabs */
 .settings-tabs {
     display: flex;
@@ -464,6 +453,72 @@
     animation-delay: 0.3s;
 }
 
+/* Tab Content */
+.settings-content {
+    width: 100%;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.empty-state .material-symbols-outlined {
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    margin: 0.5rem 0;
+}
+
+/* Preferences Grid */
+.preferences-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.preference-item {
+    background-color: var(--surface-container-low);
+    padding: 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(193, 199, 210, 0.1);
+}
+
+.preference-item-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--outline);
+    margin-bottom: 0.75rem;
+}
+
+.preference-value-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-fixed);
+    color: var(--on-primary-fixed);
+    border-radius: 0.5rem;
+    font-weight: 700;
+    font-size: 0.875rem;
+}
+
 /* Responsive adjustments */
 @media (max-width: 767.98px) {
     .settings-header h1 {
@@ -474,6 +529,12 @@
         gap: 1rem;
         overflow-x: auto;
         white-space: nowrap;
+        padding-bottom: 0.5rem;
+    }
+    
+    .settings-tab {
+        padding-bottom: 0.75rem;
+        font-size: 0.75rem;
     }
     
     .preferences-strip {
@@ -484,5 +545,9 @@
     .preference-badges {
         width: 100%;
         justify-content: flex-start;
+    }
+    
+    .preferences-grid {
+        grid-template-columns: 1fr;
     }
 }

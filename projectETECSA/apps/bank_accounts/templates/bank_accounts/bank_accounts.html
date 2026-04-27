@@ -10,167 +10,214 @@
 
 {% block content %}
 
-        <!-- Header -->
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4 gap-3">
-            <div>
-                <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Estados de Cuenta</h1>
-                <p class="text-muted fw-medium mb-0 small">Gestión de cuentas bancarias y consulta de saldos disponibles.</p>
-            </div>
-            <button class="btn btn-primary-gradient d-flex align-items-center gap-2 fw-bold text-white" id="addAccountBtn">
-                <span class="material-symbols-outlined">add</span>
-                <span>Nueva Cuenta</span>
-            </button>
-        </div>
+    <!-- Header Section -->
+    <div class="bank-accounts-header">
+        <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Estados de Cuenta</h1>
+        <p class="text-muted fw-medium mb-0 small">Gestione la carga manual de extractos bancarios y verifique el historial de procesamiento de los activos financieros de la entidad.</p>
+    </div>
 
-        <!-- Stats Cards Row -->
-        <div class="row g-3 mb-4">
-            <div class="col-12 col-sm-6 col-lg-4">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Total Cuentas</p>
-                        <span class="material-symbols-outlined text-primary" style="font-size: 20px;">account_balance</span>
+    <!-- Upload and Guide Section -->
+    <div class="row g-4 upload-container">
+        <!-- Upload Zone -->
+        <div class="col-lg-8">
+            <div class="upload-zone">
+                <div class="upload-zone-content">
+                    <div class="upload-icon">
+                        <span class="material-symbols-outlined">upload_file</span>
                     </div>
-                    <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">8</h3>
-                    <p class="text-muted small mb-0">Cuentas activas</p>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-4">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Saldo Total</p>
-                        <span class="material-symbols-outlined text-primary" style="font-size: 20px;">wallet</span>
+                    <h3 class="upload-zone-title">Cargar Nuevo Extracto</h3>
+                    <p class="upload-zone-description">Arrastre sus archivos aquí o haga clic para buscar en su ordenador. Soporta .XML y .TXT.</p>
+                    <div class="upload-badges">
+                        <span class="upload-badge">Máx. 5MB</span>
                     </div>
-                    <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">$45.2M</h3>
-                    <p class="text-muted small mb-0">USD consolidado</p>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-4">
-                <div class="stat-card">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <p class="text-muted fw-bold text-uppercase mb-0" style="font-size: 0.75rem;">Última Actualización</p>
-                        <span class="material-symbols-outlined text-primary" style="font-size: 20px;">schedule</span>
-                    </div>
-                    <h3 class="font-manrope fw-extrabold text-primary mb-1" style="font-size: 1.75rem;">Hoy</h3>
-                    <p class="text-muted small mb-0">10:45 AM</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Accounts Table Section -->
-        <div class="table-container">
-            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center p-4 border-bottom" style="border-color: var(--surface-container-high) !important;">
-                <h5 class="font-manrope fw-bold text-primary mb-3 mb-sm-0">Cuentas Registradas</h5>
-                <div class="d-flex gap-2">
-                    <div class="position-relative d-none d-md-block">
-                        <span class="material-symbols-outlined search-icon" style="font-size: 18px;">search</span>
-                        <input type="text" class="form-control search-input form-control-sm" placeholder="Buscar cuenta..." style="width: 200px;" id="accountSearchInput">
-                    </div>
-                    <button class="btn btn-sm d-flex align-items-center gap-1 fw-bold text-secondary" style="background-color: var(--surface-container-low);">
-                        <span class="material-symbols-outlined" style="font-size: 18px;">filter_list</span> Filtrar
+                    <button class="btn-select-files" id="selectFilesBtn">
+                        <span class="material-symbols-outlined">add</span>
+                        Seleccionar Archivos
                     </button>
-                </div>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-custom mb-0">
-                    <thead>
-                        <tr>
-                            <th>Número de Cuenta</th>
-                            <th>Tipo</th>
-                            <th>Banco</th>
-                            <th>Moneda</th>
-                            <th>Saldo</th>
-                            <th>Estado</th>
-                            <th class="text-end">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****3456</td>
-                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(5, 150, 213, 0.1); color: #0596d5;">Corriente</span></td>
-                            <td>Banco Metropolitano</td>
-                            <td>USD</td>
-                            <td class="font-manrope fw-bold">$12,450.00</td>
-                            <td><span class="status-badge status-matched">Activa</span></td>
-                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
-                        </tr>
-                        <tr>
-                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****7890</td>
-                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(100, 45, 0, 0.1); color: #642d00;">Ahorro</span></td>
-                            <td>BANDEC</td>
-                            <td>USD</td>
-                            <td class="font-manrope fw-bold">$32,100.50</td>
-                            <td><span class="status-badge status-matched">Activa</span></td>
-                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
-                        </tr>
-                        <tr>
-                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****2341</td>
-                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(200, 100, 50, 0.1); color: #c86432;">Plazo</span></td>
-                            <td>BPA</td>
-                            <td>USD</td>
-                            <td class="font-manrope fw-bold">$500.00</td>
-                            <td><span class="status-badge status-pending">Inactiva</span></td>
-                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
-                        </tr>
-                        <tr>
-                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****5678</td>
-                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(5, 150, 213, 0.1); color: #0596d5;">Corriente</span></td>
-                            <td>Transfermóvil</td>
-                            <td>USD</td>
-                            <td class="font-manrope fw-bold">$1,200.00</td>
-                            <td><span class="status-badge status-matched">Activa</span></td>
-                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
-                        </tr>
-                        <tr>
-                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****9102</td>
-                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(5, 150, 213, 0.1); color: #0596d5;">Corriente</span></td>
-                            <td>Enzona</td>
-                            <td>USD</td>
-                            <td class="font-manrope fw-bold">$-250.75</td>
-                            <td><span class="status-badge status-flagged">Alerta</span></td>
-                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
-                        </tr>
-                        <tr>
-                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****3464</td>
-                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(100, 45, 0, 0.1); color: #642d00;">Ahorro</span></td>
-                            <td>Banco Popular</td>
-                            <td>USD</td>
-                            <td class="font-manrope fw-bold">$-1,050.00</td>
-                            <td><span class="status-badge status-flagged">Alerta</span></td>
-                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
-                        </tr>
-                        <tr>
-                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****7865</td>
-                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(5, 150, 213, 0.1); color: #0596d5;">Corriente</span></td>
-                            <td>ICBC Cuba</td>
-                            <td>USD</td>
-                            <td class="font-manrope fw-bold">$8,900.00</td>
-                            <td><span class="status-badge status-matched">Activa</span></td>
-                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
-                        </tr>
-                        <tr>
-                            <td class="font-monospace fw-bold text-primary" style="font-size: 0.85rem;">****4532</td>
-                            <td><span class="badge rounded-pill fw-bold" style="background-color: rgba(100, 45, 0, 0.1); color: #642d00;">Ahorro</span></td>
-                            <td>First Bank</td>
-                            <td>USD</td>
-                            <td class="font-manrope fw-bold">$-100.25</td>
-                            <td><span class="status-badge status-pending">Revisión</span></td>
-                            <td class="text-end"><button class="btn btn-link p-0 text-muted account-menu"><span class="material-symbols-outlined">more_vert</span></button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination Footer -->
-            <div class="p-3 d-flex flex-column flex-sm-row justify-content-between align-items-center gap-3" style="background-color: rgba(245, 243, 243, 0.5);">
-                <span class="small text-muted fw-medium">Mostrando 8 de 8 cuentas</span>
-                <div class="d-flex gap-1">
-                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center p-1 text-muted"><span class="material-symbols-outlined" style="font-size: 18px;">chevron_left</span></button>
-                    <button class="btn btn-sm btn-primary fw-bold px-2">1</button>
-                    <button class="btn btn-sm btn-light border d-flex align-items-center justify-content-center p-1 text-muted"><span class="material-symbols-outlined" style="font-size: 18px;">chevron_right</span></button>
+                    <input type="file" id="fileInput" multiple accept=".pdf,.csv,.xlsx,.xls">
                 </div>
             </div>
         </div>
+
+        <!-- Format Guide Sidebar -->
+        <div class="col-lg-4">
+            <div class="format-guide">
+                <div>
+                    <div class="format-guide-header">
+                        <span class="material-symbols-outlined">info</span>
+                    </div>
+                    <h3 class="format-guide-title">Guía de Formato</h3>
+                    <ul class="format-guide-list">
+                        <li class="format-guide-item">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            <span>El archivo debe contener la columna 'Referencia'.</span>
+                        </li>
+                        <li class="format-guide-item">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            <span>Las fechas deben estar en formato DD/MM/AAAA.</span>
+                        </li>
+                        <li class="format-guide-item">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            <span>Evite celdas combinadas en archivos XLSX.</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="last-processing">
+                    <p class="last-processing-label">Último Procesamiento</p>
+                    <div class="last-processing-time">
+                        <span class="time">14:32</span>
+                        <span class="date">Hoy, 24 Oct</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de Cargas Table Section -->
+    <div class="history-container">
+        <!-- Table Header -->
+        <div class="history-header">
+            <h5 class="history-title">Historial de Cargas</h5>
+            <div class="history-actions">
+                <button class="history-action-btn" title="Filtrar">
+                    <span class="material-symbols-outlined">filter_list</span>
+                </button>
+                <button class="history-action-btn" title="Descargar">
+                    <span class="material-symbols-outlined">download</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+            <table class="upload-history-table">
+                <thead>
+                    <tr>
+                        <th>Nombre del Archivo</th>
+                        <th>Banco</th>
+                        <th>Fecha de Carga</th>
+                        <th>Periodo</th>
+                        <th>Estado</th>
+                        <th style="text-align: right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="file-item">
+                                <div class="file-icon pdf">
+                                    <span class="material-symbols-outlined">picture_as_pdf</span>
+                                </div>
+                                <div class="file-info">
+                                    <p class="file-name">EXT_BPA_OCT_2023.pdf</p>
+                                    <p class="file-size">4.2 MB</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="bank-name">Banco Popular de Ahorro</td>
+                        <td class="upload-date">24/10/2023 09:15</td>
+                        <td class="upload-period">Octubre 2023</td>
+                        <td>
+                            <span class="status-badge completed">
+                                <span class="status-dot"></span>
+                                Completado
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn" title="Ver">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                </button>
+                                <button class="action-btn" title="Eliminar">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="file-item">
+                                <div class="file-icon csv">
+                                    <span class="material-symbols-outlined">csv</span>
+                                </div>
+                                <div class="file-info">
+                                    <p class="file-name">MOV_BANDEC_20231024.csv</p>
+                                    <p class="file-size">1.8 MB</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="bank-name">BANDEC</td>
+                        <td class="upload-date">24/10/2023 10:42</td>
+                        <td class="upload-period">Diario - Oct 24</td>
+                        <td>
+                            <span class="status-badge processing">
+                                <span class="status-dot"></span>
+                                Procesando
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn" title="Ver">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                </button>
+                                <button class="action-btn" title="Eliminar">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="file-item">
+                                <div class="file-icon xlsx">
+                                    <span class="material-symbols-outlined">table_chart</span>
+                                </div>
+                                <div class="file-info">
+                                    <p class="file-name">BMET_CENTRAL_Q3.xlsx</p>
+                                    <p class="file-size">12.5 MB</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="bank-name">Banco Metropolitano</td>
+                        <td class="upload-date">23/10/2023 16:20</td>
+                        <td class="upload-period">Trimestre 3 - 2023</td>
+                        <td>
+                            <span class="status-badge completed">
+                                <span class="status-dot"></span>
+                                Completado
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn" title="Ver">
+                                    <span class="material-symbols-outlined">visibility</span>
+                                </button>
+                                <button class="action-btn" title="Eliminar">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="pagination-footer">
+            <p class="pagination-info">Mostrando 3 de 148 archivos cargados</p>
+            <div class="pagination-controls">
+                <button class="pagination-btn" title="Página anterior">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <button class="pagination-btn active">1</button>
+                <button class="pagination-btn">2</button>
+                <button class="pagination-btn">3</button>
+                <button class="pagination-btn" title="Página siguiente">
+                    <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 

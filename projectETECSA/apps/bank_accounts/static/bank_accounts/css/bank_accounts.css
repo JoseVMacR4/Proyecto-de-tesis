@@ -1,110 +1,663 @@
 /*
-   Bank Accounts Section Styles
-   Consistent with dashboard institutional design
+   ETECSA Finanzas - Bank Accounts Styles
+   Basado en Material Design 3 - Institutional Authority
 */
 
-.stat-card {
-    background-color: var(--surface-container-lowest);
-    border: 1px solid var(--surface-container-high);
+:root {
+    --primary: #003e6f;
+    --primary-container: #005596;
+    --secondary: #466275;
+    --secondary-container: #c6e4fa;
+    --tertiary: #642d00;
+    --tertiary-container: #ffdbc8;
+    --surface: #fbf9f8;
+    --surface-container: #efeded;
+    --surface-container-low: #f5f3f3;
+    --surface-container-high: #e9e8e7;
+    --surface-container-lowest: #ffffff;
+    --on-surface: #1b1c1c;
+    --on-surface-variant: #414750;
+    --outline: #727781;
+    --outline-variant: #c1c7d2;
+    --error: #ba1a1a;
+    --error-container: #ffdad6;
+    --success: #21a038;
+    --success-container: #d1f2d9;
+    
+    /* Status Colors */
+    --status-matched-bg: #c6e4fa;
+    --status-matched-text: #004881;
+    --status-pending-bg: #ffdbc8;
+    --status-pending-text: #743500;
+    --status-flagged-bg: #ffdad6;
+    --status-flagged-text: #93000a;
+}
+
+/* ===== Header Section ===== */
+.bank-accounts-header {
+    margin-bottom: 2.5rem;
+}
+
+/* ===== Upload Zone ===== */
+.upload-container {
+    margin-bottom: 2.5rem;
+}
+
+.upload-zone {
+    border: 2px dashed var(--outline-variant);
     border-radius: 0.75rem;
-    padding: 1.25rem;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    padding: 1px;
+    transition: all 0.3s ease;
+    background-color: var(--surface);
+    height: 100%;
+    display: flex;
 }
 
-.stat-card:hover {
-    border-color: var(--primary-container);
-    box-shadow: 0 4px 12px rgba(0, 85, 150, 0.08);
-    transform: translateY(-2px);
+.upload-zone:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 62, 111, 0.1);
+    background-color: rgba(211, 228, 255, 0.1);
 }
 
-.stat-card p {
+.upload-zone-content {
+    background-color: var(--surface-container-lowest);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    text-align: center;
+    cursor: pointer;
+    box-sizing: border-box;
+}
+
+.upload-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: #d3e4ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    transition: transform 0.3s ease;
+}
+
+.upload-zone:hover .upload-icon {
+    transform: scale(1.1);
+}
+
+.upload-icon span {
+    font-size: 2rem !important;
+    color: var(--primary);
+}
+
+.upload-zone-title {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: var(--primary);
+    margin-bottom: 0.75rem;
+}
+
+.upload-zone-description {
+    color: var(--on-surface-variant);
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    max-width: 18rem;
+}
+
+.upload-badges {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    justify-content: center;
+}
+
+.upload-badge {
+    background-color: var(--surface-container);
+    color: var(--outline);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
     letter-spacing: 0.05em;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.25rem;
 }
 
-/* Account Status Badges */
-.status-badge {
-    display: inline-block;
-    padding: 0.35rem 0.75rem;
-    border-radius: 50rem;
+.btn-select-files {
+    background: linear-gradient(135deg, var(--primary-container) 0%, var(--primary) 100%);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem 2rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.25s ease;
+    box-shadow: 0 8px 18px rgba(0, 62, 111, 0.14);
+    text-decoration: none;
+}
+
+.btn-select-files:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(0, 62, 111, 0.2);
+    color: #ffffff !important;
+}
+
+.btn-select-files:active {
+    transform: scale(0.98);
+}
+
+.btn-select-files span {
+    font-size: 1rem !important;
+}
+
+#fileInput {
+    display: none;
+}
+
+/* ===== Format Guide Panel ===== */
+.format-guide {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+    color: #ffffff;
+    border-radius: 0.75rem;
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.format-guide-header {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.format-guide-header span {
+    opacity: 0.6;
+}
+
+.format-guide-title {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.format-guide-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.format-guide-item {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    font-size: 0.95rem;
+    align-items: flex-start;
+}
+
+.format-guide-item:last-child {
+    margin-bottom: 0;
+}
+
+.format-guide-item span:first-child {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+    font-size: 1rem !important;
+    color: #a4caff;
+}
+
+.format-guide-item span:last-child {
+    flex: 1;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.last-processing {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    position: relative;
+    z-index: 10;
+}
+
+.last-processing-label {
     font-size: 0.7rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    color: #a4caff;
+    margin-bottom: 0.5rem;
 }
 
-.status-matched {
-    background-color: var(--status-matched-bg);
-    color: var(--status-matched-text);
+.last-processing-time {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
 }
 
-.status-pending {
-    background-color: var(--status-pending-bg);
-    color: var(--status-pending-text);
+.last-processing-time .time {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 1.75rem;
 }
 
-.status-flagged {
-    background-color: var(--status-flagged-bg);
-    color: var(--status-flagged-text);
+.last-processing-time .date {
+    font-size: 0.8rem;
+    color: #a4caff;
+    margin-bottom: 0.25rem;
 }
 
-/* Account Row Hover Effects */
-.table-custom tbody tr {
+.format-guide::after {
+    content: '';
+    position: absolute;
+    bottom: -40px;
+    right: -40px;
+    width: 160px;
+    height: 160px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    filter: blur(60px);
+    z-index: 0;
+}
+
+/* ===== History Table Section ===== */
+.history-container {
+    background-color: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: rgba(245, 243, 243, 0.5);
+    border-bottom: 1px solid var(--surface-container-high);
+}
+
+.history-title {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin: 0;
+}
+
+.history-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.history-action-btn {
+    background-color: transparent;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--outline);
+    transition: all 0.2s ease;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.history-action-btn:hover {
+    background-color: var(--surface-container-high);
+    color: var(--on-surface);
+}
+
+.history-action-btn span {
+    font-size: 1.25rem !important;
+}
+
+/* ===== Upload History Table ===== */
+.upload-history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.upload-history-table thead {
+    background-color: rgba(245, 243, 243, 0.5);
+}
+
+.upload-history-table thead th {
+    padding: 1rem 1.5rem;
+    text-align: left;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--outline);
+    border: none;
+    background-color: transparent;
+}
+
+.upload-history-table tbody tr {
+    border-bottom: 1px solid var(--surface-container);
     transition: background-color 0.2s ease;
 }
 
-.table-custom tbody tr:hover {
-    background-color: rgba(0, 85, 150, 0.02);
+.upload-history-table tbody tr:hover {
+    background-color: rgba(245, 243, 243, 0.5);
 }
 
-/* Account Menu Button */
-.account-menu {
+.upload-history-table tbody tr:hover .action-buttons {
+    opacity: 1;
+}
+
+.upload-history-table tbody td {
+    padding: 1rem 1.5rem;
+    font-size: 0.9rem;
+    color: var(--on-surface);
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.file-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    flex-shrink: 0;
+    font-size: 1.25rem !important;
+}
+
+.file-icon.pdf {
+    background-color: #fee;
+    color: #dc3545;
+}
+
+.file-icon.csv {
+    background-color: #e8f5e9;
+    color: #28a745;
+}
+
+.file-icon.xlsx {
+    background-color: #e3f2fd;
+    color: #0c63e4;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-name {
+    font-weight: 600;
+    color: var(--on-surface);
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.file-size {
+    font-size: 0.8rem;
+    color: var(--on-surface-variant);
+    margin: 0;
+}
+
+.bank-name {
+    color: var(--on-surface-variant);
+    font-size: 0.9rem;
+}
+
+.upload-date {
+    color: var(--on-surface-variant);
+    font-size: 0.9rem;
+}
+
+.upload-period {
+    color: var(--on-surface-variant);
+    font-size: 0.9rem;
+}
+
+/* ===== Status Badges ===== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.status-badge.completed {
+    background-color: var(--secondary-container);
+    color: var(--status-matched-text);
+}
+
+.status-badge.processing {
+    background-color: #cfe9ff;
+    color: #0c63e4;
+}
+
+.status-badge .status-dot {
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.status-badge.completed .status-dot {
+    background-color: #198754;
+}
+
+.status-badge.processing .status-dot {
+    background-color: #0c63e4;
+    animation: pulse 1.5s infinite;
+}
+
+/* ===== Action Buttons ===== */
+.action-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
     opacity: 0;
     transition: opacity 0.2s ease;
 }
 
-.table-custom tbody tr:hover .account-menu {
-    opacity: 1;
+.action-btn {
+    background-color: transparent;
+    border: none;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--outline);
+    transition: all 0.2s ease;
+    border-radius: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Add Account Button */
-#addAccountBtn {
-    border-radius: 1rem;
-    box-shadow: 0 8px 18px rgba(0, 62, 111, 0.14);
-    transition: all 0.25s ease;
+.action-btn:hover {
+    background-color: var(--surface-container-high);
+    color: var(--on-surface);
 }
 
-#addAccountBtn:hover {
-    filter: brightness(1.05);
-    transform: translateY(-1px);
-    box-shadow: 0 12px 24px rgba(0, 62, 111, 0.2);
+.action-btn span {
+    font-size: 1.25rem !important;
 }
 
-/* Search and Filter */
-#accountSearchInput {
-    background-color: var(--surface-container-low);
-    border: 1px solid var(--surface-container-high);
+/* ===== Pagination ===== */
+.pagination-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: rgba(245, 243, 243, 0.5);
+    border-top: 1px solid var(--surface-container-high);
+}
+
+@media (min-width: 576px) {
+    .pagination-footer {
+        flex-direction: row;
+        gap: 0;
+    }
+}
+
+.pagination-info {
+    font-size: 0.8rem;
+    color: var(--on-surface-variant);
+    font-weight: 500;
+    margin: 0;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.pagination-btn {
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--outline-variant);
+    border-radius: 0.25rem;
+    background-color: var(--surface-container-lowest);
+    color: var(--outline);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.8rem;
     transition: all 0.2s ease;
 }
 
-#accountSearchInput:focus {
-    border-color: var(--primary-container);
-    box-shadow: 0 0 0 2px rgba(0, 85, 150, 0.1);
-    outline: none;
+.pagination-btn:hover:not(:disabled) {
+    background-color: var(--surface-container-low);
+    color: var(--on-surface);
 }
 
-/* Responsive adjustments */
+.pagination-btn.active {
+    background-color: var(--primary);
+    color: #ffffff;
+    border-color: var(--primary);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-btn span {
+    font-size: 1rem !important;
+}
+
+/* ===== Animations ===== */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 991px) {
+    .upload-container {
+        flex-direction: column;
+    }
+
+    .upload-zone, .format-guide  {
+        height: auto;
+    }
+}
+
 @media (max-width: 768px) {
-    .stat-card {
-        margin-bottom: 0.5rem;
+    .bank-accounts-header h1 {
+        font-size: 1.75rem;
     }
 
-    #addAccountBtn span:last-child {
-        display: none;
+    .upload-zone-content {
+        min-height: 300px;
+        padding: 1.5rem;
     }
 
-    #addAccountBtn {
-        min-width: auto;
-        width: auto;
+    .upload-icon {
+        width: 3rem;
+        height: 3rem;
+    }
+
+    .upload-icon span {
+        font-size: 1.5rem !important;
+    }
+
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .history-actions {
+        align-self: flex-end;
+    }
+
+    .upload-history-table {
+        font-size: 0.85rem;
+    }
+
+    .upload-history-table thead th {
+        padding: 0.75rem;
+        font-size: 0.65rem;
+    }
+
+    .upload-history-table tbody td {
+        padding: 0.75rem;
+    }
+
+    .file-item {
+        gap: 0.5rem;
+    }
+
+    .file-icon {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    .action-buttons {
+        opacity: 1;
+    }
+
+    .pagination-footer {
+        flex-direction: column;
     }
 }
