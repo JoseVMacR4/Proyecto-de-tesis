@@ -96,7 +96,7 @@ function handleFileUpload(files) {
     console.log(`Files selected: ${files.length}`);
     
     const allowedExtensions = ['pdf', 'csv', 'xlsx', 'xls'];
-    const maxFileSize = 25 * 1024 * 1024; // 25MB
+    const maxFileSize = 5 * 1024 * 1024; // 5MB (según el template)
     const validFiles = [];
     const errors = [];
 
@@ -109,7 +109,7 @@ function handleFileUpload(files) {
         }
 
         if (file.size > maxFileSize) {
-            errors.push(`${file.name}: El archivo excede 25MB.`);
+            errors.push(`${file.name}: El archivo excede 5MB.`);
             continue;
         }
 
@@ -117,19 +117,71 @@ function handleFileUpload(files) {
     }
 
     if (errors.length > 0) {
-        alert('Errores en los archivos:\n\n' + errors.join('\n'));
+        showNotification('Errores en los archivos:\n\n' + errors.join('\n'), 'error');
+        return;
     }
 
     if (validFiles.length > 0) {
-        // Here you would typically upload the files to the server
-        console.log('Valid files to upload:', validFiles);
-        
-        // Show success message
-        alert(`${validFiles.length} archivo(s) listo(s) para cargar.`);
-        
-        // Example: You could call an upload function here
-        // uploadFilesToServer(validFiles);
+        // Upload each file to the server
+        validFiles.forEach(file => {
+            uploadFileToServer(file);
+        });
     }
+}
+
+/**
+ * Upload file to server via AJAX
+ */
+function uploadFileToServer(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Show loading state
+    showNotification(`Cargando archivo: ${file.name}`, 'info');
+
+    fetch('/bank-accounts/api/upload/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showNotification(data.message, 'success');
+            // Optionally reload the page or update the table
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else if (data.status === 'warning') {
+            showNotification(data.message, 'warning');
+        } else {
+            showNotification(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error uploading file:', error);
+        showNotification('Error al cargar el archivo. Por favor intente nuevamente.', 'error');
+    });
+}
+
+/**
+ * Get CSRF token from cookies
+ */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 
 /**
@@ -148,12 +200,12 @@ function initializeHistoryActions() {
 
             if (isViewBtn) {
                 console.log('Ver archivo:', fileName);
-                alert(`Ver detalles de: ${fileName}`);
+                showNotification(`Ver detalles de: ${fileName}`, 'info');
             } else {
                 console.log('Eliminar archivo:', fileName);
                 if (confirm(`¿Está seguro que desea eliminar ${fileName}?`)) {
                     row.style.opacity = '0.5';
-                    console.log('Archivo eliminado:', fileName);
+                    showNotification('Archivo eliminado exitosamente', 'success');
                     setTimeout(() => {
                         row.remove();
                     }, 300);
@@ -177,13 +229,13 @@ function initializePagination() {
 
             if (isNumber) {
                 console.log('Ir a página:', btn.textContent);
-                alert(`Ir a página ${btn.textContent}`);
+                showNotification(`Ir a página ${btn.textContent}`, 'info');
             } else if (icon.includes('chevron_left')) {
                 console.log('Página anterior');
-                alert('Ir a página anterior');
+                showNotification('Ir a página anterior', 'info');
             } else if (icon.includes('chevron_right')) {
                 console.log('Página siguiente');
-                alert('Ir a página siguiente');
+                showNotification('Ir a página siguiente', 'info');
             }
         });
     });
@@ -197,4 +249,41 @@ function formatCurrency(value) {
         style: 'currency',
         currency: 'USD'
     }).format(value);
+}
+
+/**
+ * Show notification using the existing notification system
+ */
+function showNotification(message, type = 'info') {
+    const notificationContainer = document.getElementById('notifications');
+
+    if (notificationContainer) {
+        const alertClass = {
+            'success': 'alert-success',
+            'error': 'alert-danger',
+            'warning': 'alert-warning',
+            'info': 'alert-info'
+        }[type] || 'alert-info';
+
+        const alertHTML = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="animation: slideIn 0.3s ease;">
+                <strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+
+        notificationContainer.innerHTML += alertHTML;
+
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+            const alerts = notificationContainer.querySelectorAll('.alert');
+            if (alerts.length > 0) {
+                const lastAlert = alerts[alerts.length - 1];
+                lastAlert.remove();
+            }
+        }, 5000);
+    } else {
+        // Fallback: alert
+        alert(`[${type.toUpperCase()}] ${message}`);
+    }
 }
