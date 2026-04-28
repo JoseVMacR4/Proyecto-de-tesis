@@ -1,11 +1,25 @@
 import uuid
-
+import os
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 
+def bank_statement_file_path(instance, filename):
+    """
+    Generate file path for bank statements.
+    Structure: estados_cuentas/{bank_id}/{bank_id}_{date_ddmmyyyy}_{internal_id}.{ext}
+    """
+    ext = os.path.splitext(filename)[1][1:]  # Get extension without dot
+    date_str = instance.statement_date.strftime('%d%m%Y')
+    bank_id = str(instance.bank_account.id)[:8]  # Use first 8 chars of UUID
+    internal_id = str(instance.internal_id) if instance.internal_id else str(instance.id)[:8]
+    new_filename = f"{bank_id}_{date_str}_{internal_id}.{ext}"
+    return os.path.join('estados_cuentas', bank_id, new_filename)
+
+
 class BankStatement(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    internal_id = models.CharField(max_length=50, unique=True, editable=False)
     bank_account = models.ForeignKey(
         'bank_accounts.BankAccount',
         on_delete=models.PROTECT,
@@ -13,6 +27,8 @@ class BankStatement(models.Model):
     )
     file_name = models.CharField(max_length=255)
     file_extension = models.CharField(max_length=10)
+    file_path = models.CharField(max_length=500)
+    file_size = models.BigIntegerField(help_text="File size in bytes")
     statement_date = models.DateField()
     period_start = models.DateField()
     period_end = models.DateField()
@@ -22,9 +38,19 @@ class BankStatement(models.Model):
     reserved_balance = models.DecimalField(max_digits=20, decimal_places=4)
     available_balance = models.DecimalField(max_digits=20, decimal_places=4)
     entry_count = models.IntegerField()
+    status = models.CharField(
+        max_length=50,
+        default='uploaded',
+        choices=[
+            ('uploaded', 'Subido'),
+            ('processing', 'Procesando'),
+            ('completed', 'Completado'),
+            ('error', 'Error'),
+        ]
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
         verbose_name = _('Bank Statement')
         verbose_name_plural = _('Bank Statements')
@@ -32,10 +58,24 @@ class BankStatement(models.Model):
         indexes = [
             models.Index(fields=['statement_date']),
             models.Index(fields=['bank_account']),
+            models.Index(fields=['status']),
+            models.Index(fields=['bank_account', 'statement_date'], name='bank_acc_stmt_date_idx'),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['bank_account', 'statement_date'],
+                name='unique_bank_statement_per_day'
+            )
         ]
 
     def __str__(self):
-        return f"{self.bank_account.code} - {self.statement_date.isoformat()}"
+        return f"{self.bank_account.code} - {self.statement_date.isoformat()} - {self.internal_id}"
+    
+    def save(self, *args, **kwargs):
+        if not self.internal_id:
+            # Generate internal ID from UUID (first 8 characters)
+            self.internal_id = str(self.id)[:8].upper()
+        super().save(*args, **kwargs)
 
 
 class BankStatementTransaction(models.Model):
@@ -61,7 +101,7 @@ class BankStatementTransaction(models.Model):
     date = models.DateField(editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
+    
     class Meta:
         verbose_name = _('Bank Statement Transaction')
         verbose_name_plural = _('Bank Statement Transactions')

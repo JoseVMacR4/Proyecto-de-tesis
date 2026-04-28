@@ -13,7 +13,7 @@
     <!-- Header Section -->
     <div class="bank-accounts-header">
         <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Estados de Cuenta</h1>
-        <p class="text-muted fw-medium mb-0 small">Gestione la carga manual de extractos bancarios y verifique el historial de procesamiento de los activos financieros de la entidad.</p>
+        <p class="text-muted fw-medium small mb-0">Gestione la carga manual de extractos bancarios y verifique el historial de procesamiento de los activos financieros de la entidad.</p>
     </div>
 
     <!-- Upload and Guide Section -->
@@ -29,12 +29,19 @@
                     <p class="upload-zone-description">Arrastre sus archivos aquí o haga clic para buscar en su ordenador. Soporta .XML y .TXT.</p>
                     <div class="upload-badges">
                         <span class="upload-badge">Máx. 5MB</span>
+                        <span class="upload-badge">XML/TXT</span>
                     </div>
                     <button class="btn-select-files" id="selectFilesBtn">
                         <span class="material-symbols-outlined">add</span>
                         Seleccionar Archivos
                     </button>
-                    <input type="file" id="fileInput" multiple accept=".pdf,.csv,.xlsx,.xls">
+                    <input type="file" id="fileInput" multiple accept=".xml,.txt">
+                </div>
+                
+                <!-- Upload Progress/Status -->
+                <div id="uploadStatus" class="upload-status" style="display: none;">
+                    <div class="status-message"></div>
+                    <div class="file-list"></div>
                 </div>
             </div>
         </div>
@@ -58,15 +65,19 @@
                         </li>
                         <li class="format-guide-item">
                             <span class="material-symbols-outlined">check_circle</span>
-                            <span>Evite celdas combinadas en archivos XLSX.</span>
+                            <span>Solo se permiten archivos de un único día (no rangos).</span>
+                        </li>
+                        <li class="format-guide-item">
+                            <span class="material-symbols-outlined">check_circle</span>
+                            <span>Formatos soportados: XML y TXT.</span>
                         </li>
                     </ul>
                 </div>
                 <div class="last-processing">
                     <p class="last-processing-label">Último Procesamiento</p>
                     <div class="last-processing-time">
-                        <span class="time">14:32</span>
-                        <span class="date">Hoy, 24 Oct</span>
+                        <span class="time" id="lastProcessingTime">--:--</span>
+                        <span class="date" id="lastProcessingDate">--</span>
                     </div>
                 </div>
             </div>
@@ -75,14 +86,35 @@
 
     <!-- Historial de Cargas Table Section -->
     <div class="history-container">
-        <!-- Table Header -->
+        <!-- Table Header with Filters -->
         <div class="history-header">
             <h5 class="history-title">Historial de Cargas</h5>
             <div class="history-actions">
-                <button class="history-action-btn" title="Filtrar">
+                <div class="filter-group" id="filterGroup" style="display: none;">
+                    <select id="filterBank" class="filter-select">
+                        <option value="">Todos los Bancos</option>
+                    </select>
+                    <input type="text" id="filterDateFrom" class="filter-input" placeholder="Desde (DD/MM/AAAA)">
+                    <input type="text" id="filterDateTo" class="filter-input" placeholder="Hasta (DD/MM/AAAA)">
+                    <select id="filterFormat" class="filter-select">
+                        <option value="">Todos los Formatos</option>
+                        <option value="xml">XML</option>
+                        <option value="txt">TXT</option>
+                    </select>
+                    <select id="filterStatus" class="filter-select">
+                        <option value="">Todos los Estados</option>
+                        <option value="uploaded">Subido</option>
+                        <option value="processing">Procesando</option>
+                        <option value="completed">Completado</option>
+                        <option value="error">Error</option>
+                    </select>
+                    <button class="btn-apply-filters" id="applyFiltersBtn">Filtrar</button>
+                    <button class="btn-clear-filters" id="clearFiltersBtn">Limpiar</button>
+                </div>
+                <button class="history-action-btn" id="toggleFiltersBtn" title="Filtrar">
                     <span class="material-symbols-outlined">filter_list</span>
                 </button>
-                <button class="history-action-btn" title="Descargar">
+                <button class="history-action-btn" id="exportBtn" title="Descargar">
                     <span class="material-symbols-outlined">download</span>
                 </button>
             </div>
@@ -93,110 +125,19 @@
             <table class="upload-history-table">
                 <thead>
                     <tr>
-                        <th>Nombre del Archivo</th>
+                        <th>ID Interno</th>
+                        <th>Archivo</th>
                         <th>Banco</th>
-                        <th>Fecha de Carga</th>
-                        <th>Periodo</th>
+                        <th>Fecha</th>
+                        <th>Formato</th>
+                        <th>Tamaño</th>
                         <th>Estado</th>
                         <th style="text-align: right;">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="historyTableBody">
                     <tr>
-                        <td>
-                            <div class="file-item">
-                                <div class="file-icon pdf">
-                                    <span class="material-symbols-outlined">picture_as_pdf</span>
-                                </div>
-                                <div class="file-info">
-                                    <p class="file-name">EXT_BPA_OCT_2023.pdf</p>
-                                    <p class="file-size">4.2 MB</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="bank-name">Banco Popular de Ahorro</td>
-                        <td class="upload-date">24/10/2023 09:15</td>
-                        <td class="upload-period">Octubre 2023</td>
-                        <td>
-                            <span class="status-badge completed">
-                                <span class="status-dot"></span>
-                                Completado
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn" title="Ver">
-                                    <span class="material-symbols-outlined">visibility</span>
-                                </button>
-                                <button class="action-btn" title="Eliminar">
-                                    <span class="material-symbols-outlined">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="file-item">
-                                <div class="file-icon csv">
-                                    <span class="material-symbols-outlined">csv</span>
-                                </div>
-                                <div class="file-info">
-                                    <p class="file-name">MOV_BANDEC_20231024.csv</p>
-                                    <p class="file-size">1.8 MB</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="bank-name">BANDEC</td>
-                        <td class="upload-date">24/10/2023 10:42</td>
-                        <td class="upload-period">Diario - Oct 24</td>
-                        <td>
-                            <span class="status-badge processing">
-                                <span class="status-dot"></span>
-                                Procesando
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn" title="Ver">
-                                    <span class="material-symbols-outlined">visibility</span>
-                                </button>
-                                <button class="action-btn" title="Eliminar">
-                                    <span class="material-symbols-outlined">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="file-item">
-                                <div class="file-icon xlsx">
-                                    <span class="material-symbols-outlined">table_chart</span>
-                                </div>
-                                <div class="file-info">
-                                    <p class="file-name">BMET_CENTRAL_Q3.xlsx</p>
-                                    <p class="file-size">12.5 MB</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="bank-name">Banco Metropolitano</td>
-                        <td class="upload-date">23/10/2023 16:20</td>
-                        <td class="upload-period">Trimestre 3 - 2023</td>
-                        <td>
-                            <span class="status-badge completed">
-                                <span class="status-dot"></span>
-                                Completado
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn" title="Ver">
-                                    <span class="material-symbols-outlined">visibility</span>
-                                </button>
-                                <button class="action-btn" title="Eliminar">
-                                    <span class="material-symbols-outlined">delete</span>
-                                </button>
-                            </div>
-                        </td>
+                        <td colspan="8" class="text-center text-muted">Cargando historial...</td>
                     </tr>
                 </tbody>
             </table>
@@ -204,17 +145,9 @@
 
         <!-- Pagination Footer -->
         <div class="pagination-footer">
-            <p class="pagination-info">Mostrando 3 de 148 archivos cargados</p>
-            <div class="pagination-controls">
-                <button class="pagination-btn" title="Página anterior">
-                    <span class="material-symbols-outlined">chevron_left</span>
-                </button>
-                <button class="pagination-btn active">1</button>
-                <button class="pagination-btn">2</button>
-                <button class="pagination-btn">3</button>
-                <button class="pagination-btn" title="Página siguiente">
-                    <span class="material-symbols-outlined">chevron_right</span>
-                </button>
+            <p class="pagination-info" id="paginationInfo">Mostrando 0 de 0 archivos cargados</p>
+            <div class="pagination-controls" id="paginationControls">
+                <!-- Pagination buttons will be inserted here -->
             </div>
         </div>
     </div>
