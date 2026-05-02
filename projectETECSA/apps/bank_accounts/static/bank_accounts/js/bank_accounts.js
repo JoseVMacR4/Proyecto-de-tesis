@@ -1,200 +1,747 @@
 /**
- * Bank Accounts Page JavaScript
- * Handles interactions for file uploads and account statements management
+ * Lógica completa para la interfaz de carga y manejo de extractos
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Bank Accounts Module Initialized');
-
-    // Initialize event listeners
     initializeFileUpload();
     initializeHistoryActions();
-    initializeDragAndDrop();
     initializePagination();
 });
 
 /**
- * File Upload Handling
+ * Configura la zona de carga (Drag & Drop + Click)
  */
 function initializeFileUpload() {
-    const selectFilesBtn = document.getElementById('selectFilesBtn');
+    const dropZone = document.querySelector('.upload-zone');
     const fileInput = document.getElementById('fileInput');
+    const selectBtn = document.getElementById('selectFilesBtn');
 
-    if (!selectFilesBtn || !fileInput) return;
+    if (!dropZone || !fileInput) return;
 
-    // Click to select files
-    selectFilesBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        fileInput.click();
+    // Evitar comportamientos por defecto del navegador
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
+        document.body.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
     });
 
-    // Handle file selection
-    fileInput.addEventListener('change', function(e) {
-        const files = e.target.files;
-        if (files.length > 0) {
-            handleFileUpload(files);
+    // Efectos visuales al arrastrar
+    dropZone.addEventListener('dragover', () => {
+        dropZone.style.borderColor = 'var(--primary)';
+        dropZone.style.backgroundColor = 'rgba(211, 228, 255, 0.1)';
+    });
+    dropZone.addEventListener('dragleave drop', () => {
+        dropZone.style.borderColor = 'var(--outline-variant)';
+        dropZone.style.backgroundColor = '';
+    });
+
+    // Manejo de eventos
+    dropZone.addEventListener('drop', e => handleFiles(e.dataTransfer.files));
+    dropZone.addEventListener('click', e => {
+        if (e.target === fileInput || e.target.closest('#selectFilesBtn')) return;
+        fileInput.click();
+    });
+    selectBtn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); fileInput.click(); });
+    fileInput.addEventListener('change', e => handleFiles(e.target.files));
+}
+
+/**
+ * Función principal: Validación y envío al servidor
+ */
+function handleFiles(files) {
+    if (!files || files.length === 0) return;
+
+    const accountSelect = document.getElementById('bankAccountSelect');
+    const accountId = accountSelect?.value || '';
+
+    if (!accountSelect) {
+        displayNotification('Por favor, implemente un selector de cuenta bancaria en el template para asociar el extracto.', 'warning');
+        return;
+    }
+    if (!accountId) {
+        displayNotification('Seleccione una cuenta bancaria antes de subir el extracto.', 'warning');
+        return;
+    }
+
+    const selectedFiles = Array.from(files);
+    if (selectedFiles.length > 1) {
+        displayNotification('Solo puede subir un archivo a la vez.', 'warning');
+        return;
+    }
+
+    const file = selectedFiles[0];
+    const extension = file.name.split('.').pop().toLowerCase();
+    const allowed = ['txt'];
+
+    if (!allowed.includes(extension)) {
+        displayNotification(`Formato inválido para: ${file.name}. Solo se permiten archivos .TXT`, 'danger');
+        return;
+    }
+
+    uploadFile(file, accountId).then(reload => {
+        document.getElementById('fileInput').value = '';
+        if (reload) {
+            window.location.reload();
         }
     });
 }
 
 /**
- * Drag and Drop functionality
+ * Muestra notificaciones en la página usando Bootstrap-style alerts
  */
-function initializeDragAndDrop() {
-    const uploadZone = document.querySelector('.upload-zone');
-    const fileInput = document.getElementById('fileInput');
+function displayNotification(message, type = 'info') {
+    const container = document.getElementById('bankUploadNotifications');
+    if (!container) {
+        alert(message);
+        return;
+    }
 
-    if (!uploadZone) return;
+    const alertType = {
+        'success': 'alert-success',
+        'warning': 'alert-warning',
+        'danger': 'alert-danger',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
 
-    // Prevent default drag behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
-    });
+    const alert = document.createElement('div');
+    alert.className = `alert ${alertType} alert-dismissible fade show`;
+    alert.role = 'alert';
+    alert.innerHTML = `
+        <div>${message}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
 
-    // Highlight drop area when item is dragged over it
-    ['dragenter', 'dragover'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, () => {
-            uploadZone.style.borderColor = 'var(--primary)';
-            uploadZone.style.backgroundColor = 'rgba(211, 228, 255, 0.1)';
-        }, false);
-    });
+    container.prepend(alert);
 
-    ['dragleave', 'drop'].forEach(eventName => {
-        uploadZone.addEventListener(eventName, () => {
-            uploadZone.style.borderColor = 'var(--outline-variant)';
-            uploadZone.style.backgroundColor = '';
-        }, false);
-    });
-
-    // Handle dropped files
-    uploadZone.addEventListener('drop', function(e) {
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            handleFileUpload(files);
-        }
-    }, false);
-
-    // Make the whole zone clickable (but not the button)
-    uploadZone.addEventListener('click', function(e) {
-        if (e.target.closest('#selectFilesBtn')) {
-            return;
-        }
-        fileInput.click();
-    });
-}
-
-function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
+    // Auto-cerrar después de 5 segundos
+    const timeout = type === 'danger' ? 6000 : 5000;
+    setTimeout(() => {
+        alert.classList.remove('show');
+        setTimeout(() => alert.remove(), 300);
+    }, timeout);
 }
 
 /**
- * Handle file upload
+ * Envía un archivo individual al backend de Django
  */
-function handleFileUpload(files) {
-    console.log(`Files selected: ${files.length}`);
+function getCurrentPageNumber() {
+    const params = new URLSearchParams(window.location.search);
+    const page = parseInt(params.get('page') || '1', 10);
+    return Number.isNaN(page) ? 1 : page;
+}
+
+function getCurrentTableRowCount() {
+    const tbody = document.querySelector('.upload-history-table tbody');
+    if (!tbody) return 0;
+
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    return rows.filter(row => !row.querySelector('td[colspan="7"]')).length;
+}
+
+function shouldReloadAfterUpload() {
+    const currentPage = getCurrentPageNumber();
+    const currentRows = getCurrentTableRowCount();
+    return currentPage !== 1 || currentRows >= 5;
+}
+
+function uploadFile(file, accountId) {
+    const btn = document.getElementById('selectFilesBtn');
+    const originalBtnContent = btn.innerHTML;
     
-    const allowedExtensions = ['pdf', 'csv', 'xlsx', 'xls'];
-    const maxFileSize = 25 * 1024 * 1024; // 25MB
-    const validFiles = [];
-    const errors = [];
+    // UI Loading
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined" style="animation:spin 1s linear infinite">sync</span> Procesando...';
 
-    for (let file of files) {
-        const ext = file.name.split('.').pop().toLowerCase();
-        
-        if (!allowedExtensions.includes(ext)) {
-            errors.push(`${file.name}: Formato no permitido. Use PDF, CSV o XLSX.`);
-            continue;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('account_id', accountId);
+
+    const uploadUrl = '/bank-accounts/api/upload-statement/';
+    return fetch(uploadUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'X-CSRFToken': getCSRFToken() },
+        body: formData
+    })
+    .then(async res => {
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`HTTP ${res.status}: ${errorText}`);
         }
-
-        if (file.size > maxFileSize) {
-            errors.push(`${file.name}: El archivo excede 25MB.`);
-            continue;
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            const reload = shouldReloadAfterUpload();
+            if (reload) {
+                displayNotification('Extracto cargado. Se actualizará la lista para mantener la paginación.', 'success');
+            } else {
+                addHistoryRow(data.data);
+                displayNotification(data.message, 'success');
+            }
+            return reload;
+        } else {
+            displayNotification(`Error en ${file.name}: ${data.error}`, 'danger');
+            return false;
         }
-
-        validFiles.push(file);
-    }
-
-    if (errors.length > 0) {
-        alert('Errores en los archivos:\n\n' + errors.join('\n'));
-    }
-
-    if (validFiles.length > 0) {
-        // Here you would typically upload the files to the server
-        console.log('Valid files to upload:', validFiles);
-        
-        // Show success message
-        alert(`${validFiles.length} archivo(s) listo(s) para cargar.`);
-        
-        // Example: You could call an upload function here
-        // uploadFilesToServer(validFiles);
-    }
+    })
+    .catch(err => {
+        console.error(err);
+        displayNotification(`Error de conexión con el servidor: ${err.message}`, 'danger');
+        return false;
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = originalBtnContent;
+    });
 }
 
 /**
- * History table actions
+ * Parsea una fecha ISO (YYYY-MM-DD) sin problemas de zona horaria
+ */
+function parseDateString(dateStr) {
+    if (!dateStr) return null;
+    // Parsear manualmente para evitar problemas de zona horaria
+    const [year, month, day] = dateStr.split('T')[0].split('-');
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+}
+
+/**
+ * Parsea un datetime ISO sin problemas de zona horaria
+ */
+function parseDateTimeString(isoStr) {
+    if (!isoStr) return null;
+    const [dateStr, timeStr] = isoStr.split('T');
+    const [year, month, day] = dateStr.split('-');
+    let date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    
+    if (timeStr) {
+        const [hours, minutes, seconds] = timeStr.replace('Z', '').split(':');
+        date.setHours(parseInt(hours));
+        date.setMinutes(parseInt(minutes));
+        if (seconds) date.setSeconds(parseInt(seconds));
+    }
+    return date;
+}
+
+/**
+ * Añade fila a la tabla de historial sin recargar
+ */
+function formatFileSize(bytes) {
+    if (bytes == null || Number.isNaN(bytes)) return '';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let size = bytes;
+    let index = 0;
+
+    while (size >= 1024 && index < units.length - 1) {
+        size /= 1024;
+        index += 1;
+    }
+
+    return `${size.toFixed(1).replace(/\.0$/, '')} ${units[index]}`;
+}
+
+function addHistoryRow(data) {
+    const tbody = document.querySelector('.upload-history-table tbody');
+    if (!tbody) return;
+
+    const emptyRow = tbody.querySelector('tr td[colspan="7"]');
+    if (emptyRow) {
+        tbody.innerHTML = '';
+    }
+    
+    const tr = document.createElement('tr');
+    
+    // Las fechas ya vienen formateadas desde el servidor en el mismo formato que Django
+    const createdAtStr = data.created_at;
+    const periodStartStr = data.period_start;
+    const periodEndStr = data.period_end;
+    const fileSizeLabel = data.file_size ? ` · ${formatFileSize(data.file_size)}` : '';
+    
+    tr.innerHTML = `
+        <td>
+            <div class="file-item">
+                <div class="file-icon txt">
+                    <span class="material-symbols-outlined">text_snippet</span>
+                </div>
+                <div class="file-info">
+                    <p class="file-name">${data.file}</p>
+                    <p class="file-size">${data.tx_count} transacciones${fileSizeLabel}</p>
+                </div>
+            </div>
+        </td>
+        <td class="bank-name">${data.bank_name}</td>
+        <td class="upload-date">${createdAtStr}</td>
+        <td class="upload-period">${periodStartStr} - ${periodEndStr}</td>
+        <td class="text-end amount">${formatCurrency(data.starting_balance || 0)}</td>
+        <td class="text-end amount">${formatCurrency(data.ending_balance || 0)}</td>
+        <td>
+            <div class="action-buttons">
+                <button class="action-btn btn-view" title="Ver" data-statement-file="${data.file}" onclick="openStatementModal(this)"><span class="material-symbols-outlined">visibility</span></button>
+                <button class="action-btn btn-download" title="Descargar" data-statement-file="${data.file}" onclick="downloadStatement(this)"><span class="material-symbols-outlined">download</span></button>
+            </div>
+        </td>
+    `;
+    
+    // Animación de entrada
+    tr.style.opacity = '0';
+    tbody.prepend(tr);
+    setTimeout(() => { tr.style.transition = 'opacity 0.5s'; tr.style.opacity = '1'; }, 10);
+    
+    // Actualizar el contador de paginación
+    updatePaginationInfo();
+    
+    initializeHistoryActions(); // Reinicializar listeners para nuevos botones
+}
+
+/**
+ * Actualiza el texto de paginación "Mostrando X - Y de Z extractos cargados"
+ */
+function updatePaginationInfo() {
+    const paginationInfo = document.querySelector('.pagination-info');
+    if (!paginationInfo) return;
+    
+    // Extraer valores actuales del texto (Mostrando 1 - 2 de 5 extractos cargados)
+    const match = paginationInfo.textContent.match(/Mostrando (\d+) - (\d+) de (\d+)/);
+    if (!match) return;
+    
+    let startIndex = parseInt(match[1]);
+    let endIndex = parseInt(match[2]);
+    let totalStatements = parseInt(match[3]);
+    
+    // Incrementar total
+    totalStatements += 1;
+    
+    // Si estamos en página 1 y el end_index es menor a 5, incrementar end_index
+    const currentPage = getCurrentPageNumber();
+    if (currentPage === 1 && endIndex < 5) {
+        endIndex += 1;
+    }
+    
+    // Actualizar el texto
+    paginationInfo.textContent = `Mostrando ${startIndex} - ${endIndex} de ${totalStatements} extractos cargados`;
+}
+
+/**
+ * Utilidad: Obtener token CSRF de Django
+ */
+function getCSRFToken() {
+    const name = 'csrftoken=';
+    const cookies = document.cookie.split(';');
+    for (let c of cookies) {
+        c = c.trim();
+        if (c.indexOf(name) === 0) return c.substring(name.length);
+    }
+    return '';
+}
+
+/**
+ * Manejo de botones de acción en la tabla
  */
 function initializeHistoryActions() {
-    const actionButtons = document.querySelectorAll('.upload-history-table .action-btn');
-
-    actionButtons.forEach((btn) => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const row = btn.closest('tr');
-            const fileName = row.querySelector('.file-name')?.textContent || 'archivo desconocido';
-            const iconText = btn.querySelector('.material-symbols-outlined')?.textContent || '';
-            const isViewBtn = iconText.includes('visibility');
-
-            if (isViewBtn) {
-                console.log('Ver archivo:', fileName);
-                alert(`Ver detalles de: ${fileName}`);
-            } else {
-                console.log('Eliminar archivo:', fileName);
-                if (confirm(`¿Está seguro que desea eliminar ${fileName}?`)) {
-                    row.style.opacity = '0.5';
-                    console.log('Archivo eliminado:', fileName);
-                    setTimeout(() => {
-                        row.remove();
-                    }, 300);
-                }
-            }
-        });
+    document.querySelectorAll('.upload-history-table .action-btn').forEach(btn => {
+        // Los botones ya tienen eventos onclick en el HTML
+        // Este método se mantiene para compatibilidad futura
     });
 }
 
 /**
- * Pagination functionality
+ * Paginación visual (sin lógica de backend por ahora)
  */
 function initializePagination() {
-    const paginationBtns = document.querySelectorAll('.pagination-btn');
-
-    paginationBtns.forEach((btn) => {
-        btn.addEventListener('click', function(e) {
+    document.querySelectorAll('.pagination-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
             e.preventDefault();
             const icon = btn.querySelector('.material-symbols-outlined')?.textContent || '';
-            const isNumber = !icon;
-
-            if (isNumber) {
-                console.log('Ir a página:', btn.textContent);
-                alert(`Ir a página ${btn.textContent}`);
-            } else if (icon.includes('chevron_left')) {
-                console.log('Página anterior');
-                alert('Ir a página anterior');
+            let page = null;
+            
+            if (icon.includes('chevron_left')) {
+                page = btn.getAttribute('data-page') || document.querySelector('.pagination-btn.active')?.previousElementSibling?.textContent;
             } else if (icon.includes('chevron_right')) {
-                console.log('Página siguiente');
-                alert('Ir a página siguiente');
+                page = btn.getAttribute('data-page') || document.querySelector('.pagination-btn.active')?.nextElementSibling?.textContent;
+            } else {
+                page = btn.textContent.trim();
+            }
+            
+            if (page && !isNaN(page)) {
+                loadPage(parseInt(page));
             }
         });
     });
 }
 
+function loadPage(pageNumber) {
+    const url = new URL(window.location);
+    url.searchParams.set('page', pageNumber);
+    
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+    })
+    .then(response => response.json())
+    .then(data => {
+        updateTable(data.statements);
+        updatePagination(data.pagination);
+        // Update URL without reloading
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('page', pageNumber);
+        window.history.pushState({}, '', newUrl);
+    })
+    .catch(error => {
+        console.error('Error loading page:', error);
+        showNotification('Error al cargar la página', 'danger');
+    });
+}
+
+function updateTable(statements) {
+    const tbody = document.querySelector('.upload-history-table tbody');
+    if (!tbody) return;
+    
+    if (statements.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">No se encontraron estados de cuenta cargados.</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = statements.map(statement => `
+        <tr>
+            <td>
+                <div class="file-item">
+                    ${getFileIcon(statement.file_extension)}
+                    <div class="file-info">
+                        <p class="file-name">${statement.file_name}</p>
+                        <p class="file-size">
+                            ${statement.entry_count} transacciones
+                            ${statement.file_size ? '· ' + formatFileSize(statement.file_size) : ''}
+                        </p>
+                    </div>
+                </div>
+            </td>
+            <td class="bank-name">${statement.bank_account_name}</td>
+            <td class="upload-date">${statement.created_at}</td>
+            <td class="upload-period">${statement.period_start} - ${statement.period_end}</td>
+            <td class="text-end amount">$${formatNumber(statement.starting_balance)}</td>
+            <td class="text-end amount">$${formatNumber(statement.ending_balance)}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn btn-view" title="Ver" data-statement-file="${statement.file_name}" onclick="openStatementModal(this)">
+                        <span class="material-symbols-outlined">visibility</span>
+                    </button>
+                    <button class="action-btn btn-download" title="Descargar" data-statement-file="${statement.file_name}" onclick="downloadStatement(this)">
+                        <span class="material-symbols-outlined">download</span>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updatePagination(pagination) {
+    const paginationControls = document.querySelector('.pagination-controls');
+    const paginationInfo = document.querySelector('.pagination-info');
+    
+    if (!paginationControls || !paginationInfo) return;
+    
+    // Update info text
+    paginationInfo.textContent = `Mostrando ${pagination.start_index} - ${pagination.end_index} de ${pagination.total_statements} extractos cargados`;
+    
+    // Update pagination buttons
+    let buttonsHtml = '';
+    
+    // Previous button
+    if (pagination.has_previous) {
+        buttonsHtml += `<button class="pagination-btn" data-page="${pagination.previous_page_number}" title="Página anterior">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>`;
+    } else {
+        buttonsHtml += `<span class="pagination-btn" title="Página anterior" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </span>`;
+    }
+    
+    // Page numbers
+    pagination.page_range.forEach(num => {
+        const isActive = num === pagination.current_page;
+        buttonsHtml += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${num}">${num}</button>`;
+    });
+    
+    // Next button
+    if (pagination.has_next) {
+        buttonsHtml += `<button class="pagination-btn" data-page="${pagination.next_page_number}" title="Página siguiente">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>`;
+    } else {
+        buttonsHtml += `<span class="pagination-btn" title="Página siguiente" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </span>`;
+    }
+    
+    paginationControls.innerHTML = buttonsHtml;
+    
+    // Re-initialize pagination listeners
+    initializePagination();
+}
+
+function getFileIcon(extension) {
+    const ext = extension.toLowerCase();
+    let iconClass = 'txt';
+    let iconName = 'text_snippet';
+    
+    if (ext === 'pdf') {
+        iconClass = 'pdf';
+        iconName = 'picture_as_pdf';
+    } else if (ext === 'csv') {
+        iconClass = 'csv';
+        iconName = 'csv';
+    } else if (ext === 'xlsx' || ext === 'xls') {
+        iconClass = 'xlsx';
+        iconName = 'table_chart';
+    }
+    
+    return `<div class="file-icon ${iconClass}">
+        <span class="material-symbols-outlined">${iconName}</span>
+    </div>`;
+}
+
+function formatFileSize(bytes) {
+    if (!bytes) return '';
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    if (bytes === 0) return '0 Bytes';
+    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function formatNumber(num) {
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 /**
- * Utility function to format currency
+ * Abre el modal y carga el estado de cuenta completo
+ */
+function openStatementModal(button) {
+    const statementFile = button.getAttribute('data-statement-file');
+    const modalBody = document.getElementById('statementModalBody');
+    
+    console.log('DEBUG openStatementModal - data-statement-file:', statementFile);
+    
+    if (!statementFile) {
+        displayNotification('Error: No se pudo obtener el archivo del estado de cuenta', 'danger');
+        return;
+    }
+
+    // Mostrar spinner de carga
+    modalBody.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
+    
+    // Abrir el modal
+    const modal = new bootstrap.Modal(document.getElementById('statementModal'));
+    modal.show();
+    
+    // Cargar datos del estado de cuenta
+    const fetchUrl = `./api/bank-statements/${encodeURIComponent(statementFile)}/`;
+    console.log('DEBUG openStatementModal - fetch URL:', fetchUrl);
+    
+    fetch(fetchUrl, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        console.log('DEBUG openStatementModal - response status:', response.status);
+        if (!response.ok) throw new Error('Error al cargar el estado');
+        return response.json();
+    })
+    .then(data => {
+        console.log('DEBUG openStatementModal - data:', data);
+        // Guardar el nombre de archivo para descargar después
+        window.currentStatementFile = statementFile;
+        renderStatementContent(data, modalBody);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el estado de cuenta: ${error.message}</div>`;
+    });
+}
+
+/**
+ * Renderiza el contenido del estado de cuenta en el modal
+ */
+function renderStatementContent(data, container) {
+    const html = `
+        <div class="statement-document">
+            <div class="statement-header mb-4">
+                <h3 class="mb-3">${data.bank_account_name}</h3>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="statement-info-item">
+                            <label class="text-muted small">Número de Cuenta</label>
+                            <p class="fw-bold">${data.bank_account_code}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="statement-info-item">
+                            <label class="text-muted small">Fecha del Extracto</label>
+                            <p class="fw-bold">${data.statement_date}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="statement-info-item">
+                            <label class="text-muted small">Periodo</label>
+                            <p class="fw-bold">${data.period_start} - ${data.period_end}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="statement-info-item">
+                            <label class="text-muted small">Total de Transacciones</label>
+                            <p class="fw-bold">${data.entry_count}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>           
+
+            <div class="statement-summary mb-4">
+                <h5 class="mb-3">Resumen Financiero</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="summary-card">
+                            <span class="summary-label" style="font-weight: bold; font-size: 1.0rem;">Saldo Inicial</span>
+                            <p class="summary-value text-primary text-end">${formatCurrency(data.starting_balance)}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="summary-card">
+                            <span class="summary-label" style="font-weight: bold; font-size: 1.0rem;">Saldo Final</span>
+                            <p class="summary-value text-success text-end">${formatCurrency(data.ending_balance)}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="summary-card">
+                            <span class="summary-label" style="font-weight: bold; font-size: 1.0rem;">Saldo de Sobregiro</span>
+                            <p class="summary-value text-end">${formatCurrency(data.overdraft_balance)}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="summary-card">
+                            <span class="summary-label" style="font-weight: bold; font-size: 1.0rem;">Saldo Reservado</span>
+                            <p class="summary-value text-warning text-end">${formatCurrency(data.reserved_balance)}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="statement-transactions">
+                <h5 class="mb-3">Transacciones (${data.entry_count})</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>                                
+                                <th>Ref. corriente</th>
+                                <th>Ref. original</th>
+                                <th>Descripción</th>
+                                <th class="text-end">Monto</th>
+                                <th>Db/Cr</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.transactions.map(tx => `
+                                <tr>                                   
+                                    <td class="font-monospace small">${tx.current_reference || ''}</td>
+                                    <td class="font-monospace small">${tx.original_reference || ''}</td>
+                                    <td>${tx.description}</td>
+                                    <td class="text-end ${tx.amount >= 0 ? 'text-success' : 'text-danger'}">${formatCurrency(tx.amount)}</td>
+                                    <td>${tx.entry_type || ''}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+/**
+ * Descarga el estado de cuenta desde la tabla
+ */
+function downloadStatement(button) {
+    const statementFile = button.getAttribute('data-statement-file');
+    
+    console.log('DEBUG downloadStatement - data-statement-file:', statementFile);
+    
+    if (!statementFile) {
+        displayNotification('Error: No se pudo obtener el archivo del estado de cuenta', 'danger');
+        return;
+    }
+
+    const downloadUrl = `./api/bank-statements/${encodeURIComponent(statementFile)}/download/`;
+    console.log('DEBUG downloadStatement - download URL:', downloadUrl);
+    window.location.href = downloadUrl;
+}
+
+/**
+ * Descarga el estado de cuenta desde el modal
+ */
+function downloadStatementFromModal() {
+    if (!window.currentStatementFile) {
+        displayNotification('Error: No hay un estado de cuenta cargado', 'danger');
+        return;
+    }
+    
+    window.location.href = `./api/bank-statements/${encodeURIComponent(window.currentStatementFile)}/download/`;
+}
+
+/**
+ * Formatea un número como moneda
  */
 function formatCurrency(value) {
+    const num = parseFloat(value);
+    if (isNaN(num)) return '0.00 CUP';
     return new Intl.NumberFormat('es-CU', {
         style: 'currency',
-        currency: 'USD'
-    }).format(value);
+        currency: 'CUP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(num);
+}
+
+// ===== Notificaciones =====
+function showNotification(message, type = 'info') {
+    // Si existe un contenedor de notificaciones en Bootstrap, usarlo
+    const notificationContainer = document.getElementById('bankUploadNotifications');
+
+    if (notificationContainer) {
+        // Usando Bootstrap
+        const alertClass = {
+            'success': 'alert-success',
+            'error': 'alert-danger',
+            'warning': 'alert-warning',
+            'info': 'alert-info'
+        }[type] || 'alert-info';
+
+        const alertHTML = `
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="animation: slideIn 0.3s ease;">
+                <strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `;
+
+        notificationContainer.innerHTML += alertHTML;
+
+        // Auto-remover después de 5 segundos
+        setTimeout(() => {
+            const alerts = notificationContainer.querySelectorAll('.alert');
+            if (alerts.length > 0) {
+                const lastAlert = alerts[alerts.length - 1];
+                lastAlert.remove();
+            }
+        }, 5000);
+    } else {
+        // Fallback: console log
+        console.log(`[${type.toUpperCase()}] ${message}`);
+    }
 }

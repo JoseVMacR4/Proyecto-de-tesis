@@ -1,227 +1,234 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static humanize %}
 
-{% block title %}ETECSA Finanzas - Estados de Cuenta{% endblock %}
+{% block title %}
+  ETECSA Finanzas - Estados de Cuenta
+{% endblock %}
 
 {% block extra_css %}
-    <!-- Bank Accounts Custom CSS -->
-    <link rel="stylesheet" href="{% static 'bank_accounts/css/bank_accounts.css' %}">
+  <!-- Bank Accounts Custom CSS -->
+  <link rel="stylesheet" href="{% static 'bank_accounts/css/bank_accounts.css' %}" />
 {% endblock %}
 
 {% block content %}
+  <!-- Header Section -->
+  <div class="bank-accounts-header">
+    <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Estados de Cuenta</h1>
+    <p class="text-muted fw-medium mb-0 small">Gestione la carga manual de extractos bancarios y verifique el historial de procesamiento de los activos financieros de la entidad.</p>
+  </div>
 
-    <!-- Header Section -->
-    <div class="bank-accounts-header">
-        <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Estados de Cuenta</h1>
-        <p class="text-muted fw-medium mb-0 small">Gestione la carga manual de extractos bancarios y verifique el historial de procesamiento de los activos financieros de la entidad.</p>
+  <!-- Notifications -->
+  <div id="bankUploadNotifications" class="mb-4"></div>
+
+  <!-- Selector de cuenta para asociar el archivo -->
+  <div class="form-group" style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+    <label for="bankAccountSelect" style="font-weight: 500; white-space: nowrap;">Cuentas de banco:</label>
+    <select id="bankAccountSelect" class="form-control" style="padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; flex-grow: 1;">
+      <option value="">--Seleccionar una cuenta de banco--</option>
+      {% for account in bank_accounts %}
+        <option value="{{ account.id }}">{{ account.code }} - {{ account.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Upload and Guide Section -->
+  <div class="row g-4 upload-container">
+    <!-- Upload Zone -->
+    <div class="col-lg-8">
+      <div class="upload-zone">
+        <div class="upload-zone-content">
+          <div class="upload-icon">
+            <span class="material-symbols-outlined">upload_file</span>
+          </div>
+          <h3 class="upload-zone-title">Cargar Nuevo Extracto</h3>
+          <p class="upload-zone-description">Arrastre sus archivos aquí o haga clic para buscar en su ordenador. Soporta .TXT.</p>
+          <div class="upload-badges">
+            <span class="upload-badge">Máx. 5MB</span>
+          </div>
+          <button class="btn-select-files" id="selectFilesBtn">
+            <span class="material-symbols-outlined">add</span>
+            Seleccionar Archivo
+          </button>
+          <input type="file" id="fileInput" accept=".txt" />
+        </div>
+      </div>
     </div>
 
-    <!-- Upload and Guide Section -->
-    <div class="row g-4 upload-container">
-        <!-- Upload Zone -->
-        <div class="col-lg-8">
-            <div class="upload-zone">
-                <div class="upload-zone-content">
-                    <div class="upload-icon">
-                        <span class="material-symbols-outlined">upload_file</span>
-                    </div>
-                    <h3 class="upload-zone-title">Cargar Nuevo Extracto</h3>
-                    <p class="upload-zone-description">Arrastre sus archivos aquí o haga clic para buscar en su ordenador. Soporta .XML y .TXT.</p>
-                    <div class="upload-badges">
-                        <span class="upload-badge">Máx. 5MB</span>
-                    </div>
-                    <button class="btn-select-files" id="selectFilesBtn">
-                        <span class="material-symbols-outlined">add</span>
-                        Seleccionar Archivos
-                    </button>
-                    <input type="file" id="fileInput" multiple accept=".pdf,.csv,.xlsx,.xls">
-                </div>
-            </div>
+    <!-- Format Guide Sidebar -->
+    <div class="col-lg-4">
+      <div class="format-guide">
+        <div>
+          <div class="format-guide-header">
+            <span class="material-symbols-outlined">info</span>
+          </div>
+          <h3 class="format-guide-title">Guía de Formato</h3>
+          <ul class="format-guide-list">
+            <li class="format-guide-item">
+              <span class="material-symbols-outlined">check_circle</span>
+              <span>El archivo debe contener la columna 'Referencia'.</span>
+            </li>
+            <li class="format-guide-item">
+              <span class="material-symbols-outlined">check_circle</span>
+              <span>Las fechas deben estar en formato DD/MM/AAAA.</span>
+            </li>
+            <li class="format-guide-item">
+              <span class="material-symbols-outlined">check_circle</span>
+              <span>Evite celdas combinadas en archivos XLSX.</span>
+            </li>
+          </ul>
         </div>
+        <div class="last-processing">
+          <p class="last-processing-label">Último Procesamiento</p>
+          <div class="last-processing-time">
+            <span class="time">14:32</span>
+            <span class="date">Hoy, 24 Oct</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Format Guide Sidebar -->
-        <div class="col-lg-4">
-            <div class="format-guide">
-                <div>
-                    <div class="format-guide-header">
-                        <span class="material-symbols-outlined">info</span>
-                    </div>
-                    <h3 class="format-guide-title">Guía de Formato</h3>
-                    <ul class="format-guide-list">
-                        <li class="format-guide-item">
-                            <span class="material-symbols-outlined">check_circle</span>
-                            <span>El archivo debe contener la columna 'Referencia'.</span>
-                        </li>
-                        <li class="format-guide-item">
-                            <span class="material-symbols-outlined">check_circle</span>
-                            <span>Las fechas deben estar en formato DD/MM/AAAA.</span>
-                        </li>
-                        <li class="format-guide-item">
-                            <span class="material-symbols-outlined">check_circle</span>
-                            <span>Evite celdas combinadas en archivos XLSX.</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="last-processing">
-                    <p class="last-processing-label">Último Procesamiento</p>
-                    <div class="last-processing-time">
-                        <span class="time">14:32</span>
-                        <span class="date">Hoy, 24 Oct</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <!-- Historial de Estados de Cuenta Table Section -->
+  <div class="history-container">
+    <!-- Table Header -->
+    <div class="history-header">
+      <h5 class="history-title">Historial de Estados de Cuenta</h5>
+      <div class="history-actions">
+        <button class="history-action-btn" title="Filtrar"><span class="material-symbols-outlined">filter_list</span></button>
+        <button class="history-action-btn" title="Descargar"><span class="material-symbols-outlined">download</span></button>
+      </div>
     </div>
 
-    <!-- Historial de Cargas Table Section -->
-    <div class="history-container">
-        <!-- Table Header -->
-        <div class="history-header">
-            <h5 class="history-title">Historial de Cargas</h5>
-            <div class="history-actions">
-                <button class="history-action-btn" title="Filtrar">
-                    <span class="material-symbols-outlined">filter_list</span>
-                </button>
-                <button class="history-action-btn" title="Descargar">
-                    <span class="material-symbols-outlined">download</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Table -->
-        <div class="table-responsive">
-            <table class="upload-history-table">
-                <thead>
-                    <tr>
-                        <th>Nombre del Archivo</th>
-                        <th>Banco</th>
-                        <th>Fecha de Carga</th>
-                        <th>Periodo</th>
-                        <th>Estado</th>
-                        <th style="text-align: right;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                            <div class="file-item">
-                                <div class="file-icon pdf">
-                                    <span class="material-symbols-outlined">picture_as_pdf</span>
-                                </div>
-                                <div class="file-info">
-                                    <p class="file-name">EXT_BPA_OCT_2023.pdf</p>
-                                    <p class="file-size">4.2 MB</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="bank-name">Banco Popular de Ahorro</td>
-                        <td class="upload-date">24/10/2023 09:15</td>
-                        <td class="upload-period">Octubre 2023</td>
-                        <td>
-                            <span class="status-badge completed">
-                                <span class="status-dot"></span>
-                                Completado
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn" title="Ver">
-                                    <span class="material-symbols-outlined">visibility</span>
-                                </button>
-                                <button class="action-btn" title="Eliminar">
-                                    <span class="material-symbols-outlined">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="file-item">
-                                <div class="file-icon csv">
-                                    <span class="material-symbols-outlined">csv</span>
-                                </div>
-                                <div class="file-info">
-                                    <p class="file-name">MOV_BANDEC_20231024.csv</p>
-                                    <p class="file-size">1.8 MB</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="bank-name">BANDEC</td>
-                        <td class="upload-date">24/10/2023 10:42</td>
-                        <td class="upload-period">Diario - Oct 24</td>
-                        <td>
-                            <span class="status-badge processing">
-                                <span class="status-dot"></span>
-                                Procesando
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn" title="Ver">
-                                    <span class="material-symbols-outlined">visibility</span>
-                                </button>
-                                <button class="action-btn" title="Eliminar">
-                                    <span class="material-symbols-outlined">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div class="file-item">
-                                <div class="file-icon xlsx">
-                                    <span class="material-symbols-outlined">table_chart</span>
-                                </div>
-                                <div class="file-info">
-                                    <p class="file-name">BMET_CENTRAL_Q3.xlsx</p>
-                                    <p class="file-size">12.5 MB</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="bank-name">Banco Metropolitano</td>
-                        <td class="upload-date">23/10/2023 16:20</td>
-                        <td class="upload-period">Trimestre 3 - 2023</td>
-                        <td>
-                            <span class="status-badge completed">
-                                <span class="status-dot"></span>
-                                Completado
-                            </span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="action-btn" title="Ver">
-                                    <span class="material-symbols-outlined">visibility</span>
-                                </button>
-                                <button class="action-btn" title="Eliminar">
-                                    <span class="material-symbols-outlined">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Pagination Footer -->
-        <div class="pagination-footer">
-            <p class="pagination-info">Mostrando 3 de 148 archivos cargados</p>
-            <div class="pagination-controls">
-                <button class="pagination-btn" title="Página anterior">
-                    <span class="material-symbols-outlined">chevron_left</span>
-                </button>
-                <button class="pagination-btn active">1</button>
-                <button class="pagination-btn">2</button>
-                <button class="pagination-btn">3</button>
-                <button class="pagination-btn" title="Página siguiente">
-                    <span class="material-symbols-outlined">chevron_right</span>
-                </button>
-            </div>
-        </div>
+    <!-- Table -->
+    <div class="table-responsive">
+      <table class="upload-history-table">
+        <thead>
+          <tr>
+            <th>Nombre del Archivo</th>
+            <th>Cuenta</th>
+            <th>Fecha de Carga</th>
+            <th>Periodo</th>
+            <th class="text-end">Saldo Inicial</th>
+            <th class="text-end">Saldo Final</th>
+            <th style="text-align: right;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if page_obj and page_obj.object_list %}
+            {% for statement in page_obj.object_list %}
+              <tr>
+                <td>
+                  <div class="file-item">
+                    {% with ext=statement.file_extension|lower %}
+                      {% if ext == 'pdf' %}
+                        <div class="file-icon pdf">
+                          <span class="material-symbols-outlined">picture_as_pdf</span>
+                        </div>
+                      {% elif ext == 'csv' %}
+                        <div class="file-icon csv">
+                          <span class="material-symbols-outlined">csv</span>
+                        </div>
+                      {% elif ext == 'xlsx' or ext == 'xls' %}
+                        <div class="file-icon xlsx">
+                          <span class="material-symbols-outlined">table_chart</span>
+                        </div>
+                      {% else %}
+                        <div class="file-icon txt">
+                          <span class="material-symbols-outlined">text_snippet</span>
+                        </div>
+                      {% endif %}
+                    {% endwith %}
+                    <div class="file-info">
+                      <p class="file-name">{{ statement.file_name }}</p>
+                      <p class="file-size">
+                        {{ statement.entry_count }} transacciones
+                        {% if statement.file_size %}· {{ statement.file_size|filesizeformat }}{% endif %}
+                      </p>
+                    </div>
+                  </div>
+                </td>
+                <td class="bank-name">{{ statement.bank_account.name }}</td>
+                <td class="upload-date">{{ statement.created_at|date:"d/m/Y H:i" }}</td>
+                <td class="upload-period">{{ statement.period_start|date:"d/m/Y" }} - {{ statement.period_end|date:"d/m/Y" }}</td>
+                <td class="text-end amount">${{ statement.starting_balance|floatformat:2|intcomma }}</td>
+                <td class="text-end amount">${{ statement.ending_balance|floatformat:2|intcomma }}</td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn btn-view" title="Ver" data-statement-file="{{ statement.file_name }}" onclick="openStatementModal(this)"><span class="material-symbols-outlined">visibility</span></button>
+                    <button class="action-btn btn-download" title="Descargar" data-statement-file="{{ statement.file_name }}" onclick="downloadStatement(this)"><span class="material-symbols-outlined">download</span></button>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center py-5 text-muted">No se encontraron estados de cuenta cargados.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
     </div>
 
+    <!-- Pagination Footer -->
+    <div class="pagination-footer">
+      <p class="pagination-info">
+        Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ total_statements }} extractos cargados
+      </p>
+      <div class="pagination-controls">
+        {% if page_obj.has_previous %}
+          <button class="pagination-btn" data-page="{{ page_obj.previous_page_number }}" title="Página anterior">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+        {% else %}
+          <span class="pagination-btn" title="Página anterior" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </span>
+        {% endif %}
+        {% for num in page_range %}
+          <button class="pagination-btn {% if page_obj.number == num %}active{% endif %}" data-page="{{ num }}">{{ num }}</button>
+        {% endfor %}
+        {% if page_obj.has_next %}
+          <button class="pagination-btn" data-page="{{ page_obj.next_page_number }}" title="Página siguiente">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        {% else %}
+          <span class="pagination-btn" title="Página siguiente" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para visualizar estado de cuenta completo -->
+  <div class="modal fade" id="statementModal" tabindex="-1" aria-labelledby="statementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="statementModalLabel">Estado de Cuenta Bancario</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body" id="statementModalBody">
+          <!-- Contenido será cargado aquí mediante JavaScript -->
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="button" class="btn btn-primary" id="downloadFromModalBtn" onclick="downloadStatementFromModal()">
+            <span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle; margin-right: 0.25rem;">download</span>
+            Descargar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endblock %}
 
 {% block extra_js %}
-    <!-- Bank Accounts Custom JS -->
-    <script src="{% static 'bank_accounts/js/bank_accounts.js' %}"></script>
+  <!-- Bank Accounts Custom JS -->
+  <script src="{% static 'bank_accounts/js/bank_accounts.js' %}"></script>
 {% endblock %}

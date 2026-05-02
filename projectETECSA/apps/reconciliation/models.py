@@ -1,7 +1,19 @@
+import re
 import uuid
 
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+
+
+def normalize_entry_type(value):
+    if value is None:
+        return value
+    entry = str(value).strip().lower()
+    if entry in {'cr', 'credit'}:
+        return 'Cr'
+    if entry in {'db', 'debit'}:
+        return 'Db'
+    return value
 
 
 class BankStatement(models.Model):
@@ -13,6 +25,7 @@ class BankStatement(models.Model):
     )
     file_name = models.CharField(max_length=255)
     file_extension = models.CharField(max_length=10)
+    file_size = models.BigIntegerField(null=True, blank=True)
     statement_date = models.DateField()
     period_start = models.DateField()
     period_end = models.DateField()
@@ -29,6 +42,12 @@ class BankStatement(models.Model):
         verbose_name = _('Bank Statement')
         verbose_name_plural = _('Bank Statements')
         ordering = ['-statement_date']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['bank_account', 'statement_date'],
+                name='unique_bank_statement_bank_date'
+            )
+        ]
         indexes = [
             models.Index(fields=['statement_date']),
             models.Index(fields=['bank_account']),
@@ -39,6 +58,10 @@ class BankStatement(models.Model):
 
 
 class BankStatementTransaction(models.Model):
+    class StatusChoices(models.TextChoices):
+        PENDING = 'pending', _('Pendiente')
+        RECONCILED = 'reconciled', _('Conciliado')
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     bank_statement = models.ForeignKey(
         'reconciliation.BankStatement',
@@ -55,9 +78,12 @@ class BankStatementTransaction(models.Model):
     )
     office_code = models.CharField(max_length=50, blank=True, null=True)
     entry_type = models.CharField(max_length=50)
+    operation_type = models.CharField(max_length=255, blank=True, null=True)
+    operation_count = models.IntegerField(default=1)
     bank_fee = models.DecimalField(max_digits=20, decimal_places=4)
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     currency = models.CharField(max_length=3)
+    status = models.CharField(max_length=20, choices=StatusChoices.choices, default=StatusChoices.PENDING)
     date = models.DateField(editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -70,6 +96,7 @@ class BankStatementTransaction(models.Model):
             models.Index(fields=['current_reference']),
             models.Index(fields=['bank_statement']),
             models.Index(fields=['date']),
+            models.Index(fields=['status']),
         ]
 
     def __str__(self):
@@ -81,4 +108,5 @@ class BankStatementTransaction(models.Model):
 
     def save(self, *args, **kwargs):
         self.date = self.bank_statement.statement_date
+        self.entry_type = normalize_entry_type(self.entry_type)
         super().save(*args, **kwargs)

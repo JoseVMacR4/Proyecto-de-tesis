@@ -3,7 +3,7 @@ import uuid
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-
+'''
 class Bank(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
@@ -22,7 +22,7 @@ class Bank(models.Model):
 
     def __str__(self):
         return self.name
-
+'''
 
 class BankAccount(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -61,7 +61,7 @@ class Office(models.Model):
     def __str__(self):
         return f"{self.code} - {self.name}"
 
-
+'''
 class AccountState(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     bank_account = models.ForeignKey(
@@ -84,7 +84,7 @@ class AccountState(models.Model):
 
     def __str__(self):
         return f"{self.bank_account.code} {self.period_start} - {self.period_end}"
-
+'''
 
 class Operation(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

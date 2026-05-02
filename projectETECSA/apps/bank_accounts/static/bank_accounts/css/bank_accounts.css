@@ -357,10 +357,6 @@
     background-color: rgba(245, 243, 243, 0.5);
 }
 
-.upload-history-table tbody tr:hover .action-buttons {
-    opacity: 1;
-}
-
 .upload-history-table tbody td {
     padding: 1rem 1.5rem;
     font-size: 0.9rem;
@@ -477,30 +473,44 @@
     display: flex;
     justify-content: flex-end;
     gap: 0.5rem;
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.2s ease;
 }
 
 .action-btn {
-    background-color: transparent;
-    border: none;
-    padding: 0.5rem;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 0.55rem;
     cursor: pointer;
-    color: var(--outline);
-    transition: all 0.2s ease;
-    border-radius: 0.25rem;
-    display: flex;
+    color: var(--on-surface-variant);
+    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    border-radius: 0.65rem;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    min-width: 2.5rem;
+    min-height: 2.5rem;
 }
 
 .action-btn:hover {
-    background-color: var(--surface-container-high);
-    color: var(--on-surface);
+    background-color: #f8fafc;
+    border-color: #cbd5e1;
+    color: var(--primary);
+    transform: translateY(-1px);
 }
 
 .action-btn span {
     font-size: 1.25rem !important;
+}
+
+.btn-download {
+    color: var(--success);
+}
+
+.btn-download:hover {
+    background-color: rgba(33, 160, 56, 0.12);
+    color: var(--success);
 }
 
 /* ===== Pagination ===== */
@@ -568,6 +578,148 @@
 
 .pagination-btn span {
     font-size: 1rem !important;
+}
+
+/* ===== Animations ===== */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ===== Modal Statement Styles ===== */
+.statement-document {
+    padding: 1.5rem 0;
+}
+
+.statement-header {
+    border-bottom: 2px solid var(--outline-variant);
+    padding-bottom: 1.5rem;
+}
+
+.statement-header h3 {
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.statement-info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.statement-info-item label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+}
+
+.statement-info-item p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.statement-summary {
+    border-bottom: 2px solid var(--outline-variant);
+    padding-bottom: 1.5rem;
+}
+
+.statement-summary h5 {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.summary-card {
+    background-color: var(--surface-container-low);
+    padding: 1rem;
+    border-radius: 8px;
+    border-top: 3px solid var(--primary);
+}
+
+.summary-label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--on-surface-variant);
+    margin-bottom: 0.5rem;
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.statement-transactions h5 {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.statement-transactions .table {
+    border: 1px solid var(--outline-variant);
+}
+
+.statement-transactions .table thead th {
+    background-color: var(--surface-container-high);
+    color: var(--primary);
+    font-weight: 600;
+    border-bottom: 2px solid var(--primary);
+}
+
+.statement-transactions .table tbody td {
+    font-size: 0.875rem;
+    color: var(--on-surface);
+}
+
+.statement-transactions .table tbody tr:hover {
+    background-color: var(--surface-container-low);
+}
+
+/* ===== Action Buttons Styles ===== */
+.btn-view {
+    background-color: transparent;
+    color: var(--primary);
+    border: 1px solid var(--primary);
+    transition: all 0.2s ease;
+}
+
+.btn-view:hover {
+    background-color: var(--primary);
+    color: #ffffff;
+}
+
+.btn-download {
+    background-color: var(--success);
+    color: #ffffff;
+    border: 1px solid var(--success);
+    transition: all 0.2s ease;
+}
+
+.btn-download:hover {
+    background-color: #1a7d2b;
+    border-color: #1a7d2b;
+}
+
+/* ===== Amount Text Styles ===== */
+.amount {
+    font-family: 'Manrope', sans-serif;
+    font-weight: bold;
 }
 
 /* ===== Animations ===== */
