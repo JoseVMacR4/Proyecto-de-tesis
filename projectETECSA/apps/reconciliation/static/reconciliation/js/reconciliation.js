@@ -102,16 +102,69 @@ function getStorageKey(key) {
     return `reconciliation_${key}_${userId}`;
 }
 
+// Clave especial para detectar cierre de sesión
+const SESSION_VALIDATION_KEY = 'reconciliation_session_valid';
+const LOGOUT_MARKER = 'reconciliation_intentional_logout';
+
+function validateSession() {
+    const userData = document.getElementById('userPermissionsData');
+    const currentUserId = userData ? userData.dataset.userId : null;
+
+    if (!currentUserId) {
+        sessionStorage.clear();
+        return false;
+    }
+
+    // Verificar si hubo un logout intencional
+    const hadIntentionalLogout = sessionStorage.getItem(LOGOUT_MARKER);
+    if (hadIntentionalLogout) {
+        // Limpiar todo - fue un logout y nuevo login
+        sessionStorage.clear();
+        // Eliminar la marca para permitir nuevas navegaciones
+        try { sessionStorage.removeItem(LOGOUT_MARKER); } catch(e) {}
+        return false;
+    }
+
+    const savedUserId = sessionStorage.getItem(getStorageKey('UserId'));
+
+    // Solo limpiar si el usuario actual es diferente al guardado (esto indica logout/login de otro usuario)
+    if (savedUserId && savedUserId !== currentUserId) {
+        try {
+            var keysToRemove = [];
+            for (var i = 0; i < sessionStorage.length; i++) {
+                var key = sessionStorage.key(i);
+                if (key && (key.startsWith('reconciliation_') || key.includes('UserId') || key.includes('State') || key.includes('Restore'))) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(function(key) {
+                sessionStorage.removeItem(key);
+            });
+        } catch(e) {}
+    }
+
+    // Guardar/actualizar el userId actual
+    sessionStorage.setItem(getStorageKey('UserId'), currentUserId);
+
+    return true;
+}
+
 function tryRestoreState() {
+    // Primero validar la sesión
+    if (!validateSession()) {
+        return false;
+    }
+
     const userData = document.getElementById('userPermissionsData');
     const currentUserId = userData ? userData.dataset.userId : null;
     const savedUserId = sessionStorage.getItem(getStorageKey('UserId'));
-    
+
     if (!savedUserId || savedUserId !== currentUserId) {
         sessionStorage.removeItem(getStorageKey('State'));
         sessionStorage.removeItem(getStorageKey('RestorePending'));
         if (currentUserId) {
             sessionStorage.setItem(getStorageKey('UserId'), currentUserId);
+            sessionStorage.setItem(SESSION_VALIDATION_KEY, 'true');
         }
         return false;
     }
@@ -234,6 +287,15 @@ function initializeUserPermissions() {
 
 // ===== Inicialización General =====
 function initializeReconciliation() {
+    // Verificación adicional: si hay estado guardado pero NO hay marca de logout,
+    // significa que es navegación normal (no logout), mantener estado
+    // Si hay marca de logout, validateSession ya limpiara todo
+    const hasState = sessionStorage.getItem(getStorageKey('State'));
+    const hasLogoutMarker = sessionStorage.getItem(LOGOUT_MARKER);
+
+    // Si hay estado pero NO hay logout marker, es navegación normal -> mantener
+    // Si hay logout marker, validateSession lo manejará
+
     const restored = tryRestoreState();
     
     initializeDropdowns();

@@ -87,7 +87,7 @@
 
             <div class="vr mx-1 d-none d-sm-block"></div>
 
-            <a href="{% url 'logout' %}" onclick="sessionStorage.clear(); localStorage.clear();"
+            <a href="{% url 'logout' %}" onclick="cleanupSessionAndLogout(event)"
                 class="btn btn-primary-gradient logout-button d-flex align-items-center gap-2 py-2 px-3 fw-bold text-white">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="d-none d-sm-inline">Cerrar Sesión</span>
@@ -190,7 +190,18 @@
     {% if user.is_authenticated %}
     <script>window.currentUserId = '{{ user.id }}';</script>
     <script src="{% static 'users/js/dashboard.js' %}"></script>
-    {% endif %}
+{% endif %}
     {% block extra_js %}{% endblock %}
+    <script>
+    function cleanupSessionAndLogout(event) {
+        event.preventDefault();
+        var logoutUrl = event.currentTarget.getAttribute('href');
+        // Primero limpiar todo el estado anterior
+        sessionStorage.clear();
+        // Luego guardar la marca de logout (para que sobrevivga al redirect)
+        sessionStorage.setItem('reconciliation_intentional_logout', 'true');
+        window.location.href = logoutUrl;
+    }
+    </script>
 </body>
 </html>
