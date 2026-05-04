@@ -309,11 +309,11 @@
                                 <input type="text" class="form-control" id="userUsername" required>
                             </div>
                             <div class="mb-3">
-                                <label for="userEmail" class="form-label fw-bold small">Email</label>
-                                <input type="email" class="form-control" id="userEmail">
+                                <label for="userEmail" class="form-label fw-bold small">Email *</label>
+                                <input type="email" class="form-control" id="userEmail" required>
                             </div>
                             <div class="mb-3">
-                                <label for="userPassword" class="form-label fw-bold small">Contraseña</label>
+                                <label for="userPassword" class="form-label fw-bold small">Contraseña *</label>
                                 <input type="password" class="form-control" id="userPassword" placeholder="Dejar en blanco para mantener la actual (solo edición)">
                             </div>
                             <div class="row">
@@ -327,8 +327,8 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label for="userRole" class="form-label fw-bold small">Rol</label>
-                                <select class="form-select" id="userRole">
+                                <label for="userRole" class="form-label fw-bold small">Rol *</label>
+                                <select class="form-select" id="userRole" required>
                                     <option value="">Seleccione un rol</option>
                                     {% for role in roles_available %}
                                     <option value="{{ role.id }}">{{ role.name }}</option>

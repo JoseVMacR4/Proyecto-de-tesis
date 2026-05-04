@@ -6,7 +6,11 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 import json
 from apps.users.models import User, UserRole, Role
+from apps.users.permissions import can_access_admin
 from apps.bank_accounts.models import BankAccount, Office, Operation
+from django.utils import timezone
+from django.views.decorators.http import require_GET, require_POST
+from .models import Notification
 
 DEFAULT_USER_ROLES = [
     'Administrador',
@@ -15,14 +19,11 @@ DEFAULT_USER_ROLES = [
     'Analista Financiero',
 ]
 
-
 def ensure_default_roles():
     if not Role.objects.exists():
         for role_name in DEFAULT_USER_ROLES:
             Role.objects.get_or_create(name=role_name)
 
-
-# Create your views here.
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -59,6 +60,9 @@ def settings(request):
 
 @login_required
 def admin_panel(request):
+    if not can_access_admin(request.user):
+        return redirect('dashboard')
+    
     # Obtener todos los usuarios con información de roles
     users = User.objects.all().select_related()
     
@@ -152,7 +156,13 @@ def create_user(request):
         if role_id:
             role = get_object_or_404(Role, id=role_id)
             UserRole.objects.create(user=user, role=role)
-        
+
+        Notification.objects.create(
+            user=request.user,
+            type='success',
+            content=f"Usuario '{username}' creado exitosamente."
+        )
+
         return JsonResponse({'success': True, 'message': 'Usuario creado exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -188,9 +198,19 @@ def update_user(request, user_id):
 @login_required
 @require_http_methods(["POST", "DELETE"])
 def delete_user(request, user_id):
+    if not can_access_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Sin permisos'}, status=403)
     try:
         user = get_object_or_404(User, id=user_id)
+        username = user.username
         user.delete()
+
+        Notification.objects.create(
+            user=request.user,
+            type='warning',
+            content=f"Usuario '{username}' eliminado."
+        )
+
         return JsonResponse({'success': True, 'message': 'Usuario eliminado exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -210,6 +230,13 @@ def create_operation(request):
             return JsonResponse({'success': False, 'error': 'El código ya existe'}, status=400)
         
         Operation.objects.create(code=code, name=name)
+
+        Notification.objects.create(
+            user=request.user,
+            type='success',
+            content=f"Operación '{code} - {name}' creada."
+        )
+
         return JsonResponse({'success': True, 'message': 'Operación creada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -232,9 +259,19 @@ def update_operation(request, operation_id):
 @login_required
 @require_http_methods(["POST", "DELETE"])
 def delete_operation(request, operation_id):
+    if not can_access_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Sin permisos'}, status=403)
     try:
         operation = get_object_or_404(Operation, id=operation_id)
+        op_code = operation.code
         operation.delete()
+
+        Notification.objects.create(
+            user=request.user,
+            type='warning',
+            content=f"Operación '{op_code}' eliminada."
+        )
+
         return JsonResponse({'success': True, 'message': 'Operación eliminada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -281,6 +318,13 @@ def create_bank_account(request):
             return JsonResponse({'success': False, 'error': 'El código ya existe'}, status=400)
         
         BankAccount.objects.create(code=code, name=name)
+
+        Notification.objects.create(
+            user=request.user,
+            type='success',
+            content=f"Cuenta bancaria '{code} - {name}' creada."
+        )
+
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria creada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -303,9 +347,19 @@ def update_bank_account(request, account_id):
 @login_required
 @require_http_methods(["POST", "DELETE"])
 def delete_bank_account(request, account_id):
+    if not can_access_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Sin permisos'}, status=403)
     try:
         account = get_object_or_404(BankAccount, id=account_id)
+        acc_code = account.code
         account.delete()
+
+        Notification.objects.create(
+            user=request.user,
+            type='warning',
+            content=f"Cuenta bancaria '{acc_code}' eliminada."
+        )
+
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria eliminada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -352,6 +406,13 @@ def create_office(request):
             return JsonResponse({'success': False, 'error': 'El código ya existe'}, status=400)
         
         Office.objects.create(code=code, name=name)
+
+        Notification.objects.create(
+            user=request.user,
+            type='success',
+            content=f"Oficina '{code} - {name}' creada."
+        )
+
         return JsonResponse({'success': True, 'message': 'Oficina creada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -374,9 +435,19 @@ def update_office(request, office_id):
 @login_required
 @require_http_methods(["POST", "DELETE"])
 def delete_office(request, office_id):
+    if not can_access_admin(request.user):
+        return JsonResponse({'success': False, 'error': 'Sin permisos'}, status=403)
     try:
         office = get_object_or_404(Office, id=office_id)
+        off_code = office.code
         office.delete()
+
+        Notification.objects.create(
+            user=request.user,
+            type='warning',
+            content=f"Oficina '{off_code}' eliminada."
+        )
+
         return JsonResponse({'success': True, 'message': 'Oficina eliminada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -537,3 +608,39 @@ def get_offices(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+@login_required
+@require_GET
+def get_unread_notifications(request):
+    """Obtiene las últimas 10 notificaciones no leídas del usuario logueado."""
+    notifications = Notification.objects.filter(
+        user=request.user, 
+        read_at__isnull=True
+    ).order_by('-created_at')[:10]
+    
+    total_count = Notification.objects.filter(user=request.user, read_at__isnull=True).count()
+    
+    data = [{
+        'id': str(n.id),
+        'type': n.type,
+        'content': n.content,
+        'created_at': n.created_at.strftime("%d/%m/%Y %H:%M"),
+        'timestamp': int(n.created_at.timestamp() * 1000)
+    } for n in notifications]
+    
+    return JsonResponse({
+        'success': True,
+        'notifications': data, 
+        'count': total_count
+    })
+
+@login_required
+@require_POST
+def mark_notifications_read(request):
+    """Marca todas las notificaciones pendientes como leídas."""
+    Notification.objects.filter(
+        user=request.user, 
+        read_at__isnull=True
+    ).update(read_at=timezone.now())
+    
+    return JsonResponse({'success': True})

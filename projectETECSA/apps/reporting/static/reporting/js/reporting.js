@@ -4,6 +4,91 @@
  * ====================================
  */
 
+/**
+ * Limpia mensajes de error eliminando información técnica
+ */
+function cleanMessage(message) {
+    if (!message) return 'Ha ocurrido un error';
+    
+    message = message.replace(/\\u[\da-f]{4}/gi, (match) => {
+        return String.fromCharCode(parseInt(match.replace('\\u', ''), 16));
+    });
+    
+    const technicalPatterns = [
+        /Traceback.*$/m,
+        /File ".*", line \d+/,
+        /"\/.*\.py":/,
+        /\\\\.*\\.*\.py/,
+        /python.*error/i,
+        /django.*error/i,
+        /database.*error/i,
+        /sqlite.*error/i,
+        /IntegrityError.*/,
+        /OperationalError.*/,
+        /ProgrammingError.*/,
+        /ValueError.*/,
+        /TypeError.*/,
+        /KeyError.*/,
+        /AttributeError.*/
+    ];
+    
+    const hasTechnicalInfo = technicalPatterns.some(pattern => pattern.test(message));
+    
+    if (hasTechnicalInfo) {
+        if (message.includes('UNIQUE constraint')) return 'Ya existe un registro con estos datos';
+        if (message.includes('FOREIGN KEY')) return 'Error de relación con otros datos';
+        if (message.includes('NOT NULL')) return 'Faltan datos requeridos';
+        if (message.includes('database')) return 'Error de base de datos';
+        return 'Ha ocurrido un error. Por favor contacte al administrador.';
+    }
+    
+    if (message.includes('no coincide con la cuenta del archivo')) {
+        if (message.includes('Error en')) {
+            return 'Error: La cuenta seleccionada no coincide con la cuenta del archivo';
+        }
+        return 'La cuenta seleccionada no coincide con la cuenta del archivo';
+    }
+    
+    if (message.includes('Ya existe un estado de cuenta')) {
+        if (message.includes('Error en')) {
+            return 'Error: Ya existe un estado de cuenta para esta cuenta en esa fecha';
+        }
+        return 'Ya existe un estado de cuenta para esta cuenta en esa fecha';
+    }
+    
+    if (message.includes('cuenta bancaria con ID')) {
+        return 'Cuenta bancaria no encontrada';
+    }
+    
+    if (message.includes('Formato') && message.includes('no soportado')) {
+        return 'Formato de archivo no soportado. Use archivos .txt';
+    }
+    
+    if (message.includes('No se detectó fecha válida')) {
+        return 'No se detectó fecha válida en el archivo';
+    }
+    
+    if (message.includes('No se pudo verificar el número de cuenta')) {
+        return 'No se pudo verificar el número de cuenta en el archivo';
+    }
+    
+    let cleaned = message;
+    
+    if (!cleaned.includes('Error en')) {
+        cleaned = cleaned.replace(/Archivo:\s*[\w\-]+/gi, 'Archivo: (datos)');
+    }
+    cleaned = cleaned.replace(/selecci[oó]n:\s*[\w\-]+/gi, 'selección: (datos)');
+    cleaned = cleaned.replace(/cuenta\s+[\w\-]+\s+en\s+la\s+fecha\s+[\d\-]+/gi, 'esta cuenta en esa fecha');
+    cleaned = cleaned.replace(/para\s+la\s+cuenta\s+[\w\-]+/gi, 'para esta cuenta');
+    cleaned = cleaned.replace(/fecha\s+[\d\-]+/gi, 'fecha (datos)');
+    cleaned = cleaned.replace(/ID\s+[\w\-]+/gi, 'ID (datos)');
+    cleaned = cleaned.replace(/cuenta\s+bancaria\s+con\s+ID\s+[\w\-]+/gi, 'cuenta bancaria');
+    
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    return cleaned;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Transactions JS loaded');
     
@@ -206,33 +291,29 @@ function handlePagination(e) {
  * Show notification helper
  */
 function showNotification(message, type = 'info') {
+    const cleanMsg = cleanMessage(message);
     const alertClass = {
         'success': 'alert-success',
         'warning': 'alert-warning',
         'error': 'alert-danger',
         'info': 'alert-info'
     }[type] || 'alert-info';
-    
-    const alertHTML = `
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+
+    document.querySelectorAll('.reporting-alert').forEach(el => el.remove());
+
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `reporting-alert alert ${alertClass} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${cleanMsg}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
-    
-    const notificationsContainer = document.getElementById('notifications') || 
-        document.querySelector('main');
-    
-    if (notificationsContainer) {
-        const alertDiv = document.createElement('div');
-        alertDiv.innerHTML = alertHTML;
-        notificationsContainer.insertBefore(alertDiv.firstElementChild, notificationsContainer.firstChild);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            alertDiv.firstElementChild.remove();
-        }, 5000);
-    }
+    document.body.appendChild(alertDiv);
+
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
 }
 
 /**

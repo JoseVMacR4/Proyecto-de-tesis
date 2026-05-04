@@ -62,6 +62,10 @@ class Role(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=150, unique=True)
     description = models.CharField(max_length=255, blank=True)
+    can_access_admin = models.BooleanField(default=False, verbose_name='Acceso al Panel de Administración')
+    can_upload_statements = models.BooleanField(default=False, verbose_name='Subir Estados de Cuenta')
+    can_reconcile = models.BooleanField(default=False, verbose_name='Conciliar')
+    can_view_all = models.BooleanField(default=False, verbose_name='Ver Toda la Información')
 
     class Meta:
         verbose_name = _('Role')

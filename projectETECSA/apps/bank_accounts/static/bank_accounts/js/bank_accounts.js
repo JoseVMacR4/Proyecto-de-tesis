@@ -2,6 +2,91 @@
  * Lógica completa para la interfaz de carga y manejo de extractos
  */
 
+/**
+ * Limpia mensajes de error eliminando información técnica
+ */
+function cleanMessage(message) {
+    if (!message) return 'Ha ocurrido un error';
+    
+    message = message.replace(/\\u[\da-f]{4}/gi, (match) => {
+        return String.fromCharCode(parseInt(match.replace('\\u', ''), 16));
+    });
+    
+    const technicalPatterns = [
+        /Traceback.*$/m,
+        /File ".*", line \d+/,
+        /"\/.*\.py":/,
+        /\\\\.*\\.*\.py/,
+        /python.*error/i,
+        /django.*error/i,
+        /database.*error/i,
+        /sqlite.*error/i,
+        /IntegrityError.*/,
+        /OperationalError.*/,
+        /ProgrammingError.*/,
+        /ValueError.*/,
+        /TypeError.*/,
+        /KeyError.*/,
+        /AttributeError.*/
+    ];
+    
+    const hasTechnicalInfo = technicalPatterns.some(pattern => pattern.test(message));
+    
+    if (hasTechnicalInfo) {
+        if (message.includes('UNIQUE constraint')) return 'Ya existe un registro con estos datos';
+        if (message.includes('FOREIGN KEY')) return 'Error de relación con otros datos';
+        if (message.includes('NOT NULL')) return 'Faltan datos requeridos';
+        if (message.includes('database')) return 'Error de base de datos';
+        return 'Ha ocurrido un error. Por favor contacte al administrador.';
+    }
+    
+    if (message.includes('no coincide con la cuenta del archivo')) {
+        if (message.includes('Error en')) {
+            return 'Error: La cuenta seleccionada no coincide con la cuenta del archivo';
+        }
+        return 'La cuenta seleccionada no coincide con la cuenta del archivo';
+    }
+    
+    if (message.includes('Ya existe un estado de cuenta')) {
+        if (message.includes('Error en')) {
+            return 'Error: Ya existe un estado de cuenta para esta cuenta en esa fecha';
+        }
+        return 'Ya existe un estado de cuenta para esta cuenta en esa fecha';
+    }
+    
+    if (message.includes('cuenta bancaria con ID')) {
+        return 'Cuenta bancaria no encontrada';
+    }
+    
+    if (message.includes('Formato') && message.includes('no soportado')) {
+        return 'Formato de archivo no soportado. Use archivos .txt';
+    }
+    
+    if (message.includes('No se detectó fecha válida')) {
+        return 'No se detectó fecha válida en el archivo';
+    }
+    
+    if (message.includes('No se pudo verificar el número de cuenta')) {
+        return 'No se pudo verificar el número de cuenta en el archivo';
+    }
+    
+    let cleaned = message;
+    
+    if (!cleaned.includes('Error en')) {
+        cleaned = cleaned.replace(/Archivo:\s*[\w\-]+/gi, 'Archivo: (datos)');
+    }
+    cleaned = cleaned.replace(/selecci[oó]n:\s*[\w\-]+/gi, 'selección: (datos)');
+    cleaned = cleaned.replace(/cuenta\s+[\w\-]+\s+en\s+la\s+fecha\s+[\d\-]+/gi, 'esta cuenta en esa fecha');
+    cleaned = cleaned.replace(/para\s+la\s+cuenta\s+[\w\-]+/gi, 'para esta cuenta');
+    cleaned = cleaned.replace(/fecha\s+[\d\-]+/gi, 'fecha (datos)');
+    cleaned = cleaned.replace(/ID\s+[\w\-]+/gi, 'ID (datos)');
+    cleaned = cleaned.replace(/cuenta\s+bancaria\s+con\s+ID\s+[\w\-]+/gi, 'cuenta bancaria');
+    
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    return cleaned;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeFileUpload();
     initializeHistoryActions();
@@ -86,15 +171,10 @@ function handleFiles(files) {
 }
 
 /**
- * Muestra notificaciones en la página usando Bootstrap-style alerts
+ * Muestra notificaciones flotantes usando Bootstrap-style alerts
  */
 function displayNotification(message, type = 'info') {
-    const container = document.getElementById('bankUploadNotifications');
-    if (!container) {
-        alert(message);
-        return;
-    }
-
+    const cleanMsg = cleanMessage(message);
     const alertType = {
         'success': 'alert-success',
         'warning': 'alert-warning',
@@ -102,22 +182,27 @@ function displayNotification(message, type = 'info') {
         'info': 'alert-info'
     }[type] || 'alert-info';
 
+    document.querySelectorAll('.bank-alert').forEach(el => el.remove());
+
     const alert = document.createElement('div');
-    alert.className = `alert ${alertType} alert-dismissible fade show`;
-    alert.role = 'alert';
+    alert.className = `bank-alert alert ${alertType} alert-dismissible fade show`;
     alert.innerHTML = `
-        <div>${message}</div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        ${cleanMsg}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
+    document.body.appendChild(alert);
 
-    container.prepend(alert);
-
-    // Auto-cerrar después de 5 segundos
     const timeout = type === 'danger' ? 6000 : 5000;
     setTimeout(() => {
-        alert.classList.remove('show');
-        setTimeout(() => alert.remove(), 300);
+        if (alert.parentNode) {
+            alert.remove();
+        }
     }, timeout);
+
+    // Guardar notificación para la campana
+    if (typeof window.addGlobalNotification === 'function') {
+        window.addGlobalNotification(cleanMsg, type);
+    }
 }
 
 /**
@@ -165,7 +250,15 @@ function uploadFile(file, accountId) {
     .then(async res => {
         if (!res.ok) {
             const errorText = await res.text();
-            throw new Error(`HTTP ${res.status}: ${errorText}`);
+            try {
+                const errorJson = JSON.parse(errorText);
+                throw new Error(errorJson.error || `Error HTTP ${res.status}`);
+            } catch (e) {
+                if (e instanceof SyntaxError) {
+                    throw new Error(`Error HTTP ${res.status}: ${errorText.substring(0, 100)}`);
+                }
+                throw e;
+            }
         }
         return res.json();
     })
@@ -186,7 +279,8 @@ function uploadFile(file, accountId) {
     })
     .catch(err => {
         console.error(err);
-        displayNotification(`Error de conexión con el servidor: ${err.message}`, 'danger');
+        const cleanErr = cleanMessage(err.message);
+        displayNotification(`Error de conexión con el servidor: ${cleanErr}`, 'danger');
         return false;
     })
     .finally(() => {
@@ -345,7 +439,7 @@ function initializeHistoryActions() {
 }
 
 /**
- * Paginación visual (sin lógica de backend por ahora)
+ * Paginación visual
  */
 function initializePagination() {
     document.querySelectorAll('.pagination-btn').forEach(btn => {
@@ -562,7 +656,8 @@ function openStatementModal(button) {
     })
     .catch(error => {
         console.error('Error:', error);
-        modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el estado de cuenta: ${error.message}</div>`;
+        const cleanError = cleanMessage(error.message);
+        modalBody.innerHTML = `<div class="alert alert-danger">Error al cargar el estado de cuenta: ${cleanError}</div>`;
     });
 }
 
@@ -711,37 +806,28 @@ function formatCurrency(value) {
 
 // ===== Notificaciones =====
 function showNotification(message, type = 'info') {
-    // Si existe un contenedor de notificaciones en Bootstrap, usarlo
-    const notificationContainer = document.getElementById('bankUploadNotifications');
+    const cleanMsg = cleanMessage(message);
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
 
-    if (notificationContainer) {
-        // Usando Bootstrap
-        const alertClass = {
-            'success': 'alert-success',
-            'error': 'alert-danger',
-            'warning': 'alert-warning',
-            'info': 'alert-info'
-        }[type] || 'alert-info';
+    // Remover notificaciones anteriores
+    document.querySelectorAll('.bank-alert').forEach(el => el.remove());
 
-        const alertHTML = `
-            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="animation: slideIn 0.3s ease;">
-                <strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `bank-alert alert ${alertClass} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${cleanMsg}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
 
-        notificationContainer.innerHTML += alertHTML;
-
-        // Auto-remover después de 5 segundos
-        setTimeout(() => {
-            const alerts = notificationContainer.querySelectorAll('.alert');
-            if (alerts.length > 0) {
-                const lastAlert = alerts[alerts.length - 1];
-                lastAlert.remove();
-            }
-        }, 5000);
-    } else {
-        // Fallback: console log
-        console.log(`[${type.toUpperCase()}] ${message}`);
-    }
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
 }

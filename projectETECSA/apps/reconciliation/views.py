@@ -8,7 +8,9 @@ from django.utils import timezone
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 from apps.reconciliation.models import BankStatementTransaction
-from apps.bank_accounts.models import BankAccount
+from apps.users.permissions import can_upload_statements, can_reconcile
+from apps.bank_accounts.models import BankAccount, Office, Operation
+from apps.users.models import Notification
 import json
 
 # Create your views here.
@@ -106,15 +108,17 @@ def get_reconciliation_data(request):
 				except ValueError:
 					pass
 
-		# Filtro por banco
-		if bank and bank != 'Todos los Bancos':
-			transactions = transactions.filter(
-				Q(bank_account__name__icontains=bank) | Q(bank_account__code__icontains=bank)
-			)
+		# Filtro por banco (múltiple) - buscar por código
+		if bank:
+			bank_list = [b.strip() for b in bank.split(',') if b.strip()]
+			if bank_list:
+				transactions = transactions.filter(bank_account__code__in=bank_list)
 
-		# Filtro por estado
-		if status and status != 'Todos':
-			transactions = transactions.filter(status=status)
+		# Filtro por estado (múltiple)
+		if status:
+			status_list = [s.strip() for s in status.split(',') if s.strip()]
+			if status_list:
+				transactions = transactions.filter(status__in=status_list)
 
 		# Filtro por referencia
 		if reference:
@@ -126,17 +130,23 @@ def get_reconciliation_data(request):
 		if name:
 			transactions = transactions.filter(name__icontains=name)
 
-		# Filtro por código de oficina
+		# Filtro por código de oficina (múltiple)
 		if office_code:
-			transactions = transactions.filter(office_code__icontains=office_code)
+			office_list = [o.strip() for o in office_code.split(',') if o.strip()]
+			if office_list:
+				transactions = transactions.filter(office_code__in=office_list)
 
-		# Filtro por tipo de entrada
-		if entry_type and entry_type != 'Todos':
-			transactions = transactions.filter(entry_type=entry_type)
+		# Filtro por tipo de entrada (múltiple)
+		if entry_type:
+			entry_list = [e.strip() for e in entry_type.split(',') if e.strip()]
+			if entry_list:
+				transactions = transactions.filter(entry_type__in=entry_list)
 
-		# Filtro por tipo de operación
+		# Filtro por tipo de operación (múltiple)
 		if operation_type:
-			transactions = transactions.filter(operation_type__icontains=operation_type)
+			operation_list = [o.strip() for o in operation_type.split(',') if o.strip()]
+			if operation_list:
+				transactions = transactions.filter(operation_type__in=operation_list)
 
 		# Filtro por rango de monto
 		if amount_min:
@@ -152,16 +162,25 @@ def get_reconciliation_data(request):
 			except ValueError:
 				pass
 
-		# Filtro por moneda
-		if currency and currency != 'Todas':
-			transactions = transactions.filter(currency=currency)
+# Filtro por moneda (múltiple)
+		if currency:
+			currency_list = [c.strip() for c in currency.split(',') if c.strip()]
+			if currency_list:
+				transactions = transactions.filter(currency__in=currency_list)
 
 		paginator = Paginator(transactions, 50)
 		page_obj = paginator.get_page(page)
 
+		office_map = {o.code: o.name for o in Office.objects.all()}
+		operation_map = {o.code: o.name for o in Operation.objects.all()}
+
 		transactions_data = []
 		for tx in page_obj.object_list:
 			try:
+				office_value = tx.office_code or ''
+				office_display = office_map.get(office_value, office_value) if office_value else ''
+				operation_value = tx.operation_type or ''
+				operation_display = operation_map.get(operation_value, '') if operation_value else ''
 				transactions_data.append({
 					'id': str(tx.id),
 					'date': date_format(tx.date, 'd/m/Y'),
@@ -169,18 +188,20 @@ def get_reconciliation_data(request):
 					'original_reference': tx.original_reference,
 					'bank': tx.bank_account.name if tx.bank_account else 'N/A',
 					'bank_code': tx.bank_account.code if tx.bank_account else 'N/A',
-					'office': tx.office_code or '',
+					'office': office_display,
+					'office_code': office_value,
 					'operations': tx.operation_count,
 					'entity': tx.name,
 					'amount': float(tx.amount),
 					'entry_type': tx.entry_type,
 					'bank_fee': float(tx.bank_fee),
-					'operation_type': tx.operation_type or '',
+					'operation_type': operation_display,
+					'operation_type_code': operation_value,
 					'currency': tx.currency,
 					'statement_date': date_format(tx.bank_statement.statement_date, 'd/m/Y') if tx.bank_statement else '',
 					'status': tx.status,
 					'status_display': tx.get_status_display(),
-     				'created_at': timezone.localtime(tx.created_at).strftime('%d/%m/%Y %H:%M') if tx.created_at else '',
+      				'created_at': timezone.localtime(tx.created_at).strftime('%d/%m/%Y %H:%M') if tx.created_at else '',
 					'updated_at': timezone.localtime(tx.updated_at).strftime('%d/%m/%Y %H:%M') if tx.updated_at else '',
 				})
 			except Exception as e:
@@ -208,6 +229,9 @@ def get_reconciliation_data(request):
 @require_http_methods(["POST"])
 @login_required
 def reconcile_transaction(request):
+    if not can_reconcile(request.user):
+        return JsonResponse({'status': 'error', 'message': 'No tiene permiso para conciliar transacciones.'}, status=403)
+    
     try:
         data = json.loads(request.body)
         tx_id = data.get('transaction_id')
@@ -224,11 +248,21 @@ def reconcile_transaction(request):
             transaction.status = BankStatementTransaction.StatusChoices.RECONCILED
             transaction.save()
 
+            # ==========================================
+            # NUEVO: Crear la notificación persistente
+            # ==========================================
+            Notification.objects.create(
+                user=request.user,
+                type='info', # Ajusta a Notification.NotificationType.INFO si usas TextChoices en tu modelo
+                content=f"Transacción {transaction.current_reference} conciliada correctamente."
+            )
+            # ==========================================
+
             updated_at = timezone.localtime(transaction.updated_at).strftime('%d/%m/%Y %H:%M')
 
             return JsonResponse({
                 'status': 'success',
-                'message': 'Transacción conciliada correctamente',
+                'message': f"Transacción {transaction.current_reference} conciliada correctamente", # Opcional: mejorar el mensaje de respuesta
                 'updated_at': updated_at,
             })
         except BankStatementTransaction.DoesNotExist:
@@ -272,15 +306,15 @@ def get_filter_options(request):
 	try:
 		# Obtener bancos
 		banks = BankAccount.objects.values('code', 'name').order_by('code')
-		bank_options = [{'value': 'Todos los Bancos', 'label': 'Todos los Bancos'}]
+		bank_options = [{'value': '', 'label': 'Todos los Bancos'}]
 		bank_options.extend([
-			{'value': bank['name'], 'label': f"{bank['code']} - {bank['name']}"}
+			{'value': bank['code'], 'label': f"{bank['code']} - {bank['name']}"}
 			for bank in banks
 		])
 
 		# Obtener tipos de entrada únicos
 		entry_types = BankStatementTransaction.objects.values_list('entry_type', flat=True).distinct().exclude(entry_type__isnull=True).exclude(entry_type='').order_by('entry_type')
-		entry_type_options = [{'value': 'Todos', 'label': 'Todos los Tipos'}]
+		entry_type_options = [{'value': '', 'label': 'Todos los Tipos'}]
 		entry_type_options.extend([
 			{'value': et, 'label': 'Crédito (Cr)' if et == 'Cr' else 'Débito (Db)'}
 			for et in entry_types
@@ -288,27 +322,35 @@ def get_filter_options(request):
 
 		# Obtener monedas únicas
 		currencies = BankStatementTransaction.objects.values_list('currency', flat=True).distinct().exclude(currency__isnull=True).exclude(currency='').order_by('currency')
-		currency_options = [{'value': 'Todas', 'label': 'Todas las Monedas'}]
+		currency_options = [{'value': '', 'label': 'Todas las Monedas'}]
 		currency_options.extend([
 			{'value': curr, 'label': curr}
 			for curr in currencies
 		])
 
-		# Obtener códigos de oficina únicos
-		offices = BankStatementTransaction.objects.values_list('office_code', flat=True).distinct().exclude(office_code__isnull=True).exclude(office_code='').order_by('office_code')
+		# Obtener oficinas registradas y códigos de transacciones
+		registered_offices = {o.code: o.name for o in Office.objects.all()}
+		transaction_office_codes = BankStatementTransaction.objects.values_list('office_code', flat=True).distinct().exclude(office_code__isnull=True).exclude(office_code='').order_by('office_code')
+		
 		office_options = [{'value': '', 'label': 'Todas las Oficinas'}]
-		office_options.extend([
-			{'value': office, 'label': office}
-			for office in offices
-		])
+		for code in transaction_office_codes:
+			name = registered_offices.get(code, code)
+			office_options.append({
+				'value': code,
+				'label': f"{code} - {name}" if code != name else code
+			})
 
-		# Obtener tipos de operación únicos
-		operation_types = BankStatementTransaction.objects.values_list('operation_type', flat=True).distinct().exclude(operation_type__isnull=True).exclude(operation_type='').order_by('operation_type')
+		# Obtener operaciones registradas y códigos de transacciones
+		registered_ops = {o.code: o.name for o in Operation.objects.all()}
+		transaction_op_codes = BankStatementTransaction.objects.values_list('operation_type', flat=True).distinct().exclude(operation_type__isnull=True).exclude(operation_type='').order_by('operation_type')
+		
 		operation_type_options = [{'value': '', 'label': 'Todos los Tipos'}]
-		operation_type_options.extend([
-			{'value': op, 'label': op}
-			for op in operation_types
-		])
+		for code in transaction_op_codes:
+			name = registered_ops.get(code, code)
+			operation_type_options.append({
+				'value': code,
+				'label': f"{code} - {name}" if code != name else code
+			})
 
 		return JsonResponse({
 			'status': 'success',

@@ -10,8 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ETECSA Finanzas - Gestión Central{% endblock %}</title>
 
-    <!-- Bootstrap 5 (local) -->
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <!-- Bootstrap 5 CSS ya incluido por bootstrap5 -->
 
     <!-- Fonts (local) -->
     <link href="{% static 'css/inter.css' %}" rel="stylesheet">
@@ -22,6 +21,31 @@
 
     <!-- Dashboard CSS Base -->
     <link rel="stylesheet" href="{% static 'users/css/dashboard.css' %}">
+
+    <!-- Estilos para notificaciones flotantes -->
+    <style>
+        body > .bank-alert,
+        body > .reconciliation-alert,
+        body > .reporting-alert,
+        body > .admin-alert,
+        div.bank-alert,
+        div.reconciliation-alert,
+        div.reporting-alert,
+        div.admin-alert {
+            position: fixed !important;
+            top: 80px !important;
+            right: 20px !important;
+            z-index: 10000 !important;
+            width: 350px !important;
+            max-width: 90% !important;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+            animation: slideInNotification 0.3s ease !important;
+        }
+        @keyframes slideInNotification {
+            from { opacity: 0; transform: translateX(100px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
 
     <!-- Block for additional CSS -->
     {% block extra_css %}{% endblock %}
@@ -35,7 +59,8 @@
             <button class="btn btn-link d-lg-none p-0 text-dark" id="sidebarToggle">
                 <span class="material-symbols-outlined">menu</span>
             </button>
-            <span class="fs-4 font-manrope fw-extrabold text-primary" style="letter-spacing: -0.02em;">ETECSA Finanzas</span>
+            <span class="fs-4 font-manrope fw-extrabold text-primary" style="letter-spacing: -0.02em;">ETECSA
+                Finanzas</span>
         </div>
 
         <div class="d-flex align-items-center gap-3 gap-md-4">
@@ -45,50 +70,90 @@
                 <input type="text" class="form-control search-input" placeholder="Buscar...">
             </div>
 
-            <button class="btn btn-link p-0 text-secondary">
-                <span class="material-symbols-outlined">notifications</span>
-            </button>
+            <div class="position-relative">
+                <button class="btn btn-link p-0 text-dark position-relative" type="button"
+                    id="notificationBtn" aria-expanded="false" aria-controls="notificationMenu"
+                    style="cursor: pointer; text-decoration: none;">
+                    <span class="material-symbols-outlined" style="font-size: 1.5rem;">notifications</span>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                        id="globalNotificationCount" style="display: none; font-size: 0.65rem;">
+                        0
+                    </span>
+                </button>
+            </div>
             <button class="btn btn-link p-0 text-secondary">
                 <span class="material-symbols-outlined">help_outline</span>
             </button>
 
             <div class="vr mx-1 d-none d-sm-block"></div>
 
-            <a href="{% url 'logout' %}" class="btn btn-primary-gradient logout-button d-flex align-items-center gap-2 py-2 px-3 fw-bold text-white">
+            <a href="{% url 'logout' %}"
+                class="btn btn-primary-gradient logout-button d-flex align-items-center gap-2 py-2 px-3 fw-bold text-white">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="d-none d-sm-inline">Cerrar Sesión</span>
             </a>
         </div>
     </nav>
 
+    <div class="notification-dropdown position-fixed" style="top: 52px; right: 10px; z-index: 9999;">
+        <div class="card shadow-lg border-0" id="notificationMenu"
+            style="width: 280px; max-height: 320px; overflow-y: auto; display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center fw-bold bg-white">
+                <span>Notificaciones</span>
+                <button class="btn btn-link btn-sm p-0 text-decoration-none" id="clearNotificationsBtn"
+                    style="font-size: 0.75rem;">Limpiar</button>
+            </div>
+            <div class="card-body p-0">
+                <div id="globalNotificationList">
+                    <div id="emptyNotificationsMsg" class="text-center text-muted p-4 small">
+                        <span class="material-symbols-outlined d-block mb-2"
+                            style="font-size: 2rem; opacity: 0.5;">notifications_paused</span>
+                        No tienes notificaciones nuevas
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Sidebar -->
     <aside class="sidebar d-flex flex-column" id="sidebar">
         <div class="px-4 mb-4">
             <div class="d-flex align-items-center gap-3">
-                <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <div class="bg-primary text-white rounded d-flex align-items-center justify-content-center"
+                    style="width: 40px; height: 40px;">
                     <span class="material-symbols-outlined icon-filled">account_balance</span>
                 </div>
                 <div>
                     <h6 class="font-manrope fw-bold text-primary mb-1 lh-1">Gestión Central</h6>
-                    <small class="text-muted fw-bold" style="font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;">Unidad de Conciliación</small>
+                    <small class="text-muted fw-bold"
+                        style="font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;">Unidad de
+                        Conciliación</small>
                 </div>
             </div>
         </div>
 
         <nav class="flex-grow-1 d-flex flex-column gap-1 pb-4">
-            <a href="{% url 'dashboard' %}" class="nav-item-custom {% if current_page == 'dashboard' %}active{% endif %}">
+            <a href="{% url 'dashboard' %}"
+                class="nav-item-custom {% if current_page == 'dashboard' %}active{% endif %}">
                 <span class="material-symbols-outlined icon-filled">dashboard</span>
                 Resumen
             </a>
-            <a href="{% url 'bank_accounts' %}" class="nav-item-custom {% if current_page == 'bank_accounts' %}active{% endif %}">
+            {% if user_permissions.can_upload_statements or user_permissions.can_view_all %}
+            <a href="{% url 'bank_accounts' %}"
+                class="nav-item-custom {% if current_page == 'bank_accounts' %}active{% endif %}">
                 <span class="material-symbols-outlined">account_balance</span>
                 Estados de cuenta
             </a>
-            <a href="{% url 'reconciliation' %}" class="nav-item-custom {% if current_page == 'reconciliation' %}active{% endif %}">
+            {% endif %}
+            {% if user_permissions.can_reconcile or user_permissions.can_view_all %}
+            <a href="{% url 'reconciliation' %}"
+                class="nav-item-custom {% if current_page == 'reconciliation' %}active{% endif %}">
                 <span class="material-symbols-outlined">sync_alt</span>
                 Conciliación
             </a>
-            <a href="{% url 'reporting' %}" class="nav-item-custom {% if current_page == 'reporting' %}active{% endif %}">
+            {% endif %}
+            <a href="{% url 'reporting' %}"
+                class="nav-item-custom {% if current_page == 'reporting' %}active{% endif %}">
                 <span class="material-symbols-outlined">description</span>
                 Informes
             </a>
@@ -96,17 +161,22 @@
                 <span class="material-symbols-outlined">settings</span>
                 Configuración
             </a>
-            <a href="{% url 'admin_panel' %}" class="nav-item-custom mt-auto {% if current_page == 'admin_panel' %}active{% endif %}">
+            {% if user_permissions.can_access_admin %}
+            <a href="{% url 'admin_panel' %}"
+                class="nav-item-custom mt-auto {% if current_page == 'admin_panel' %}active{% endif %}">
                 <span class="material-symbols-outlined">admin_panel_settings</span>
                 Administrador
             </a>
+            {% endif %}
         </nav>
 
         <div class="mt-auto pt-4 border-top" style="border-color: var(--surface-container-high) !important;">
+            {% if user_permissions.can_view_all %}
             <a href="#" class="nav-item-custom mb-3">
                 <span class="material-symbols-outlined">summarize</span>
                 Reportes
             </a>
+            {% endif %}
         </div>
     </aside>
 
@@ -116,12 +186,11 @@
     </main>
 
     <!-- Bootstrap JS (local) -->
-    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-
-    <!-- Custom Dashboard JS -->
+<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script>window.currentUserId = '{{ user.id }}';</script>
     <script src="{% static 'users/js/dashboard.js' %}"></script>
-
-    <!-- Block for additional JS -->
+    {% endif %}
     {% block extra_js %}{% endblock %}
 </body>
 </html>

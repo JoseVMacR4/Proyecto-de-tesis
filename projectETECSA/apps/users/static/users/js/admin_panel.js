@@ -6,6 +6,91 @@
 // Variables globales para los modales
 let userModal, operationModal, operationDetailsModal, bankModal, bankDetailsModal, officeModal, officeDetailsModal, deleteModal, userDetailsModal;
 
+/**
+ * Limpia mensajes de error eliminando información técnica
+ */
+function cleanMessage(message) {
+    if (!message) return 'Ha ocurrido un error';
+    
+    message = message.replace(/\\u[\da-f]{4}/gi, (match) => {
+        return String.fromCharCode(parseInt(match.replace('\\u', ''), 16));
+    });
+    
+    const technicalPatterns = [
+        /Traceback.*$/m,
+        /File ".*", line \d+/,
+        /"\/.*\.py":/,
+        /\\\\.*\\.*\.py/,
+        /python.*error/i,
+        /django.*error/i,
+        /database.*error/i,
+        /sqlite.*error/i,
+        /IntegrityError.*/,
+        /OperationalError.*/,
+        /ProgrammingError.*/,
+        /ValueError.*/,
+        /TypeError.*/,
+        /KeyError.*/,
+        /AttributeError.*/
+    ];
+    
+    const hasTechnicalInfo = technicalPatterns.some(pattern => pattern.test(message));
+    
+    if (hasTechnicalInfo) {
+        if (message.includes('UNIQUE constraint')) return 'Ya existe un registro con estos datos';
+        if (message.includes('FOREIGN KEY')) return 'Error de relación con otros datos';
+        if (message.includes('NOT NULL')) return 'Faltan datos requeridos';
+        if (message.includes('database')) return 'Error de base de datos';
+        return 'Ha ocurrido un error. Por favor contacte al administrador.';
+    }
+    
+    if (message.includes('no coincide con la cuenta del archivo')) {
+        if (message.includes('Error en')) {
+            return 'Error: La cuenta seleccionada no coincide con la cuenta del archivo';
+        }
+        return 'La cuenta seleccionada no coincide con la cuenta del archivo';
+    }
+    
+    if (message.includes('Ya existe un estado de cuenta')) {
+        if (message.includes('Error en')) {
+            return 'Error: Ya existe un estado de cuenta para esta cuenta en esa fecha';
+        }
+        return 'Ya existe un estado de cuenta para esta cuenta en esa fecha';
+    }
+    
+    if (message.includes('cuenta bancaria con ID')) {
+        return 'Cuenta bancaria no encontrada';
+    }
+    
+    if (message.includes('Formato') && message.includes('no soportado')) {
+        return 'Formato de archivo no soportado. Use archivos .txt';
+    }
+    
+    if (message.includes('No se detectó fecha válida')) {
+        return 'No se detectó fecha válida en el archivo';
+    }
+    
+    if (message.includes('No se pudo verificar el número de cuenta')) {
+        return 'No se pudo verificar el número de cuenta en el archivo';
+    }
+    
+    let cleaned = message;
+    
+    if (!cleaned.includes('Error en')) {
+        cleaned = cleaned.replace(/Archivo:\s*[\w\-]+/gi, 'Archivo: (datos)');
+    }
+    cleaned = cleaned.replace(/selecci[oó]n:\s*[\w\-]+/gi, 'selección: (datos)');
+    cleaned = cleaned.replace(/cuenta\s+[\w\-]+\s+en\s+la\s+fecha\s+[\d\-]+/gi, 'esta cuenta en esa fecha');
+    cleaned = cleaned.replace(/para\s+la\s+cuenta\s+[\w\-]+/gi, 'para esta cuenta');
+    cleaned = cleaned.replace(/fecha\s+[\d\-]+/gi, 'fecha (datos)');
+    cleaned = cleaned.replace(/ID\s+[\w\-]+/gi, 'ID (datos)');
+    cleaned = cleaned.replace(/cuenta\s+bancaria\s+con\s+ID\s+[\w\-]+/gi, 'cuenta bancaria');
+    
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    return cleaned;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Inicializar tabs
     initTabs();
@@ -473,10 +558,13 @@ function resetForm(type) {
         document.getElementById('userUsername').value = '';
         document.getElementById('userEmail').value = '';
         document.getElementById('userPassword').value = '';
+        document.getElementById('userPassword').required = true;
+        document.getElementById('userPassword').placeholder = 'Dejar en blanco para mantener la actual (solo edición)';
         document.getElementById('userFirstName').value = '';
         document.getElementById('userLastName').value = '';
         document.getElementById('userRole').value = '';
         document.getElementById('userIsActive').checked = true;
+        document.getElementById('userIsActive').disabled = false;
     } else if (type === 'operation') {
         document.getElementById('operationId').value = '';
         document.getElementById('operationFormAction').value = 'create';
@@ -570,18 +658,27 @@ function reinitializeUserButtons() {
  * Muestra una alerta temporal
  */
 function showAlert(type, message) {
+    const cleanMsg = cleanMessage(message);
+    document.querySelectorAll('.admin-alert').forEach(el => el.remove());
+
     const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
-    alertDiv.style.zIndex = '9999';
+    alertDiv.className = `admin-alert alert alert-${type} alert-dismissible fade show`;
     alertDiv.innerHTML = `
-        ${message}
+        ${cleanMsg}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     `;
     document.body.appendChild(alertDiv);
-    
+
     setTimeout(() => {
-        alertDiv.remove();
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
     }, 5000);
+
+    // Guardar notificación para la campana
+    if (typeof window.addGlobalNotification === 'function') {
+        window.addGlobalNotification(cleanMsg, type);
+    }
 }
 
 /**
@@ -1121,10 +1218,13 @@ function editUser(userId) {
     document.getElementById('userUsername').value = user.username;
     document.getElementById('userEmail').value = user.email !== '—' ? user.email : '';
     document.getElementById('userPassword').value = '';
+    document.getElementById('userPassword').required = false;
+    document.getElementById('userPassword').placeholder = 'Dejar en blanco para mantener la actual';
     document.getElementById('userFirstName').value = user.first_name || '';
     document.getElementById('userLastName').value = user.last_name || '';
     document.getElementById('userRole').value = user.role_id || '';
     document.getElementById('userIsActive').checked = user.is_active;
+    document.getElementById('userIsActive').disabled = String(user.id) === String(window.currentUserId);
     
     document.getElementById('modalUserLabel').textContent = 'Editar Usuario';
     userModal.show();

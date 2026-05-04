@@ -1,14 +1,108 @@
 /*
    ETECSA Finanzas - Reconciliation JavaScript
    Funcionalidad para gestionar transacciones bancarias
-*/
+ */
+
+/**
+ * Limpia mensajes de error eliminando información técnica
+ */
+function cleanMessage(message) {
+    if (!message) return 'Ha ocurrido un error';
+    
+    message = message.replace(/\\u[\da-f]{4}/gi, (match) => {
+        return String.fromCharCode(parseInt(match.replace('\\u', ''), 16));
+    });
+    
+    const technicalPatterns = [
+        /Traceback.*$/m,
+        /File ".*", line \d+/,
+        /"\/.*\.py":/,
+        /\\\\.*\\.*\.py/,
+        /python.*error/i,
+        /django.*error/i,
+        /database.*error/i,
+        /sqlite.*error/i,
+        /IntegrityError.*/,
+        /OperationalError.*/,
+        /ProgrammingError.*/,
+        /ValueError.*/,
+        /TypeError.*/,
+        /KeyError.*/,
+        /AttributeError.*/
+    ];
+    
+    const hasTechnicalInfo = technicalPatterns.some(pattern => pattern.test(message));
+    
+    if (hasTechnicalInfo) {
+        if (message.includes('UNIQUE constraint')) return 'Ya existe un registro con estos datos';
+        if (message.includes('FOREIGN KEY')) return 'Error de relación con otros datos';
+        if (message.includes('NOT NULL')) return 'Faltan datos requeridos';
+        if (message.includes('database')) return 'Error de base de datos';
+        return 'Ha ocurrido un error. Por favor contacte al administrador.';
+    }
+    
+    if (message.includes('no coincide con la cuenta del archivo')) {
+        if (message.includes('Error en')) {
+            return 'Error: La cuenta seleccionada no coincide con la cuenta del archivo';
+        }
+        return 'La cuenta seleccionada no coincide con la cuenta del archivo';
+    }
+    
+    if (message.includes('Ya existe un estado de cuenta')) {
+        if (message.includes('Error en')) {
+            return 'Error: Ya existe un estado de cuenta para esta cuenta en esa fecha';
+        }
+        return 'Ya existe un estado de cuenta para esta cuenta en esa fecha';
+    }
+    
+    if (message.includes('cuenta bancaria con ID')) {
+        return 'Cuenta bancaria no encontrada';
+    }
+    
+    if (message.includes('Formato') && message.includes('no soportado')) {
+        return 'Formato de archivo no soportado. Use archivos .txt';
+    }
+    
+    if (message.includes('No se detectó fecha válida')) {
+        return 'No se detectó fecha válida en el archivo';
+    }
+    
+    if (message.includes('No se pudo verificar el número de cuenta')) {
+        return 'No se pudo verificar el número de cuenta en el archivo';
+    }
+    
+    let cleaned = message;
+    
+    if (!cleaned.includes('Error en')) {
+        cleaned = cleaned.replace(/Archivo:\s*[\w\-]+/gi, 'Archivo: (datos)');
+    }
+    cleaned = cleaned.replace(/selecci[oó]n:\s*[\w\-]+/gi, 'selección: (datos)');
+    cleaned = cleaned.replace(/cuenta\s+[\w\-]+\s+en\s+la\s+fecha\s+[\d\-]+/gi, 'esta cuenta en esa fecha');
+    cleaned = cleaned.replace(/para\s+la\s+cuenta\s+[\w\-]+/gi, 'para esta cuenta');
+    cleaned = cleaned.replace(/fecha\s+[\d\-]+/gi, 'fecha (datos)');
+    cleaned = cleaned.replace(/ID\s+[\w\-]+/gi, 'ID (datos)');
+    cleaned = cleaned.replace(/cuenta\s+bancaria\s+con\s+ID\s+[\w\-]+/gi, 'cuenta bancaria');
+    
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    return cleaned;
+}
 
 document.addEventListener('DOMContentLoaded', function() {
+    initializeUserPermissions();
     initializeReconciliation();
 });
 
+function initializeUserPermissions() {
+    const dataElement = document.getElementById('userPermissionsData');
+    window.userPermissions = {
+        can_reconcile: dataElement?.dataset?.canReconcile === 'true'
+    };
+}
+
 // ===== Inicialización General =====
 function initializeReconciliation() {
+    initializeDropdowns();
     setupFilterListeners();
     setupTableListeners();
     setupPaginationListeners();
@@ -22,36 +116,188 @@ function initializeReconciliation() {
     });
 }
 
+function initializeDropdowns() {
+    console.log('Initializing dropdowns...');
+    
+    const buttons = document.querySelectorAll('.dropdown-multiselect button');
+    console.log('Found buttons:', buttons.length);
+    
+    buttons.forEach(button => {
+        console.log('Button found:', button.id);
+        
+        // Agregar handler manual
+        button.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const dropdown = this.closest('.dropdown-multiselect');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            
+            // Cerrar otros dropdowns
+            document.querySelectorAll('.dropdown-multiselect .dropdown-menu.show').forEach(openMenu => {
+                if (openMenu !== menu) {
+                    openMenu.classList.remove('show');
+                }
+            });
+            
+            // Toggle este dropdown
+            menu.classList.toggle('show');
+        };
+        
+        console.log('Dropdown initialized for:', button.id);
+    });
+    
+    // Cerrar dropdowns al hacer click fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-multiselect')) {
+            document.querySelectorAll('.dropdown-multiselect .dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+    
+    // Agregar event listeners a los checkboxes de los menús
+    document.querySelectorAll('.dropdown-multiselect .dropdown-menu').forEach(menu => {
+        menu.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox') {
+                handleDropdownCheckboxChange(e.target);
+            }
+        });
+    });
+}
+
 // ===== Filtros =====
 function setupFilterListeners() {
-    const filterInputs = document.querySelectorAll('.filter-input, .filter-select');
-
-    // Aplicar filtros automáticamente al cambiar cualquier input
+    // Listeners para inputs simples (texto, date, number)
+    const filterInputs = document.querySelectorAll('.filter-input:not([type="hidden"])');
     filterInputs.forEach(input => {
         input.addEventListener('change', applyFilters);
         input.addEventListener('input', debounce(applyFilters, 500));
     });
+
+    // Event delegation global para TODOS los checkboxes dentro de dropdowns
+    document.addEventListener('change', function(e) {
+        if (e.target.type === 'checkbox' && e.target.closest('.dropdown-menu')) {
+            console.log('Checkbox changed:', e.target.value, 'Checked:', e.target.checked);
+            handleMultiselectChange(e.target);
+        }
+    });
+
+    // Conectar listeners a status filter (que ya existe en HTML)
+    const statusCheckboxes = document.querySelectorAll('#statusFilterMenu input[type="checkbox"]');
+    statusCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            handleMultiselectChange(this);
+        });
+    });
+}
+
+function handleMultiselectChange(checkbox) {
+    // Encontrar el menú padre
+    const menu = checkbox.closest('.dropdown-menu');
+    if (!menu) {
+        console.warn('No menu found for checkbox');
+        return;
+    }
+
+    const menuId = menu.id;
+    console.log('Handling change for menu:', menuId);
+
+    // Encontrar el botón y hidden input correspondientes
+    const btnId = menuId.replace('Menu', 'Btn');
+    const hiddenInputId = menuId.replace('FilterMenu', 'Filter');
+    
+    const btn = document.getElementById(btnId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    
+    if (!btn || !hiddenInput) {
+        console.warn(`No button or input found for menu ${menuId}`);
+        return;
+    }
+
+    // Obtener todos los checkboxes del menu
+    const allCheckboxes = menu.querySelectorAll('input[type="checkbox"]');
+    const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
+
+    // Construir el texto a mostrar
+    const checkedValues = Array.from(checkedCheckboxes).map(cb => cb.value).filter(v => v);
+    const displayText = Array.from(checkedCheckboxes)
+        .map(cb => {
+            const label = cb.closest('label') || cb.nextElementSibling;
+            return label ? label.textContent.trim() : cb.value;
+        })
+        .filter(text => text);
+
+    // Actualizar hidden input
+    hiddenInput.value = checkedValues.join(',');
+
+    // Actualizar texto del botón
+    const textSpan = btn.querySelector('span');
+    if (textSpan && displayText.length > 0) {
+        if (displayText.length > 2) {
+            textSpan.textContent = displayText.slice(0, 2).join(', ') + ` (+${displayText.length - 2})`;
+        } else {
+            textSpan.textContent = displayText.join(', ');
+        }
+    }
+
+    // Disparar búsqueda
+    applyFilters();
+}
+
+function getFilterValues(menuId) {
+    const menu = document.getElementById(menuId);
+    if (!menu) return '';
+
+    const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
+    const specialValues = ['', 'Todos los Bancos', 'Todos los Estados', 'Todas las Oficinas', 
+                           'Todos los Tipos', 'Todas las Monedas', 'Todos', 'Todas'];
+    
+    const values = Array.from(checkedCheckboxes)
+        .map(cb => cb.value)
+        .filter(v => v && !specialValues.includes(v));
+
+    return values.join(',');
 }
 
 let currentFilters = { page: 1 };
 
 function applyFilters() {
+    const bankValue = getFilterValues('bankFilterMenu');
+    const statusValue = getFilterValues('statusFilterMenu');
+    
+    const amountMinInput = document.getElementById('amountMinFilter');
+    const amountMaxInput = document.getElementById('amountMaxFilter');
+    
+    let amountMin = amountMinInput?.value || '';
+    let amountMax = amountMaxInput?.value || '';
+    
+    if (amountMin && parseFloat(amountMin) < 0) {
+        amountMinInput.value = '';
+        amountMin = '';
+    }
+    if (amountMax && parseFloat(amountMax) < 0) {
+        amountMaxInput.value = '';
+        amountMax = '';
+    }
+    
     currentFilters = {
         date_from: document.getElementById('dateFrom')?.value || '',
         date_to: document.getElementById('dateTo')?.value || '',
-        bank: document.getElementById('bankFilter')?.value || '',
-        status: document.getElementById('statusFilter')?.value || '',
+        bank: bankValue,
+        status: statusValue,
         reference: document.getElementById('referenceFilter')?.value || '',
         name: document.getElementById('nameFilter')?.value || '',
-        office_code: document.getElementById('officeFilter')?.value || '',
-        entry_type: document.getElementById('entryTypeFilter')?.value || '',
-        operation_type: document.getElementById('operationTypeFilter')?.value || '',
-        amount_min: document.getElementById('amountMinFilter')?.value || '',
-        amount_max: document.getElementById('amountMaxFilter')?.value || '',
-        currency: document.getElementById('currencyFilter')?.value || '',
-        page: 1 // Al filtrar, siempre volvemos a la página 1
+        office_code: getFilterValues('officeFilterMenu'),
+        entry_type: getFilterValues('entryTypeFilterMenu'),
+        operation_type: getFilterValues('operationTypeFilterMenu'),
+        amount_min: amountMin,
+        amount_max: amountMax,
+        currency: getFilterValues('currencyFilterMenu'),
+        page: 1
     };
 
+    console.log('Applying filters:', currentFilters);
     loadTransactions(currentFilters);
 }
 
@@ -83,55 +329,160 @@ function loadFilterOptions() {
 }
 
 function populateFilterOptions(filters) {
-    // Poblar bancos
-    const bankSelect = document.getElementById('bankFilter');
-    bankSelect.innerHTML = '';
-    filters.banks.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option.value;
-        opt.textContent = option.label;
-        bankSelect.appendChild(opt);
-    });
+    const populateMenu = (menuId, options) => {
+        const menu = document.getElementById(menuId);
+        if (!menu || !options) return;
 
-    // Poblar tipos de entrada
-    const entryTypeSelect = document.getElementById('entryTypeFilter');
-    entryTypeSelect.innerHTML = '';
-    filters.entry_types.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option.value;
-        opt.textContent = option.label;
-        entryTypeSelect.appendChild(opt);
-    });
+        menu.innerHTML = '';
+        
+        options.forEach((option, index) => {
+            const li = document.createElement('li');
+            li.className = 'dropdown-item';
+            li.style.display = 'flex';
+            li.style.alignItems = 'center';
+            li.style.padding = '0.375rem 0.75rem';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'form-check-input';
+            checkbox.style.marginRight = '0.5rem';
+            checkbox.style.marginTop = '0';
+            checkbox.style.width = '16px';
+            checkbox.style.height = '16px';
+            checkbox.value = option.value;
+            checkbox.id = `chk-${menuId}-${index}`;
+            
+            // Marcar por defecto la opción "Todos" (valor vacío)
+            if (option.value === '' || option.value === 'Todos' || option.value === 'Todas') {
+                checkbox.checked = true;
+            }
+            
+            const label = document.createElement('label');
+            label.className = 'form-check-label';
+            label.htmlFor = checkbox.id;
+            label.style.marginBottom = '0';
+            label.style.cursor = 'pointer';
+            label.style.width = '100%';
+            label.textContent = option.label || option.value;
+            
+            li.appendChild(checkbox);
+            li.appendChild(label);
+            menu.appendChild(li);
+        });
+    };
 
-    // Poblar monedas
-    const currencySelect = document.getElementById('currencyFilter');
-    currencySelect.innerHTML = '';
-    filters.currencies.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option.value;
-        opt.textContent = option.label;
-        currencySelect.appendChild(opt);
-    });
+    populateMenu('bankFilterMenu', filters.banks);
+    populateMenu('entryTypeFilterMenu', filters.entry_types);
+    populateMenu('currencyFilterMenu', filters.currencies);
+    populateMenu('officeFilterMenu', filters.offices);
+    populateMenu('operationTypeFilterMenu', filters.operation_types);
 
-    // Poblar oficinas
-    const officeSelect = document.getElementById('officeFilter');
-    officeSelect.innerHTML = '';
-    filters.offices.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option.value;
-        opt.textContent = option.label;
-        officeSelect.appendChild(opt);
-    });
+    // Forzar re-inicialización de dropdowns DESPUÉS de populate
+    setTimeout(() => {
+        forceReinitializeDropdowns();
+    }, 100);
+}
 
-    // Poblar tipos de operación
-    const operationTypeSelect = document.getElementById('operationTypeFilter');
-    operationTypeSelect.innerHTML = '';
-    filters.operation_types.forEach(option => {
-        const opt = document.createElement('option');
-        opt.value = option.value;
-        opt.textContent = option.label;
-        operationTypeSelect.appendChild(opt);
+function forceReinitializeDropdowns() {
+    console.log('Force reinitializing dropdowns...');
+    
+    const buttons = document.querySelectorAll('.dropdown-multiselect button');
+    buttons.forEach(button => {
+        // Agregar handler manual
+        button.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const dropdown = this.closest('.dropdown-multiselect');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            
+            // Cerrar otros dropdowns
+            document.querySelectorAll('.dropdown-multiselect .dropdown-menu.show').forEach(openMenu => {
+                if (openMenu !== menu) {
+                    openMenu.classList.remove('show');
+                }
+            });
+            
+            // Toggle este dropdown
+            menu.classList.toggle('show');
+        };
+        
+        console.log('Manual handler added:', button.id);
     });
+    
+    // Cerrar dropdowns al hacer click fuera
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-multiselect')) {
+            document.querySelectorAll('.dropdown-multiselect .dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+    
+    // Agregar event listeners a los checkboxes de los menús
+    document.querySelectorAll('.dropdown-multiselect .dropdown-menu').forEach(menu => {
+        menu.addEventListener('change', function(e) {
+            if (e.target.type === 'checkbox') {
+                handleDropdownCheckboxChange(e.target);
+            }
+        });
+    });
+}
+
+function handleDropdownCheckboxChange(checkbox) {
+    const menu = checkbox.closest('.dropdown-menu');
+    const allCheckboxes = menu.querySelectorAll('input[type="checkbox"]');
+    const allOption = Array.from(allCheckboxes).find(cb => cb.value === '' || cb.value === 'Todos' || cb.value === 'Todas');
+    
+    // Si se marca "Todos" (valor vacío), desmarcar todo lo demás
+    if ((checkbox.value === '' || checkbox.value === 'Todos' || checkbox.value === 'Todas') && checkbox.checked) {
+        allCheckboxes.forEach(cb => {
+            if (cb !== checkbox) cb.checked = false;
+        });
+    }
+    // Si se marca cualquier otra cosa, desmarcar "Todos"
+    else if (checkbox.value !== '' && checkbox.value !== 'Todos' && checkbox.value !== 'Todas' && checkbox.checked) {
+        if (allOption) allOption.checked = false;
+    }
+    
+    // Actualizar texto del botón
+    updateDropdownButtonText(menu);
+    
+    // Aplicar filtros
+    applyFilters();
+}
+
+function updateDropdownButtonText(menu) {
+    const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
+    const button = menu.closest('.dropdown-multiselect').querySelector('.dropdown-toggle');
+    const textSpan = button.querySelector('span');
+    
+    const allValues = Array.from(checkedCheckboxes).map(cb => cb.value);
+    const isAllSelected = allValues.includes('') || allValues.includes('Todos') || allValues.includes('Todas') || allValues.length === 0;
+    
+    // Obtener textos de las opciones marcadas
+    const checkedLabels = Array.from(checkedCheckboxes).map(cb => {
+        const label = cb.closest('.dropdown-item')?.querySelector('label');
+        return label ? label.textContent.trim() : cb.value;
+    }).filter(t => t);
+    
+    if (isAllSelected || checkedLabels.length === 0) {
+        // Texto por defecto
+        const menuId = menu.id;
+        const defaults = {
+            'bankFilterMenu': 'Todos los Bancos',
+            'statusFilterMenu': 'Todos los Estados',
+            'officeFilterMenu': 'Todas las Oficinas',
+            'entryTypeFilterMenu': 'Todos los Tipos',
+            'operationTypeFilterMenu': 'Todos los Tipos',
+            'currencyFilterMenu': 'Todas las Monedas'
+        };
+        textSpan.textContent = defaults[menuId] || 'Todos';
+    } else if (checkedLabels.length <= 2) {
+        textSpan.textContent = checkedLabels.join(', ');
+    } else {
+        textSpan.textContent = checkedLabels.slice(0, 2).join(', ') + ` (+${checkedLabels.length - 2})`;
+    }
 }
 
 function updateTable(transactions) {
@@ -183,6 +534,7 @@ function createTransactionRow(tx) {
         <td class="font-monospace">${tx.original_reference || '--'}</td>
         <td class="bank-name">${tx.bank}</td>
         <td>${tx.office || '--'}</td>
+        <td>${tx.operation_type || '--'}</td>
         <td class="text-center">${tx.operations}</td>
         <td class="text-end amount ${amountClass}">${amountSign}${tx.amount}</td>
         <td class="text-center">${tx.entry_type}</td>
@@ -194,7 +546,7 @@ function createTransactionRow(tx) {
                 <button class="action-btn btn-view" title="Ver detalles">
                     <span class="material-symbols-outlined">visibility</span>
                 </button>
-                ${tx.status === 'pending' ? `
+                ${(tx.status === 'pending' && window.userPermissions?.can_reconcile) ? `
                 <button class="btn-reconcile" data-transaction-id="${tx.id}" title="Conciliar">
                     <span class="material-symbols-outlined" style="font-size: 0.9rem;">sync</span>
                 </button>
@@ -304,8 +656,8 @@ function setupFilterToggle() {
 
 // Única versión correcta de resetFilters
 function resetFilters() {
-    const filterInputs = document.querySelectorAll('.filter-input, .filter-select');
-    
+    // 1. Limpiar inputs normales de texto y fechas
+    const filterInputs = document.querySelectorAll('.filter-input:not([type="hidden"]), .filter-select');
     filterInputs.forEach(input => {
         if (input.tagName === 'SELECT') {
             input.selectedIndex = 0;
@@ -313,9 +665,43 @@ function resetFilters() {
             input.value = '';
         }
     });
+
+    // 2. Reiniciar los checkboxes en el DOM (esto faltaba en la versión anterior)
+    const isAllOption = (val) => val === '' || val === 'Todos' || val === 'Todas' || val === 'Todos los Bancos';
     
-    // Disparar la búsqueda nuevamente (hace reset en el backend)
+    document.querySelectorAll('.dropdown-multiselect').forEach(dropdown => {
+        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.checked = isAllOption(cb.value);
+        });
+
+        // 3. Restaurar los textos visuales de los botones
+        const btn = dropdown.querySelector('.dropdown-toggle');
+        const menuId = dropdown.querySelector('.dropdown-menu').id;
+        
+        const defaultTexts = {
+            'bankFilterMenu': 'Todos los Bancos',
+            'statusFilterMenu': 'Todos los Estados',
+            'officeFilterMenu': 'Todas las Oficinas',
+            'entryTypeFilterMenu': 'Todos los Tipos',
+            'operationTypeFilterMenu': 'Todos los Tipos',
+            'currencyFilterMenu': 'Todas las Monedas'
+        };
+        
+        if (btn && defaultTexts[menuId]) {
+            const textSpan = btn.querySelector('span:first-child');
+            if (textSpan) textSpan.textContent = defaultTexts[menuId];
+        }
+    });
+    
+    // 4. Limpiar los inputs ocultos
+    document.querySelectorAll('input[type="hidden"].filter-input').forEach(input => {
+        input.value = '';
+    });
+
+    // Disparar búsqueda en blanco
     applyFilters();
+    showNotification('Filtros reiniciados correctamente', 'info');
 }
 
 function loadTransactions(filters = {}) {
@@ -335,7 +721,6 @@ function loadTransactions(filters = {}) {
             // Es vital que estas funciones se ejecuten en orden
             updateTable(data.transactions);    // Esto llena la tabla
             updatePagination(data);           // Esto actualiza el texto de "Mostrando..."
-            updateStats(data);                // Esto ahora no hace nada con el Total
         }
     })
     .catch(error => console.error('Error:', error));
@@ -472,6 +857,9 @@ function openReconcileConfirmModal(transactionId, row) {
     const confirmBtn = document.getElementById('confirmReconcileBtn');
     if (confirmBtn) {
         confirmBtn.onclick = function() {
+
+            this.blur();
+
             reconcileTransaction(transactionId, row);
             const modalInstance = bootstrap.Modal.getInstance(modalElement);
             if (modalInstance) modalInstance.hide();
@@ -682,38 +1070,32 @@ function downloadFile(content, filename, type) {
 
 // ===== Notificaciones =====
 function showNotification(message, type = 'info') {
-    // Si existe un contenedor de notificaciones en Bootstrap, usarlo
-    const notificationContainer = document.getElementById('notifications');
+    const cleanMsg = cleanMessage(message);
+    const alertClass = {
+        'success': 'alert-success',
+        'error': 'alert-danger',
+        'warning': 'alert-warning',
+        'info': 'alert-info'
+    }[type] || 'alert-info';
 
-    if (notificationContainer) {
-        // Usando Bootstrap
-        const alertClass = {
-            'success': 'alert-success',
-            'error': 'alert-danger',
-            'warning': 'alert-warning',
-            'info': 'alert-info'
-        }[type] || 'alert-info';
+    document.querySelectorAll('.reconciliation-alert').forEach(el => el.remove());
 
-        const alertHTML = `
-            <div class="alert ${alertClass} alert-dismissible fade show" role="alert" style="animation: slideIn 0.3s ease;">
-                <strong>${type.charAt(0).toUpperCase() + type.slice(1)}:</strong> ${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `reconciliation-alert alert ${alertClass} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${cleanMsg}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
 
-        notificationContainer.innerHTML += alertHTML;
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
 
-        // Auto-remover después de 5 segundos
-        setTimeout(() => {
-            const alerts = notificationContainer.querySelectorAll('.alert');
-            if (alerts.length > 0) {
-                const lastAlert = alerts[alerts.length - 1];
-                lastAlert.remove();
-            }
-        }, 5000);
-    } else {
-        // Fallback: console log
-        console.log(`[${type.toUpperCase()}] ${message}`);
+    if (typeof window.addGlobalNotification === 'function') {
+        window.addGlobalNotification(cleanMsg, type);
     }
 }
 

@@ -1,12 +1,14 @@
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, FileResponse
 from django.views.decorators.http import require_POST, require_http_methods
 from apps.bank_accounts.models import BankAccount
 from apps.reconciliation.models import BankStatement, BankStatementTransaction
 from apps.reconciliation.services import process_statement_upload
+from apps.users.models import Notification
+from apps.users.permissions import can_upload_statements
 from django.utils.formats import date_format
 from django.utils import timezone
 import logging
@@ -85,6 +87,9 @@ def bank_accounts(request):
 @login_required
 @require_POST
 def upload_statement_api(request):
+    if not can_upload_statements(request.user):
+        return JsonResponse({'success': False, 'error': 'No tiene permiso para subir estados de cuenta.'}, status=403)
+    
     try:
         uploaded_file = request.FILES.get('file')
         account_id = request.POST.get('account_id')
@@ -103,6 +108,13 @@ def upload_statement_api(request):
         created_at_formatted = date_format(timezone.localtime(stmt.created_at), 'd/m/Y H:i')
         period_start_formatted = date_format(stmt.period_start, 'd/m/Y')
         period_end_formatted = date_format(stmt.period_end, 'd/m/Y')
+
+        # Crear notificación persistente
+        Notification.objects.create(
+            user=request.user,
+            type='info',
+            content=f"Extracto bancario '{stmt.file_name}' cargado exitosamente con {stmt.entry_count} transacciones."
+        )
 
         return JsonResponse({
             'success': True,

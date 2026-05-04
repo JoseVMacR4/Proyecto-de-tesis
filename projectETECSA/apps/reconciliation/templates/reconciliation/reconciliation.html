@@ -22,6 +22,14 @@
 <!-- Notifications Container -->
 <div id="notifications" class="mb-3"></div>
 
+<!-- Permission Info Alert -->
+{% if not user_permissions.can_reconcile %}
+<div class="alert alert-info mb-4">
+    <span class="material-symbols-outlined" style="vertical-align: middle;">info</span>
+    <strong>Sin permisos:</strong> No tiene permiso para conciliar transacciones. Solo puede visualizar la información.
+</div>
+{% endif %}
+
 <!-- Summary Stats (Bento Cards) -->
 <div class="row g-3 mb-4">
     <div class="col-12 col-md-6 col-lg-3">
@@ -98,8 +106,8 @@
     <div class="row g-2">
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">calendar_today</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">calendar_today</span>
                 </span>
                 <input type="date" id="dateFrom" class="form-control filter-input" placeholder="Fecha desde">
             </div>
@@ -107,8 +115,8 @@
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">calendar_today</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">calendar_today</span>
                 </span>
                 <input type="date" id="dateTo" class="form-control filter-input" placeholder="Fecha hasta">
             </div>
@@ -116,32 +124,53 @@
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">account_balance</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">account_balance</span>
                 </span>
-                <select id="bankFilter" class="form-select filter-select">
-                    <option value="Todos los Bancos">Cargando bancos...</option>
-                </select>
+                <div class="dropdown dropdown-multiselect w-100">
+                    <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="bankFilterBtn">
+                        <span class="bank-filter-text">Todos los Bancos</span>
+                    </button>
+                    <ul class="dropdown-menu w-100" id="bankFilterMenu">
+                        <li><label class="dropdown-item"><input type="checkbox" value="" checked> Todos los Bancos</label></li>
+                    </ul>
+                </div>
+                <input type="hidden" id="bankFilter" class="filter-input" value="">
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">filter_list</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">filter_list</span>
                 </span>
-                <select id="statusFilter" class="form-select filter-select">
-                    <option value="Todos">Todos los Estados</option>
-                    <option value="pending">Pendiente</option>
-                    <option value="reconciled">Conciliado</option>
-                </select>
+                <div class="dropdown dropdown-multiselect w-100">
+                    <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="statusFilterBtn">
+                        <span class="status-filter-text">Todos los Estados</span>
+                    </button>
+                    <ul class="dropdown-menu w-100" id="statusFilterMenu">
+                        <li class="dropdown-item">
+                            <input type="checkbox" value="" checked id="chk-statusFilterMenu-Todos" class="form-check-input me-2">
+                            <label class="form-check-label flex-grow-1 py-1 mb-0" for="chk-statusFilterMenu-Todos" style="cursor: pointer;">Todos los Estados</label>
+                        </li>
+                        <li class="dropdown-item">
+                            <input type="checkbox" value="pending" id="chk-statusFilterMenu-pending" class="form-check-input me-2">
+                            <label class="form-check-label flex-grow-1 py-1 mb-0" for="chk-statusFilterMenu-pending" style="cursor: pointer;">Pendiente</label>
+                        </li>
+                        <li class="dropdown-item">
+                            <input type="checkbox" value="reconciled" id="chk-statusFilterMenu-reconciled" class="form-check-input me-2">
+                            <label class="form-check-label flex-grow-1 py-1 mb-0" for="chk-statusFilterMenu-reconciled" style="cursor: pointer;">Conciliado</label>
+                        </li>
+                    </ul>
+                </div>
+                <input type="hidden" id="statusFilter" class="filter-input" value="">
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">tag</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">tag</span>
                 </span>
                 <input type="text" id="referenceFilter" class="form-control filter-input" placeholder="Referencia">
             </div>
@@ -149,8 +178,8 @@
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">description</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">description</span>
                 </span>
                 <input type="text" id="nameFilter" class="form-control filter-input" placeholder="Nombre/Descripción">
             </div>
@@ -158,63 +187,87 @@
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">location_on</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">location_on</span>
                 </span>
-                <select id="officeFilter" class="form-select filter-select">
-                    <option value="">Cargando oficinas...</option>
-                </select>
+                <div class="dropdown dropdown-multiselect w-100">
+                    <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="officeFilterBtn">
+                        <span class="office-filter-text">Todas las Oficinas</span>
+                    </button>
+                    <ul class="dropdown-menu w-100" id="officeFilterMenu">
+                        <li><label class="dropdown-item"><input type="checkbox" value="" checked> Todas las Oficinas</label></li>
+                    </ul>
+                </div>
+                <input type="hidden" id="officeFilter" class="filter-input" value="">
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">swap_horiz</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">swap_horiz</span>
                 </span>
-                <select id="entryTypeFilter" class="form-select filter-select">
-                    <option value="Todos">Cargando tipos...</option>
-                </select>
+                <div class="dropdown dropdown-multiselect w-100">
+                    <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="entryTypeFilterBtn">
+                        <span class="entry-type-filter-text">Todos los Tipos</span>
+                    </button>
+                    <ul class="dropdown-menu w-100" id="entryTypeFilterMenu">
+                        <li><label class="dropdown-item"><input type="checkbox" value="" checked> Todos los Tipos</label></li>
+                    </ul>
+                </div>
+                <input type="hidden" id="entryTypeFilter" class="filter-input" value="">
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">settings</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">settings</span>
                 </span>
-                <select id="operationTypeFilter" class="form-select filter-select">
-                    <option value="">Cargando tipos...</option>
-                </select>
+                <div class="dropdown dropdown-multiselect w-100">
+                    <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="operationTypeFilterBtn">
+                        <span class="operation-type-filter-text">Todos los Tipos</span>
+                    </button>
+                    <ul class="dropdown-menu w-100" id="operationTypeFilterMenu">
+                        <li><label class="dropdown-item"><input type="checkbox" value="" checked> Todos los Tipos</label></li>
+                    </ul>
+                </div>
+                <input type="hidden" id="operationTypeFilter" class="filter-input" value="">
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">attach_money</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">attach_money</span>
                 </span>
-                <input type="number" id="amountMinFilter" class="form-control filter-input" placeholder="Monto mín." step="0.01">
+                <input type="number" id="amountMinFilter" class="form-control filter-input" placeholder="Monto mín." step="0.01" min="0">
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">attach_money</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">attach_money</span>
                 </span>
-                <input type="number" id="amountMaxFilter" class="form-control filter-input" placeholder="Monto máx." step="0.01">
+                <input type="number" id="amountMaxFilter" class="form-control filter-input" placeholder="Monto máx." step="0.01" min="0">
             </div>
         </div>
 
         <div class="col-12 col-md-6 col-lg-2">
             <div class="input-group">
-                <span class="input-group-text border-0" style="background-color: white; color: #999;">
-                    <span class="material-symbols-outlined">currency_exchange</span>
+                <span class="input-group-text border-0 bg-white" style="color: #999;">
+                    <span class="material-symbols-outlined" style="font-size: 1.1rem;">currency_exchange</span>
                 </span>
-                <select id="currencyFilter" class="form-select filter-select">
-                    <option value="Todas">Cargando monedas...</option>
-                </select>
+                <div class="dropdown dropdown-multiselect w-100">
+                    <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="currencyFilterBtn">
+                        <span class="currency-filter-text">Todas las Monedas</span>
+                    </button>
+                    <ul class="dropdown-menu w-100" id="currencyFilterMenu">
+                        <li><label class="dropdown-item"><input type="checkbox" value="" checked> Todas las Monedas</label></li>
+                    </ul>
+                </div>
+                <input type="hidden" id="currencyFilter" class="filter-input" value="">
             </div>
         </div>
     </div>
@@ -272,6 +325,7 @@
                     <th>Referencia Original</th>
                     <th>Banco</th>
                     <th>Oficina</th>
+                    <th>Tipo de Operación</th>
                     <th class="text-center">Cant. de Oper.</th>
                     <th class="text-end">Monto</th>
                     <th class="text-center">Tipo</th>
@@ -281,7 +335,7 @@
             </thead>
             <tbody id="transactionsTableBody">
                 <tr>
-                    <td colspan="11" class="text-center py-5 text-muted">
+                    <td colspan="12" class="text-center py-5 text-muted">
                         <div class="spinner-border text-primary" role="status">
                             <span class="visually-hidden">Cargando...</span>
                         </div>
@@ -466,6 +520,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<div id="userPermissionsData" data-can-reconcile="{{ user_permissions.can_reconcile|yesno:"true,false" }}" hidden></div>
 <!-- Custom Reconciliation JS -->
 <script src="{% static 'reconciliation/js/reconciliation.js' %}"></script>
 {% endblock %}
