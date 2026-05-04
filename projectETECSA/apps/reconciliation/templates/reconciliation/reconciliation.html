@@ -286,9 +286,9 @@
     <div class="table-header d-flex justify-content-between align-items-center gap-2">
         <h5 class="table-title mb-0">Transacciones Bancarias</h5>
         <div class="d-flex gap-2 align-items-center">
-            <button id="exportBtn" class="export-btn" type="button">
+            <button class="export-btn" type="button" data-bs-toggle="modal" data-bs-target="#exportModal">
                 <span class="material-symbols-outlined" style="font-size: 1rem;">download</span>
-                Exportar CSV
+                Exportar
             </button>
             <button id="jumpDownBtn" class="pagination-btn" type="button" title="Ir abajo">
                 <span class="material-symbols-outlined">arrow_downward</span>
@@ -504,6 +504,72 @@
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-success" id="confirmBulkReconcileBtn" onclick="executeBulkReconcile()">Confirmar
                         Conciliación</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Exportación -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <span class="material-symbols-outlined align-middle me-2">download</span>
+                        Exportar Transacciones
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Alcance:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportScope" id="exportCurrentPage" value="current" checked>
+                            <label class="form-check-label" for="exportCurrentPage">
+                                Página actual
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportScope" id="exportAll" value="all">
+                            <label class="form-check-label" for="exportAll">
+                                Todos los datos (aplicando filtros)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exportScope" id="exportSelected" value="selected" disabled>
+                            <label class="form-check-label text-muted" for="exportSelected">
+                                Solo seleccionados <span class="badge bg-secondary small">0</span>
+                            </label>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Formato:</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="formatXls" value="xls" checked>
+                                <label class="form-check-label" for="formatXls">
+                                    <span class="material-symbols-outlined align-middle" style="font-size: 1rem; color: #217346;">description</span>
+                                    Excel (XLS)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="exportFormat" id="formatPdf" value="pdf">
+                                <label class="form-check-label" for="formatPdf">
+                                    <span class="material-symbols-outlined align-middle" style="font-size: 1rem; color: #B30B00;">picture_as_pdf</span>
+                                    PDF
+                                </label>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="exportBtn">
+                        <span class="material-symbols-outlined align-middle" style="font-size: 1rem;">download</span>
+                        Exportar
+                    </button>
                 </div>
             </div>
         </div>

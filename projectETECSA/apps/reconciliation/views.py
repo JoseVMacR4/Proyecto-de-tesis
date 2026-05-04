@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
@@ -12,6 +12,27 @@ from apps.users.permissions import can_upload_statements, can_reconcile
 from apps.bank_accounts.models import BankAccount, Office, Operation
 from apps.users.models import Notification
 import json
+import io
+from datetime import datetime
+
+try:
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from openpyxl.utils import get_column_letter
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
+
+try:
+    from reportlab.lib.pagesizes import A4, letter
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 
 # Create your views here.
 @login_required
@@ -334,7 +355,7 @@ def export_reconciliation(request):
 	"""
 	try:
 		data = json.loads(request.body)
-		format_type = data.get('format', 'csv')
+		format_type = data.get('format', 'xls')
 		
 		# Aquí se generaría el archivo
 		response = {
@@ -442,3 +463,427 @@ def get_reconciliation_stats(request):
         })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+@login_required
+def get_export_data(request):
+    """
+    API para obtener los datos de exportación filtrados
+    """
+    try:
+        date_range = request.GET.get('date_range', '')
+        date_from = request.GET.get('date_from', '')
+        date_to = request.GET.get('date_to', '')
+        bank = request.GET.get('bank', '')
+        status = request.GET.get('status', '')
+        reference = request.GET.get('reference', '')
+        name = request.GET.get('name', '')
+        office_code = request.GET.get('office_code', '')
+        entry_type = request.GET.get('entry_type', '')
+        operation_type = request.GET.get('operation_type', '')
+        amount_min = request.GET.get('amount_min', '')
+        amount_max = request.GET.get('amount_max', '')
+        currency = request.GET.get('currency', '')
+        selected_ids = request.GET.get('ids', '')
+
+        transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement').order_by('-bank_statement__statement_date', 'current_reference')
+
+        # Aplicar filtros
+        if date_range:
+            parts = [part.strip() for part in date_range.split('-')]
+            if len(parts) == 2:
+                try:
+                    start_date = timezone.datetime.strptime(parts[0], '%d/%m/%Y').date()
+                    end_date = timezone.datetime.strptime(parts[1], '%d/%m/%Y').date()
+                    transactions = transactions.filter(bank_statement__statement_date__range=(start_date, end_date))
+                except ValueError:
+                    pass
+        elif date_from or date_to:
+            if date_from:
+                try:
+                    start_date = timezone.datetime.strptime(date_from, '%Y-%m-%d').date()
+                    transactions = transactions.filter(bank_statement__statement_date__gte=start_date)
+                except ValueError:
+                    pass
+            if date_to:
+                try:
+                    end_date = timezone.datetime.strptime(date_to, '%Y-%m-%d').date()
+                    transactions = transactions.filter(bank_statement__statement_date__lte=end_date)
+                except ValueError:
+                    pass
+
+        if bank:
+            bank_list = [b.strip() for b in bank.split(',') if b.strip()]
+            if bank_list:
+                transactions = transactions.filter(bank_account__code__in=bank_list)
+
+        if status:
+            status_list = [s.strip() for s in status.split(',') if s.strip()]
+            if status_list:
+                transactions = transactions.filter(status__in=status_list)
+
+        if reference:
+            transactions = transactions.filter(
+                Q(current_reference__icontains=reference) | Q(original_reference__icontains=reference)
+            )
+
+        if name:
+            transactions = transactions.filter(name__icontains=name)
+
+        if office_code:
+            office_list = [o.strip() for o in office_code.split(',') if o.strip()]
+            if office_list:
+                transactions = transactions.filter(office_code__in=office_list)
+
+        if entry_type:
+            entry_list = [e.strip() for e in entry_type.split(',') if e.strip()]
+            if entry_list:
+                transactions = transactions.filter(entry_type__in=entry_list)
+
+        if operation_type:
+            operation_list = [o.strip() for o in operation_type.split(',') if o.strip()]
+            if operation_list:
+                transactions = transactions.filter(operation_type__in=operation_list)
+
+        if amount_min:
+            try:
+                min_amount = float(amount_min)
+                transactions = transactions.filter(amount__gte=min_amount)
+            except ValueError:
+                pass
+        if amount_max:
+            try:
+                max_amount = float(amount_max)
+                transactions = transactions.filter(amount__lte=max_amount)
+            except ValueError:
+                pass
+
+        if currency:
+            currency_list = [c.strip() for c in currency.split(',') if c.strip()]
+            if currency_list:
+                transactions = transactions.filter(currency__in=currency_list)
+
+        # Si hay IDs seleccionados, filtrar por esos
+        if selected_ids:
+            id_list = [id.strip() for id in selected_ids.split(',') if id.strip()]
+            transactions = transactions.filter(id__in=id_list)
+
+        office_map = {o.code: o.name for o in Office.objects.all()}
+        operation_map = {o.code: o.name for o in Operation.objects.all()}
+
+        transactions_data = []
+        total_amount = 0
+        for tx in transactions:
+            try:
+                office_value = tx.office_code or ''
+                office_display = office_map.get(office_value, office_value) if office_value else ''
+                operation_value = tx.operation_type or ''
+                operation_display = operation_map.get(operation_value, '') if operation_value else ''
+                total_amount += float(tx.amount)
+                transactions_data.append({
+                    'id': str(tx.id),
+                    'date': date_format(tx.date, 'd/m/Y'),
+                    'reference': tx.current_reference,
+                    'original_reference': tx.original_reference or '',
+                    'bank': tx.bank_account.name if tx.bank_account else 'N/A',
+                    'bank_code': tx.bank_account.code if tx.bank_account else 'N/A',
+                    'office': office_display,
+                    'office_code': office_value,
+                    'operations': tx.operation_count,
+                    'entity': tx.name,
+                    'amount': float(tx.amount),
+                    'entry_type': tx.entry_type,
+                    'bank_fee': float(tx.bank_fee),
+                    'operation_type': operation_display,
+                    'operation_type_code': operation_value,
+                    'currency': tx.currency,
+                    'statement_date': date_format(tx.bank_statement.statement_date, 'd/m/Y') if tx.bank_statement else '',
+                    'status': tx.status,
+                    'status_display': tx.get_status_display(),
+                    'created_at': timezone.localtime(tx.created_at).strftime('%d/%m/%Y %H:%M') if tx.created_at else '',
+                    'updated_at': timezone.localtime(tx.updated_at).strftime('%d/%m/%Y %H:%M') if tx.updated_at else '',
+                })
+            except Exception as e:
+                print(f"Error procesando transacción {tx.id}: {str(e)}")
+                continue
+
+        return JsonResponse({
+            'status': 'success',
+            'count': len(transactions_data),
+            'total_amount': total_amount,
+            'transactions': transactions_data,
+            'filters_applied': {
+                'date_range': date_range,
+                'date_from': date_from,
+                'date_to': date_to,
+                'bank': bank,
+                'status': status,
+                'reference': reference,
+                'name': name,
+                'office_code': office_code,
+                'entry_type': entry_type,
+                'operation_type': operation_type,
+                'amount_min': amount_min,
+                'amount_max': amount_max,
+                'currency': currency,
+            }
+        })
+    except Exception as e:
+        import traceback
+        print(f"Error en get_export_data: {str(e)}")
+        traceback.print_exc()
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+@login_required
+def export_download(request):
+    """
+    API para generar y descargar archivos exportables (XLS, PDF)
+    """
+    try:
+        data = json.loads(request.body)
+        format_type = data.get('format', 'xls')
+        export_data = data.get('data', {})
+        
+        transactions = export_data.get('transactions', [])
+        filters = export_data.get('filters_applied', {})
+        
+        if not transactions:
+            return JsonResponse({'status': 'error', 'message': 'No hay datos para exportar'}, status=400)
+        
+        if format_type == 'xls':
+            return export_to_xls(transactions, filters)
+        elif format_type == 'pdf':
+            return export_to_pdf(transactions, filters)
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Formato no soportado'}, status=400)
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+def export_to_xls(transactions, filters):
+    if not OPENPYXL_AVAILABLE:
+        return JsonResponse({'status': 'error', 'message': 'Librería openpyxl no disponible'}, status=500)
+    
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Transacciones"
+    
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    headers = [
+        'Fecha', 'Referencia', 'Ref. Original', 'Banco', 'Oficina', 
+        'Tipo de Operación', 'Cant. Oper.', 'Entidad', 'Monto', 'Tipo', 'Estado', 'Fecha Creación'
+    ]
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = thin_border
+    
+    total_amount = 0
+    for row_idx, tx in enumerate(transactions, 2):
+        total_amount += tx.get('amount', 0)
+        
+        ws.cell(row=row_idx, column=1, value=tx.get('date', '')).border = thin_border
+        ws.cell(row=row_idx, column=2, value=tx.get('reference', '')).border = thin_border
+        ws.cell(row=row_idx, column=3, value=tx.get('original_reference', '')).border = thin_border
+        ws.cell(row=row_idx, column=4, value=tx.get('bank', '')).border = thin_border
+        ws.cell(row=row_idx, column=5, value=tx.get('office', '')).border = thin_border
+        ws.cell(row=row_idx, column=6, value=tx.get('operation_type', '')).border = thin_border
+        ws.cell(row=row_idx, column=7, value=tx.get('operations', '')).border = thin_border
+        ws.cell(row=row_idx, column=8, value=tx.get('entity', '')).border = thin_border
+        
+        amount_cell = ws.cell(row=row_idx, column=9, value=tx.get('amount', 0))
+        amount_cell.number_format = '#,##0.00'
+        amount_cell.border = thin_border
+        amount_cell.alignment = Alignment(horizontal="right")
+        
+        ws.cell(row=row_idx, column=10, value=tx.get('entry_type', '')).border = thin_border
+        ws.cell(row=row_idx, column=11, value=tx.get('status_display', '')).border = thin_border
+        ws.cell(row=row_idx, column=12, value=tx.get('created_at', '')).border = thin_border
+    
+    total_row = len(transactions) + 2
+    ws.cell(row=total_row, column=8, value="TOTAL:")
+    ws.cell(row=total_row, column=8).font = Font(bold=True)
+    ws.cell(row=total_row, column=9, value=total_amount)
+    ws.cell(row=total_row, column=9).number_format = '#,##0.00'
+    ws.cell(row=total_row, column=9).font = Font(bold=True)
+    ws.cell(row=total_row, column=9).alignment = Alignment(horizontal="right")
+    
+    col_widths = [12, 18, 18, 20, 15, 20, 12, 30, 15, 8, 12, 16]
+    for col, width in enumerate(col_widths, 1):
+        ws.column_dimensions[get_column_letter(col)].width = width
+    
+    buffer = io.BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename=transacciones_{timestamp}.xlsx'
+    return response
+
+
+def export_to_pdf(transactions, filters):
+    if not REPORTLAB_AVAILABLE:
+        return JsonResponse({'status': 'error', 'message': 'Librería reportlab no disponible'}, status=500)
+    
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
+    
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=16,
+        bold=True,
+        textColor=colors.HexColor('#1F4E79'),
+        spaceAfter=10,
+    )
+    
+    subtitle_style = ParagraphStyle(
+        'CustomSubtitle',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=colors.gray,
+        spaceAfter=20,
+    )
+    
+    filter_style = ParagraphStyle(
+        'FilterInfo',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=colors.HexColor('#666666'),
+        spaceAfter=5,
+    )
+    
+    header_style = ParagraphStyle(
+        'TableHeader',
+        parent=styles['Normal'],
+        fontSize=8,
+        bold=True,
+        textColor=colors.white,
+    )
+    
+    elements = []
+    
+    elements.append(Paragraph("Reporte de Transacciones Bancarias", title_style))
+    
+    elements.append(Paragraph(f"Fecha de generación: {datetime.now().strftime('%d/%m/%Y %H:%M')}", subtitle_style))
+    
+    filter_lines = []
+    if filters.get('date_range'):
+        filter_lines.append(f"Rango de fechas: {filters['date_range']}")
+    if filters.get('date_from'):
+        filter_lines.append(f"Desde: {filters['date_from']}")
+    if filters.get('date_to'):
+        filter_lines.append(f"Hasta: {filters['date_to']}")
+    if filters.get('bank'):
+        filter_lines.append(f"Banco: {filters['bank']}")
+    if filters.get('status'):
+        filter_lines.append(f"Estado: {filters['status']}")
+    
+    if filter_lines:
+        elements.append(Paragraph("Filtros aplicados:", ParagraphStyle('Bold', parent=styles['Normal'], bold=True, fontSize=9, spaceAfter=3)))
+        for fline in filter_lines:
+            elements.append(Paragraph(fline, filter_style))
+    
+    elements.append(Spacer(1, 10))
+    
+    headers = ['Fecha', 'Referencia', 'Banco', 'Oficina', 'Entidad', 'Monto', 'Tipo', 'Estado']
+    col_widths = [60, 80, 70, 60, 100, 70, 40, 60]
+    
+    table_data = [headers]
+    
+    total_amount = 0
+    max_rows = 30
+    current_page = 1
+    
+    for idx, tx in enumerate(transactions):
+        total_amount += tx.get('amount', 0)
+        
+        row = [
+            tx.get('date', ''),
+            tx.get('reference', '')[:15] if tx.get('reference') else '',
+            tx.get('bank', '')[:12] if tx.get('bank') else '',
+            tx.get('office', '')[:10] if tx.get('office') else '',
+            tx.get('entity', '')[:20] if tx.get('entity') else '',
+            f"{tx.get('amount', 0):,.2f}",
+            tx.get('entry_type', ''),
+            tx.get('status_display', ''),
+        ]
+        table_data.append(row)
+        
+        if len(table_data) - 1 >= max_rows and idx < len(transactions) - 1:
+            t = Table(table_data, colWidths=col_widths)
+            t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 8),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 7),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.gray),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F2F2F2')]),
+            ]))
+            elements.append(t)
+            elements.append(Paragraph(f"Página {current_page}", ParagraphStyle('PageNum', parent=styles['Normal'], fontSize=8, textColor=colors.gray, alignment=TA_CENTER)))
+            elements.append(PageBreak())
+            
+            table_data = [headers]
+            current_page += 1
+    
+    if table_data:
+        total_row = [['TOTAL', '', '', '', '', f"{total_amount:,.2f}", '', '']]
+        
+        t = Table(table_data + total_row, colWidths=col_widths)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#4472C4')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 8),
+            ('FONTNAME', (0, 1), (-1, -2), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -2), 7),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+            ('BACKGROUND', (0, 1), (-1, -2), colors.white),
+            ('GRID', (0, 0), (-1, -2), 0.5, colors.gray),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#F2F2F2')]),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#D9E2F3')),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, -1), (-1, -1), 8),
+        ]))
+        elements.append(t)
+    
+    elements.append(Spacer(1, 20))
+    elements.append(Paragraph(f"Total de registros: {len(transactions)}", ParagraphStyle('Total', parent=styles['Normal'], fontSize=9, bold=True)))
+    elements.append(Paragraph(f"Monto total: {total_amount:,.2f}", ParagraphStyle('Total', parent=styles['Normal'], fontSize=9, bold=True)))
+    
+    doc.build(elements)
+    
+    buffer.seek(0)
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=transacciones_{timestamp}.pdf'
+    return response

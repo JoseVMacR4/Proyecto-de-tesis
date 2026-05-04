@@ -1031,6 +1031,7 @@ function setupCheckboxListeners() {
         if (e.target && e.target.name === 'row-select') {
             updateMasterCheckbox();
             updateBulkActionsVisibility();
+            updateExportSelectedBadge();
         }
     });
 
@@ -1042,6 +1043,7 @@ function setupCheckboxListeners() {
                 checkbox.checked = e.target.checked;
             });
             updateBulkActionsVisibility();
+            updateExportSelectedBadge();
         }
     });
 }
@@ -1069,6 +1071,7 @@ function clearAllCheckboxes() {
     rowCheckboxes.forEach(cb => cb.checked = false);
     savedSelectedIds = [];
     updateBulkActionsVisibility();
+    updateExportSelectedBadge();
 }
 
 function updateBulkActionsVisibility() {
@@ -1321,41 +1324,204 @@ function scrollToElement(selector) {
 function setupExportListener() {
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) {
-        exportBtn.addEventListener('click', exportToCSV);
+        exportBtn.addEventListener('click', handleExport);
+    }
+    
+    const selectAllCheckbox = document.getElementById('selectAll');
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', updateExportSelectedBadge);
+    }
+    
+    document.querySelectorAll('input[name="row-select"]').forEach(cb => {
+        cb.addEventListener('change', updateExportSelectedBadge);
+    });
+}
+
+function updateExportSelectedBadge() {
+    const selectedCheck = document.getElementById('exportSelected');
+    const badge = selectedCheck?.closest('.form-check')?.querySelector('.badge');
+    if (badge && selectedCheck) {
+        const count = getSelectedTransactionIds().length;
+        badge.textContent = count;
+        selectedCheck.disabled = count === 0;
+        if (count === 0) {
+            selectedCheck.closest('.form-check').classList.add('text-muted');
+        } else {
+            selectedCheck.closest('.form-check').classList.remove('text-muted');
+        }
     }
 }
 
-function exportToCSV() {
-    console.log('Exportando a CSV...');
-
-    // Obtener datos de la tabla
-    const table = document.querySelector('.reconciliation-table');
-    const rows = Array.from(table.querySelectorAll('tbody tr'))
-        .filter(row => row.style.display !== 'none');
-
-    if (rows.length === 0) {
-        showNotification('No hay datos para exportar', 'warning');
+async function handleExport() {
+    const scope = document.querySelector('input[name="exportScope"]:checked')?.value;
+    const format = document.querySelector('input[name="exportFormat"]:checked')?.value;
+    
+    if (!scope || !format) {
+        showNotification('Por favor seleccione alcance y formato', 'warning');
         return;
     }
+    
+    const btn = document.getElementById('exportBtn');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Exportando...';
+    
+    try {
+        let data;
+        
+        if (scope === 'current') {
+            data = await getCurrentPageData();
+        } else if (scope === 'all') {
+            data = await getAllFilteredData();
+        } else if (scope === 'selected') {
+            data = await getSelectedData();
+        }
+        
+        if (!data || data.transactions.length === 0) {
+            showNotification('No hay datos para exportar', 'warning');
+            return;
+        }
+        
+        await downloadExportFile(data, format, scope);
+        
+        const formatName = format.toUpperCase();
+        showNotification(`Exportación en ${formatName} completada: ${data.transactions.length} registros`, 'success');
+        
+    } catch (error) {
+        console.error('Error en exportación:', error);
+        showNotification('Error al exportar: ' + error.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
 
-    // Construir CSV
-    let csv = 'Fecha,Referencia,Banco,Entidad,Monto,Estado\n';
-
+async function getCurrentPageData() {
+    const rows = document.querySelectorAll('.reconciliation-table tbody tr');
+    const transactions = [];
+    
     rows.forEach(row => {
         const cells = row.querySelectorAll('td');
-        const date = cells[1]?.textContent.trim() || '';
-        const reference = cells[2]?.textContent.trim() || '';
-        const bank = cells[3]?.textContent.trim() || '';
-        const entity = cells[4]?.textContent.trim() || '';
-        const amount = cells[5]?.textContent.trim() || '';
-        const status = cells[6]?.textContent.trim() || '';
-
-        csv += `"${date}","${reference}","${bank}","${entity}","${amount}","${status}"\n`;
+        const checkbox = row.querySelector('input[name="row-select"]');
+        transactions.push({
+            id: checkbox?.dataset.transactionId || '',
+            date: cells[1]?.textContent.trim() || '',
+            reference: cells[2]?.textContent.trim() || '',
+            original_reference: cells[3]?.textContent.trim() || '',
+            bank: cells[4]?.textContent.trim() || '',
+            office: cells[5]?.textContent.trim() || '',
+            operation_type: cells[6]?.textContent.trim() || '',
+            operations: cells[7]?.textContent.trim() || '',
+            amount: parseFloat(cells[8]?.textContent.replace(/[^0-9.-]/g, '') || 0),
+            entry_type: cells[9]?.textContent.trim() || '',
+            status: cells[10]?.textContent.trim() || '',
+            status_display: cells[10]?.textContent.trim() || '',
+            entity: '',
+            created_at: '',
+        });
     });
+    
+    return { transactions, filters_applied: {} };
+}
 
-    // Descargar archivo
-    downloadFile(csv, 'reconciliacion.csv', 'text/csv');
-    showNotification('Archivo exportado exitosamente', 'success');
+async function getAllFilteredData() {
+    const filters = getCurrentFilters();
+    const url = new URL('/reconciliation/api/export/data/', window.location.origin);
+    
+    Object.entries(filters).forEach(([key, value]) => {
+        if (value) url.searchParams.append(key, value);
+    });
+    
+    const response = await fetch(url.toString(), {
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+        }
+    });
+    
+    if (!response.ok) throw new Error('Error al obtener datos');
+    return await response.json();
+}
+
+async function getSelectedData() {
+    const selectedIds = getSelectedTransactionIds();
+    if (selectedIds.length === 0) {
+        throw new Error('No hay transacciones seleccionadas');
+    }
+    
+    const url = new URL('/reconciliation/api/export/data/', window.location.origin);
+    url.searchParams.append('ids', selectedIds.join(','));
+    
+    const response = await fetch(url.toString(), {
+        headers: {
+            'X-CSRFToken': getCSRFToken(),
+        }
+    });
+    
+    if (!response.ok) throw new Error('Error al obtener datos seleccionados');
+    return await response.json();
+}
+
+function getCurrentFilters() {
+    const filters = {};
+    
+    const dateFromInput = document.getElementById('dateFrom');
+    const dateToInput = document.getElementById('dateTo');
+    const referenceInput = document.getElementById('referenceFilter');
+    const nameInput = document.getElementById('nameFilter');
+    const amountMinInput = document.getElementById('amountMin');
+    const amountMaxInput = document.getElementById('amountMax');
+    
+    if (dateFromInput?.value) filters.date_from = dateFromInput.value;
+    if (dateToInput?.value) filters.date_to = dateToInput.value;
+    if (referenceInput?.value) filters.reference = referenceInput.value;
+    if (nameInput?.value) filters.name = nameInput.value;
+    if (amountMinInput?.value) filters.amount_min = amountMinInput.value;
+    if (amountMaxInput?.value) filters.amount_max = amountMaxInput.value;
+    
+    const bankValue = getFilterValues('bankFilterMenu');
+    const statusValue = getFilterValues('statusFilterMenu');
+    const officeValue = getFilterValues('officeFilterMenu');
+    const entryTypeValue = getFilterValues('entryTypeFilterMenu');
+    const operationTypeValue = getFilterValues('operationTypeFilterMenu');
+    const currencyValue = getFilterValues('currencyFilterMenu');
+    
+    if (bankValue) filters.bank = bankValue;
+    if (statusValue) filters.status = statusValue;
+    if (officeValue) filters.office_code = officeValue;
+    if (entryTypeValue) filters.entry_type = entryTypeValue;
+    if (operationTypeValue) filters.operation_type = operationTypeValue;
+    if (currencyValue) filters.currency = currencyValue;
+    
+    return filters;
+}
+
+async function downloadExportFile(data, format, scope) {
+    const url = new URL('/reconciliation/api/export/download/', window.location.origin);
+    
+    const response = await fetch(url.toString(), {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken(),
+        },
+        body: JSON.stringify({
+            format: format,
+            data: data
+        })
+    });
+    
+    if (!response.ok) throw new Error('Error al generar archivo');
+    
+    const blob = await response.blob();
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const extension = format === 'xls' ? 'xlsx' : format;
+    const filename = `transacciones_${scope}_${timestamp}.${extension}`;
+    
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(link.href);
 }
 
 function downloadFile(content, filename, type) {

@@ -12,4 +12,6 @@ urlpatterns = [
     path('api/reconcile/bulk/', views.reconcile_transactions_bulk, name='api_reconcile_bulk'),
     path('api/stats/', views.get_reconciliation_stats, name='api_reconciliation_stats'),
     path('api/export/', views.export_reconciliation, name='api_export_reconciliation'),
+    path('api/export/data/', views.get_export_data, name='api_export_data'),
+    path('api/export/download/', views.export_download, name='api_export_download'),
 ]
