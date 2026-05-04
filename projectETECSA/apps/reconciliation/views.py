@@ -275,6 +275,59 @@ def reconcile_transaction(request):
 
 @require_http_methods(["POST"])
 @login_required
+def reconcile_transactions_bulk(request):
+    if not can_reconcile(request.user):
+        return JsonResponse({'status': 'error', 'message': 'No tiene permiso para conciliar transacciones.'}, status=403)
+    
+    try:
+        data = json.loads(request.body)
+        transaction_ids = data.get('transaction_ids', [])
+        
+        if not transaction_ids:
+            return JsonResponse({'status': 'error', 'message': 'No se proporcionaron transacciones.'}, status=400)
+        
+        if len(transaction_ids) > 50:
+            return JsonResponse({'status': 'error', 'message': 'El límite máximo es de 50 transacciones por operación.'}, status=400)
+        
+        pending_transactions = BankStatementTransaction.objects.filter(
+            id__in=transaction_ids,
+            status=BankStatementTransaction.StatusChoices.PENDING
+        )
+        
+        count = pending_transactions.count()
+        
+        if count == 0:
+            return JsonResponse({'status': 'error', 'message': 'No se encontraron transacciones pendientes para conciliar.'}, status=400)
+        
+        pending_transactions.update(status=BankStatementTransaction.StatusChoices.RECONCILED)
+        
+        notified_transactions = BankStatementTransaction.objects.filter(
+            id__in=transaction_ids,
+            status=BankStatementTransaction.StatusChoices.RECONCILED
+        )
+        
+        notifications_to_create = [
+            Notification(
+                user=request.user,
+                type='info',
+                content=f"Transacción {tx.current_reference} conciliada correctamente."
+            )
+            for tx in notified_transactions
+        ]
+        Notification.objects.bulk_create(notifications_to_create)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'{count} transacción(es) conciliada(s) correctamente.',
+            'count': count,
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Formato JSON inválido.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+@require_http_methods(["POST"])
+@login_required
 def export_reconciliation(request):
 	"""
 	API para exportar datos de reconciliación
@@ -367,3 +420,25 @@ def get_filter_options(request):
 			'status': 'error',
 			'message': str(e)
 		}, status=500)
+
+@require_http_methods(["GET"])
+@login_required
+def get_reconciliation_stats(request):
+    try:
+        total_transactions = BankStatementTransaction.objects.count()
+        reconciled_count = BankStatementTransaction.objects.filter(status=BankStatementTransaction.StatusChoices.RECONCILED).count()
+        pending_count = total_transactions - reconciled_count
+        
+        reconciled_percentage = 0
+        if total_transactions > 0:
+            reconciled_percentage = round((reconciled_count / total_transactions) * 100)
+
+        return JsonResponse({
+            'status': 'success',
+            'total_count': total_transactions,
+            'reconciled_count': reconciled_count,
+            'pending_count': pending_count,
+            'reconciled_percentage': reconciled_percentage,
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

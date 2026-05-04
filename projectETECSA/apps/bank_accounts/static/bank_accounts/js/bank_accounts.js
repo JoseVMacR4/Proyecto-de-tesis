@@ -199,9 +199,9 @@ function displayNotification(message, type = 'info') {
         }
     }, timeout);
 
-    // Guardar notificación para la campana
-    if (typeof window.addGlobalNotification === 'function') {
-        window.addGlobalNotification(cleanMsg, type);
+    // Actualizar notificaciones del servidor para la campana
+    if (type === 'success' && typeof window.reloadNotifications === 'function') {
+        setTimeout(() => window.reloadNotifications(), 500);
     }
 }
 

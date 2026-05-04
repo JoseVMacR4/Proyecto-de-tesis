@@ -9,5 +9,7 @@ urlpatterns = [
     path('api/data/', views.get_reconciliation_data, name='api_reconciliation_data'),
     path('api/filters/', views.get_filter_options, name='api_filter_options'),
     path('api/reconcile/', views.reconcile_transaction, name='api_reconcile_transaction'),
+    path('api/reconcile/bulk/', views.reconcile_transactions_bulk, name='api_reconcile_bulk'),
+    path('api/stats/', views.get_reconciliation_stats, name='api_reconciliation_stats'),
     path('api/export/', views.export_reconciliation, name='api_export_reconciliation'),
 ]

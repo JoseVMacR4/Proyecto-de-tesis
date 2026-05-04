@@ -100,6 +100,14 @@
         <span class="material-symbols-outlined" style="font-size: 1.2rem;">refresh</span>
         Reiniciar Filtros
     </button>
+    <span id="selectedCountBadge" class="badge bg-primary d-flex align-items-center ms-auto" style="display: none; cursor: pointer;" onclick="clearAllCheckboxes();">
+        <span id="selectedCountText">0</span>&nbsp;<span id="selectedCountLabel">Seleccionada</span>
+        <span class="material-symbols-outlined ms-1" style="font-size: 0.9rem;">close</span>
+    </span>
+    <button id="bulkReconcileBtn" class="btn btn-success d-flex align-items-center gap-2 shadow-sm" style="display: none;" onclick="openBulkReconcileModal()">
+        <span class="material-symbols-outlined" style="font-size: 1.2rem;">sync</span>
+        Conciliar Seleccionadas
+    </button>
 </div>
 
 <div id="filterContainer" class="filter-bar mb-4" style="display: none;">
@@ -480,6 +488,27 @@
         </div>
     </div>
 
+    <!-- Modal de confirmación de conciliación masiva -->
+    <div id="bulkReconcileConfirmModal" class="modal fade" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar Conciliación Masiva</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea conciliar las <strong id="bulkSelectedCount">0</strong> transacciones seleccionadas?</p>
+                    <p class="text-muted small mb-0">Solo se conciliarán las transacciones en estado Pendiente.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="confirmBulkReconcileBtn" onclick="executeBulkReconcile()">Confirmar
+                        Conciliación</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="paginationBottom" class="pagination-footer mt-3">
         <p class="pagination-info mb-0">
             Mostrando {{ transactions_page.start_index }} - {{ transactions_page.end_index }} de {{ total_transactions }} transacciones
@@ -520,7 +549,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<div id="userPermissionsData" data-can-reconcile="{{ user_permissions.can_reconcile|yesno:"true,false" }}" hidden></div>
+<div id="userPermissionsData" data-can-reconcile="{{ user_permissions.can_reconcile|yesno:"true,false" }}" data-user-id="{{ request.user.id }}" hidden></div>
 <!-- Custom Reconciliation JS -->
 <script src="{% static 'reconciliation/js/reconciliation.js' %}"></script>
 {% endblock %}

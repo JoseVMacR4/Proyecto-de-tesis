@@ -93,6 +93,138 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeReconciliation();
 });
 
+let savedSelectedIds = [];
+let pendingRestore = false;
+
+function getStorageKey(key) {
+    const userData = document.getElementById('userPermissionsData');
+    const userId = userData ? userData.dataset.userId : 'anonymous';
+    return `reconciliation_${key}_${userId}`;
+}
+
+function tryRestoreState() {
+    const userData = document.getElementById('userPermissionsData');
+    const currentUserId = userData ? userData.dataset.userId : null;
+    const savedUserId = sessionStorage.getItem(getStorageKey('UserId'));
+    
+    if (!savedUserId || savedUserId !== currentUserId) {
+        sessionStorage.removeItem(getStorageKey('State'));
+        sessionStorage.removeItem(getStorageKey('RestorePending'));
+        if (currentUserId) {
+            sessionStorage.setItem(getStorageKey('UserId'), currentUserId);
+        }
+        return false;
+    }
+    
+    const storageKey = getStorageKey('State');
+    const savedState = sessionStorage.getItem(storageKey);
+    if (savedState) {
+        try {
+            const state = JSON.parse(savedState);
+            if (state && state.filters) {
+                currentFilters = state.filters;
+                savedSelectedIds = state.selectedIds || [];
+                pendingRestore = true;
+                sessionStorage.setItem(getStorageKey('RestorePending'), 'true');
+                return true;
+            }
+        } catch (e) {
+            console.error('Error restoring state:', e);
+            sessionStorage.removeItem(storageKey);
+        }
+    }
+    return false;
+}
+
+function finishStateRestore() {
+    if (pendingRestore) {
+        pendingRestore = false;
+        sessionStorage.removeItem(getStorageKey('State'));
+        sessionStorage.removeItem(getStorageKey('RestorePending'));
+    }
+}
+
+function applyFiltersFromState() {
+    if (currentFilters.date_from) {
+        document.getElementById('dateFrom').value = currentFilters.date_from;
+    }
+    if (currentFilters.date_to) {
+        document.getElementById('dateTo').value = currentFilters.date_to;
+    }
+    if (currentFilters.reference) {
+        document.getElementById('referenceFilter').value = currentFilters.reference;
+    }
+    if (currentFilters.name) {
+        document.getElementById('nameFilter').value = currentFilters.name;
+    }
+    if (currentFilters.amount_min) {
+        document.getElementById('amountMinFilter').value = currentFilters.amount_min;
+    }
+    if (currentFilters.amount_max) {
+        document.getElementById('amountMaxFilter').value = currentFilters.amount_max;
+    }
+    
+    const filterContainer = document.getElementById('filterContainer');
+    const toggleText = document.getElementById('toggleFiltersText');
+    const expandIcon = document.querySelector('.expand-icon');
+    
+    if (currentFilters.filterPanelOpen && filterContainer) {
+        filterContainer.style.display = 'block';
+        if (toggleText) toggleText.textContent = 'Ocultar Filtros';
+        if (expandIcon) expandIcon.textContent = 'expand_less';
+    }
+    
+    if (currentFilters.bank) {
+        restoreMultiselectDropdown('bankFilterMenu', currentFilters.bank);
+    }
+    if (currentFilters.status) {
+        restoreMultiselectDropdown('statusFilterMenu', currentFilters.status);
+    }
+    if (currentFilters.office_code) {
+        restoreMultiselectDropdown('officeFilterMenu', currentFilters.office_code);
+    }
+    if (currentFilters.entry_type) {
+        restoreMultiselectDropdown('entryTypeFilterMenu', currentFilters.entry_type);
+    }
+    if (currentFilters.operation_type) {
+        restoreMultiselectDropdown('operationTypeFilterMenu', currentFilters.operation_type);
+    }
+    if (currentFilters.currency) {
+        restoreMultiselectDropdown('currencyFilterMenu', currentFilters.currency);
+    }
+}
+
+function restoreMultiselectDropdown(menuId, values) {
+    const menu = document.getElementById(menuId);
+    if (!menu) return;
+    
+    const valueArray = values.split(',').filter(v => v);
+    
+    menu.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    
+    valueArray.forEach(val => {
+        const checkbox = Array.from(menu.querySelectorAll('input[type="checkbox"]'))
+            .find(cb => cb.value === val);
+        if (checkbox) checkbox.checked = true;
+    });
+    
+    updateDropdownButtonText(menu);
+}
+
+function restoreSelectedCheckboxes() {
+    if (savedSelectedIds.length > 0) {
+        savedSelectedIds.forEach(id => {
+            const checkbox = document.querySelector(`input[name="row-select"][data-transaction-id="${id}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+        updateMasterCheckbox();
+        savedSelectedIds = [];
+    }
+    updateBulkActionsVisibility();
+}
+
 function initializeUserPermissions() {
     const dataElement = document.getElementById('userPermissionsData');
     window.userPermissions = {
@@ -102,17 +234,46 @@ function initializeUserPermissions() {
 
 // ===== Inicialización General =====
 function initializeReconciliation() {
+    const restored = tryRestoreState();
+    
     initializeDropdowns();
     setupFilterListeners();
     setupTableListeners();
     setupPaginationListeners();
     setupJumpListeners();
-    setupExportListener();
     setupFilterToggle();
+    setupExportListener();
 
-    // Cargar opciones de filtro primero, luego los datos
     loadFilterOptions().then(() => {
-        loadTransactions();
+        if (pendingRestore) {
+            setTimeout(() => {
+                applyFiltersFromState();
+                setTimeout(() => restoreSelectedCheckboxes(), 100);
+            }, 100);
+        }
+        
+        console.log('Loading transactions with filters:', currentFilters);
+        loadTransactions(currentFilters);
+        
+        if (pendingRestore) {
+            setTimeout(() => finishStateRestore(), 500);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading:', error);
+    });
+    
+    window.addEventListener('beforeunload', () => {
+        const userData = document.getElementById('userPermissionsData');
+        const currentUserId = userData ? userData.dataset.userId : null;
+        
+        if (currentUserId) {
+            sessionStorage.setItem(getStorageKey('UserId'), currentUserId);
+        }
+        sessionStorage.setItem(getStorageKey('State'), JSON.stringify({
+            filters: currentFilters,
+            selectedIds: getSelectedTransactionIds()
+        }));
     });
 }
 
@@ -294,10 +455,14 @@ function applyFilters() {
         amount_min: amountMin,
         amount_max: amountMax,
         currency: getFilterValues('currencyFilterMenu'),
-        page: 1
+        filterPanelOpen: document.getElementById('filterContainer')?.style.display !== 'none',
+        page: pendingRestore ? (currentFilters.page || 1) : 1
     };
-
-    console.log('Applying filters:', currentFilters);
+    
+    if (pendingRestore) {
+        pendingRestore = false;
+    }
+    
     loadTransactions(currentFilters);
 }
 
@@ -491,6 +656,7 @@ function updateTable(transactions) {
 
     if (transactions.length === 0) {
         tbody.innerHTML = '<tr><td colspan="11" class="text-center py-5 text-muted">No se encontraron transacciones bancarias.</td></tr>';
+        updateBulkActionsVisibility();
         return;
     }
 
@@ -499,9 +665,14 @@ function updateTable(transactions) {
         tbody.appendChild(row);
     });
 
-    // Re-inicializar listeners para las nuevas filas
     setupRowActions();
     setupCheckboxListeners();
+    
+    if (savedSelectedIds.length > 0) {
+        setTimeout(() => restoreSelectedCheckboxes(), 50);
+    } else {
+        updateBulkActionsVisibility();
+    }
 }
 
 function createTransactionRow(tx) {
@@ -528,7 +699,7 @@ function createTransactionRow(tx) {
     const statusText = tx.status_display;
 
     tr.innerHTML = `
-        <td><input type="checkbox" name="row-select" class="form-check-input"></td>
+        <td><input type="checkbox" name="row-select" class="form-check-input" data-transaction-id="${tx.id}"></td>
         <td>${tx.date}</td>
         <td class="font-monospace ref-code">${tx.reference}</td>
         <td class="font-monospace">${tx.original_reference || '--'}</td>
@@ -704,8 +875,33 @@ function resetFilters() {
     showNotification('Filtros reiniciados correctamente', 'info');
 }
 
+function getCurrentFilterValues() {
+    const statusValue = getFilterValues('statusFilterMenu');
+    return {
+        date_from: document.getElementById('dateFrom')?.value || '',
+        date_to: document.getElementById('dateTo')?.value || '',
+        bank: getFilterValues('bankFilterMenu'),
+        status: statusValue,
+        reference: document.getElementById('referenceFilter')?.value || '',
+        name: document.getElementById('nameFilter')?.value || '',
+        office_code: getFilterValues('officeFilterMenu'),
+        entry_type: getFilterValues('entryTypeFilterMenu'),
+        operation_type: getFilterValues('operationTypeFilterMenu'),
+        amount_min: document.getElementById('amountMinFilter')?.value || '',
+        amount_max: document.getElementById('amountMaxFilter')?.value || '',
+        currency: getFilterValues('currencyFilterMenu'),
+        page: 1
+    };
+}
+
 function loadTransactions(filters = {}) {
+    if (!filters || Object.keys(filters).length === 0) {
+        filters = getCurrentFilterValues();
+    } else if (filters.page === undefined) {
+        filters.page = 1;
+    }
     const queryString = new URLSearchParams(filters).toString();
+    console.log('Loading from URL:', `/reconciliation/api/data/?${queryString}`);
     const url = `/reconciliation/api/data/?${queryString}`;
 
     fetch(url, {
@@ -718,12 +914,35 @@ function loadTransactions(filters = {}) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
-            // Es vital que estas funciones se ejecuten en orden
-            updateTable(data.transactions);    // Esto llena la tabla
-            updatePagination(data);           // Esto actualiza el texto de "Mostrando..."
+            updateTable(data.transactions);
+            updatePagination(data);
+            updateSummaryStats();
         }
     })
     .catch(error => console.error('Error:', error));
+}
+
+function updateSummaryStats() {
+    fetch('/reconciliation/api/stats/', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            document.getElementById('totalCount').textContent = data.total_count.toLocaleString('es-ES');
+            document.getElementById('reconciledCount').textContent = data.reconciled_count.toLocaleString('es-ES');
+            document.getElementById('pendingCount').textContent = data.pending_count.toLocaleString('es-ES');
+            document.getElementById('reconciledPercentage').textContent = data.reconciled_percentage;
+        }
+        finishStateRestore();
+    })
+    .catch(error => {
+        console.error('Error updating stats:', error);
+        finishStateRestore();
+    });
 }
 
 function debounce(func, wait) {
@@ -745,23 +964,23 @@ function setupTableListeners() {
 }
 
 function setupCheckboxListeners() {
-    const masterCheckbox = document.getElementById('selectAll');
-    const rowCheckboxes = document.querySelectorAll('input[name="row-select"]');
-
-    if (masterCheckbox) {
-        masterCheckbox.addEventListener('change', function() {
-            rowCheckboxes.forEach(checkbox => {
-                checkbox.checked = this.checked;
-            });
-            updateBulkActionsVisibility();
-        });
-    }
-
-    rowCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
+    // Event delegation para checkboxes
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.name === 'row-select') {
             updateMasterCheckbox();
             updateBulkActionsVisibility();
-        });
+        }
+    });
+
+    // Event delegation para "selectAll" 
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.id === 'selectAll') {
+            const rowCheckboxes = document.querySelectorAll('input[name="row-select"]');
+            rowCheckboxes.forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+            updateBulkActionsVisibility();
+        }
     });
 }
 
@@ -778,13 +997,40 @@ function updateMasterCheckbox() {
     }
 }
 
+function clearAllCheckboxes() {
+    const masterCheckbox = document.getElementById('selectAll');
+    if (masterCheckbox) {
+        masterCheckbox.checked = false;
+        masterCheckbox.indeterminate = false;
+    }
+    const rowCheckboxes = document.querySelectorAll('input[name="row-select"]');
+    rowCheckboxes.forEach(cb => cb.checked = false);
+    savedSelectedIds = [];
+    updateBulkActionsVisibility();
+}
+
 function updateBulkActionsVisibility() {
     const rowCheckboxes = document.querySelectorAll('input[name="row-select"]');
     const selectedCount = Array.from(rowCheckboxes).filter(cb => cb.checked).length;
 
-    const bulkActions = document.getElementById('bulkActions');
-    if (bulkActions) {
-        bulkActions.style.display = selectedCount > 0 ? 'flex' : 'none';
+    const masterCheckbox = document.getElementById('selectAll');
+    if (masterCheckbox) {
+        masterCheckbox.checked = selectedCount > 0 && selectedCount === rowCheckboxes.length;
+        masterCheckbox.indeterminate = selectedCount > 0 && selectedCount < rowCheckboxes.length;
+    }
+
+    const bulkReconcileBtn = document.getElementById('bulkReconcileBtn');
+    if (bulkReconcileBtn) {
+        bulkReconcileBtn.style.display = (selectedCount > 0 && window.userPermissions?.can_reconcile) ? 'flex' : 'none';
+    }
+
+    const selectedCountBadge = document.getElementById('selectedCountBadge');
+    if (selectedCountBadge) {
+        selectedCountBadge.style.display = selectedCount > 0 ? 'flex' : 'none';
+        const countText = document.getElementById('selectedCountText');
+        const countLabel = document.getElementById('selectedCountLabel');
+        if (countText) countText.textContent = selectedCount;
+        if (countLabel) countLabel.textContent = selectedCount === 1 ? 'Seleccionada' : 'Seleccionados';
     }
 
     const selectedInfo = document.getElementById('selectedCount');
@@ -889,18 +1135,10 @@ function reconcileTransaction(transactionId, row) {
     })
     .then(data => {
         if (data.status === 'success') {
-            const statusBadge = row.querySelector('.status-badge');
-            if (statusBadge) {
-                statusBadge.className = 'status-badge status-matched';
-                statusBadge.textContent = 'Conciliado';
-            }
-            row.dataset.statusDisplay = 'Conciliado';
-            if (data.updated_at) {
-                row.dataset.updatedAt = data.updated_at;
-            }
-            row.querySelector('.btn-reconcile')?.remove();
-            updateReconciliationSummaryStats();
             showNotification(data.message, 'success');
+            clearAllCheckboxes();
+            savedSelectedIds = [];
+            loadTransactions(currentFilters);
         }
     })
     .catch(error => {
@@ -1094,8 +1332,9 @@ function showNotification(message, type = 'info') {
         }
     }, 5000);
 
-    if (typeof window.addGlobalNotification === 'function') {
-        window.addGlobalNotification(cleanMsg, type);
+    // Actualizar notificaciones del servidor para la campana
+    if (type === 'success' && typeof window.reloadNotifications === 'function') {
+        setTimeout(() => window.reloadNotifications(), 500);
     }
 }
 
@@ -1132,3 +1371,114 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// ===== Conciliación Masiva =====
+function openBulkReconcileModal() {
+    const selectedTransactions = getSelectedTransactionIds();
+    console.log('Selected transactions:', selectedTransactions);
+    
+    if (selectedTransactions.length === 0) {
+        showNotification('No hay transacciones seleccionadas.', 'warning');
+        return;
+    }
+
+    if (selectedTransactions.length > 50) {
+        showNotification('El límite máximo es de 50 transacciones.', 'error');
+        return;
+    }
+
+    const bulkCountEl = document.getElementById('bulkSelectedCount');
+    if (bulkCountEl) {
+        bulkCountEl.textContent = selectedTransactions.length;
+    }
+
+    const modalElement = document.getElementById('bulkReconcileConfirmModal');
+    if (!modalElement) {
+        console.error('Modal no encontrado');
+        showNotification('Error: Modal no encontrado', 'error');
+        return;
+    }
+    
+    const modalInstance = new bootstrap.Modal(modalElement);
+    modalInstance.show();
+}
+
+function getSelectedTransactionIds() {
+    const rowCheckboxes = document.querySelectorAll('input[name="row-select"]:checked');
+    return Array.from(rowCheckboxes)
+        .map(checkbox => checkbox.getAttribute('data-transaction-id'))
+        .filter(id => id);
+}
+
+function executeBulkReconcile() {
+    const selectedIds = getSelectedTransactionIds();
+    
+    if (selectedIds.length === 0) {
+        showNotification('No hay transacciones para conciliar.', 'warning');
+        return;
+    }
+
+    const confirmBtn = document.getElementById('confirmBulkReconcileBtn');
+    if (confirmBtn) {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Conciliando...';
+    }
+
+    fetch('/reconciliation/api/reconcile/bulk/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ 'transaction_ids': selectedIds })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const modalElement = document.getElementById('bulkReconcileConfirmModal');
+        if (modalElement) {
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if (modal) modal.hide();
+        }
+
+        if (data.status === 'success') {
+            showNotification(data.message, 'success');
+            clearAllCheckboxes();
+            savedSelectedIds = [];
+            loadTransactions(currentFilters);
+        } else {
+            showNotification(data.message || 'Error al conciliar', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error en conciliación masiva:', error);
+        showNotification('Error al procesar la solicitud.', 'error');
+    })
+    .finally(() => {
+        if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Confirmar Conciliación';
+        }
+    });
+}
+
+function updateReconciliationSummaryStatsBulk(count) {
+    const totalEl = document.getElementById('totalCount');
+    const reconciledEl = document.getElementById('reconciledCount');
+    const pendingEl = document.getElementById('pendingCount');
+    const percentageEl = document.getElementById('reconciledPercentage');
+
+    if (!totalEl || !reconciledEl || !pendingEl || !percentageEl) return;
+
+    const parseNumber = (text) => {
+        if (!text) return 0;
+        return parseInt(text.replace(/[^0-9]/g, ''), 10) || 0;
+    };
+
+    const totalCount = parseNumber(totalEl.textContent);
+    const reconciledCount = parseNumber(reconciledEl.textContent) + count;
+    const pendingCount = Math.max(parseNumber(pendingEl.textContent) - count, 0);
+
+    reconciledEl.textContent = reconciledCount.toLocaleString('es-ES');
+    pendingEl.textContent = pendingCount.toLocaleString('es-ES');
+    percentageEl.textContent = totalCount > 0 ? Math.round((reconciledCount / totalCount) * 100) : '0';
+}
