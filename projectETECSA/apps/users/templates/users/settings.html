@@ -19,8 +19,7 @@
     <div class="settings-tabs">
         <button class="settings-tab active" data-tab="profile">Perfil de Usuario</button>
         <button class="settings-tab" data-tab="notifications">Historial de Notificaciones</button>
-        <button class="settings-tab" data-tab="reports">Reportes</button>
-        <button class="settings-tab" data-tab="audit">Auditoría</button>
+        <button class="settings-tab" data-tab="reports">Mis Reportes</button>
     </div>
     
     <!-- Tab Content Container -->
@@ -28,129 +27,51 @@
         <!-- PROFILE TAB -->
         <div class="tab-content active" data-tab-content="profile">
             <div class="settings-grid">
-                <!-- Left Column: Profile Card -->
-                <div class="settings-card" style="grid-column: span 6;">
+                <!-- Left Column: Profile Card (30%) -->
+                <div class="settings-card" style="grid-column: span 4;">
                     <div class="settings-card-header">
-                        <h3 class="settings-card-title">Perfil del Analista</h3>
+                        <h3 class="settings-card-title">Perfil del Usuario</h3>
                         <span class="material-symbols-outlined settings-card-icon">person</span>
                     </div>
                     <div class="profile-avatar-container">
-                        <img alt="Profile portrait" class="profile-avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIOP5dcFMmKnIveZqSx2SA1EFxt1FJzj3YGQbcHz4vsYtKVHQpD5-zmbhml2mHz2R2SPr5J4OxVVUjY2CtrcKpLAyBxFqrmzVYYuTPXBnX6bogJ-DhRYt5G8sp45PgKkFkvUbEePQe3j7pAvHZGpB970JdNPhojJ0seLmC3pF1JMPOMlwpRCI9F3FI1eGv7Hy82hxHTCN0aZFpRI9RB0l25_KGzQ_uj9P29bL0DflCffa8ru7mc6J4VHbkYNViXhYH8ppyYnLmZb4"/>
-                        <span class="profile-name">Lic. Ricardo Mesa</span>
-                        <span class="profile-role">Analista Financiero Senior</span>
+                        <span class="profile-name">{{ profile_user.first_name }} {{ profile_user.last_name }}</span>
+                        <span class="profile-role">{{ profile_role }}</span>
                     </div>
                     <div class="space-y-4">
                         <div class="profile-info-item">
-                            <label class="profile-info-label">ID Institucional</label>
-                            <span class="profile-info-value mono">ET-8829-FIN</span>
+                            <label class="profile-info-label">Nombre de Usuario</label>
+                            <span class="profile-info-value mono">{{ profile_user.username }}</span>
                         </div>
                         <div class="profile-info-item">
-                            <label class="profile-info-label">Unidad de Control</label>
-                            <span class="profile-info-value">Tesorería Central - La Habana</span>
+                            <label class="profile-info-label">Email</label>
+                            <span class="profile-info-value">{% if profile_user.email %}{{ profile_user.email }}{% else %}<span class="text-muted">No configurado</span>{% endif %}</span>
+                        </div>
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Fecha de Creación</label>
+                            <span class="profile-info-value">{{ profile_user.created_at|date:"d/m/Y H:i" }}</span>
+                        </div>
+                        <div class="profile-info-item">
+                            <label class="profile-info-label">Último Acceso</label>
+                            <span class="profile-info-value">{% if profile_user.last_login %}{{ profile_user.last_login|date:"d/m/Y H:i:s" }}{% else %}Primera vez{% endif %}</span>
                         </div>
                     </div>
-                    <button class="btn-edit-profile">Editar Información</button>
                 </div>
 
-                <!-- Right Column: Banks Section -->
-                <div class="settings-card" style="grid-column: span 6;">
+                <!-- Right Column: Recent Activities (70%) -->
+                <div class="settings-card" style="grid-column: span 8; display: flex; flex-direction: column;">
                     <div class="settings-card-header">
                         <div>
-                            <h3 class="settings-card-title">Bancos y Canales</h3>
-                            <p class="text-xs text-on-surface-variant">Configure las entidades bancarias para la conciliación automática.</p>
+                            <h3 class="settings-card-title">Últimas Acciones</h3>
+                            <p class="text-xs text-on-surface-variant">Historial de actividades recientes</p>
                         </div>
-                        <button class="btn-add-bank">
-                            <span class="material-symbols-outlined" style="font-size: 1rem;">add</span>
-                            Agregar Banco
-                        </button>
+                        <span class="material-symbols-outlined" style="color: var(--primary);">history</span>
                     </div>
-                    <div class="bank-list">
-                        <!-- Bank Item 1 -->
-                        <div class="bank-item">
-                            <div class="bank-item-left">
-                                <div class="bank-icon-container">
-                                    <span class="material-symbols-outlined">account_balance</span>
-                                </div>
-                                <div>
-                                    <h4 class="bank-name">Banco Metropolitano</h4>
-                                    <p class="bank-description">Cuentas Corrientes (MN/MLC)</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="bank-status active">Activo</span>
-                                <button class="btn-bank-action">
-                                    <span class="material-symbols-outlined" style="font-size: 1.25rem;">edit</span>
-                                </button>
-                            </div>
-                        </div>
-                        <!-- Bank Item 2 -->
-                        <div class="bank-item">
-                            <div class="bank-item-left">
-                                <div class="bank-icon-container">
-                                    <span class="material-symbols-outlined">account_balance</span>
-                                </div>
-                                <div>
-                                    <h4 class="bank-name">BANDEC</h4>
-                                    <p class="bank-description">Crédito Agrícola y Comercial</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="bank-status active">Activo</span>
-                                <button class="btn-bank-action">
-                                    <span class="material-symbols-outlined" style="font-size: 1.25rem;">edit</span>
-                                </button>
-                            </div>
-                        </div>
-                        <!-- Bank Item 3 -->
-                        <div class="bank-item">
-                            <div class="bank-item-left">
-                                <div class="bank-icon-container">
-                                    <span class="material-symbols-outlined">account_balance</span>
-                                </div>
-                                <div>
-                                    <h4 class="bank-name">BPA</h4>
-                                    <p class="bank-description">Banco Popular de Ahorro</p>
-                                </div>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <span class="bank-status pending">En Espera</span>
-                                <button class="btn-bank-action">
-                                    <span class="material-symbols-outlined" style="font-size: 1.25rem;">edit</span>
-                                </button>
-                            </div>
+                    <div id="activities-list" class="activities-list" style="flex: 1; overflow-y: auto;">
+                        <div class="empty-state py-3">
+                            <span class="material-symbols-outlined" style="font-size: 2rem; color: var(--outline);">hourglass_empty</span>
+                            <p class="text-on-surface-variant small">Cargando actividades...</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- Bottom Left: Security Section -->
-                <div class="settings-card" style="grid-column: span 6;">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined" style="color: var(--tertiary); font-size: 1.5rem;">lock</span>
-                        <h3 class="settings-card-title mb-0">Seguridad</h3>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="security-item">
-                            <span class="security-label">Contraseña de acceso</span>
-                            <a href="#" class="security-link">Cambiar</a>
-                        </div>
-                        <div class="security-item">
-                            <span class="security-label">Autenticación 2FA</span>
-                            <div class="toggle-switch"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Right: Permissions Section -->
-                <div class="settings-card" style="grid-column: span 6;">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">admin_panel_settings</span>
-                        <h3 class="settings-card-title mb-0">Permisos</h3>
-                    </div>
-                    <p class="permissions-description">Su perfil cuenta con permisos de <strong>Escritura y Auditoría</strong> asignados por el administrador central.</p>
-                    <button class="btn-view-permissions">
-                        Ver matriz de permisos
-                        <span class="material-symbols-outlined">arrow_forward</span>
-                    </button>
                 </div>
             </div>
         </div>
@@ -177,28 +98,11 @@
             <div class="settings-grid">
                 <div class="settings-card" style="grid-column: span 12;">
                     <div class="d-flex align-items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">bar_chart</span>
-                        <h3 class="settings-card-title mb-0">Reportes</h3>
+                        <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">description</span>
+                        <h3 class="settings-card-title mb-0">Mis Reportes</h3>
                     </div>
                     <div class="empty-state">
-                        <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--outline);">assessment</span>
-                        <p class="text-on-surface-variant">Sección en desarrollo</p>
-                        <p class="text-xs text-on-surface-variant">Esta funcionalidad se implementará próximamente.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- AUDIT TAB -->
-        <div class="tab-content" data-tab-content="audit">
-            <div class="settings-grid">
-                <div class="settings-card" style="grid-column: span 12;">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">verified_user</span>
-                        <h3 class="settings-card-title mb-0">Auditoría</h3>
-                    </div>
-                    <div class="empty-state">
-                        <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--outline);">history</span>
+                        <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--outline);">folder_open</span>
                         <p class="text-on-surface-variant">Sección en desarrollo</p>
                         <p class="text-xs text-on-surface-variant">Esta funcionalidad se implementará próximamente.</p>
                     </div>

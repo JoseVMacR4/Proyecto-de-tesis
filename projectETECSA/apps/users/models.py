@@ -178,36 +178,45 @@ class Notification(models.Model):
         return f"Notification to {self.user or 'Unknown'} - {self.type}"
 
 
-class Reminder(models.Model):
-    class StatusChoices(models.TextChoices):
-        PENDING = 'pending', _('Pending')
-        SENT = 'sent', _('Sent')
-        DISMISSED = 'dismissed', _('Dismissed')
-        COMPLETED = 'completed', _('Completed')
+class UserActivity(models.Model):
+    class ActionType(models.TextChoices):
+        LOGIN = 'login', _('Inicio de sesión')
+        LOGOUT = 'logout', _('Cierre de sesión')
+        CONCILIATION = 'conciliation', _('Conciliación')
+        UPLOAD_STATEMENT = 'upload_statement', _('Subir estado de cuenta')
+        CREATE_USER = 'create_user', _('Crear usuario')
+        UPDATE_USER = 'update_user', _('Actualizar usuario')
+        DELETE_USER = 'delete_user', _('Eliminar usuario')
+        CREATE_BANK = 'create_bank', _('Crear banco')
+        UPDATE_BANK = 'update_bank', _('Actualizar banco')
+        DELETE_BANK = 'delete_bank', _('Eliminar banco')
+        CREATE_OPERATION = 'create_operation', _('Crear operación')
+        UPDATE_OPERATION = 'update_operation', _('Actualizar operación')
+        DELETE_OPERATION = 'delete_operation', _('Eliminar operación')
+        CREATE_OFFICE = 'create_office', _('Crear oficina')
+        UPDATE_OFFICE = 'update_office', _('Actualizar oficina')
+        DELETE_OFFICE = 'delete_office', _('Eliminar oficina')
+        GENERATE_REPORT = 'generate_report', _('Generar reporte')
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=255)
-    message = models.TextField()
-    due_at = models.DateTimeField()
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='reminders',
+        on_delete=models.CASCADE,
+        related_name='user_activities',
     )
-    status = models.CharField(max_length=20, choices=StatusChoices.choices)
+    action = models.CharField(max_length=30, choices=ActionType.choices)
+    description = models.TextField()
+    metadata = models.JSONField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = _('Reminder')
-        verbose_name_plural = _('Reminders')
-        ordering = ['due_at']
+        verbose_name = _('User Activity')
+        verbose_name_plural = _('User Activities')
+        ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['status']),
-            models.Index(fields=['due_at']),
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['action']),
         ]
 
     def __str__(self):
-        return self.title
+        return f"{self.user} - {self.action} - {self.created_at}"

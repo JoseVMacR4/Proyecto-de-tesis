@@ -10,6 +10,7 @@ urlpatterns = [
     
     path('api/notifications/unread/', views.get_unread_notifications, name='api_notifications_unread'),
     path('api/notifications/mark-read/', views.mark_notifications_read, name='api_notifications_read'),
+    path('api/user/activities/', views.get_user_activities, name='api_user_activities'),
     
     # CRUD Usuarios
     path('admin-panel/users/create/', views.create_user, name='create_user'),

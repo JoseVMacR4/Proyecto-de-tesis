@@ -9,7 +9,7 @@ from decimal import Decimal
 from apps.bank_accounts.models import BankAccount
 from apps.reconciliation.models import BankStatement, BankStatementTransaction
 from apps.reconciliation.services import process_statement_upload
-from apps.users.models import Notification
+from apps.users.models import Notification, UserActivity
 from apps.users.permissions import can_upload_statements
 from django.utils.formats import date_format
 from django.utils import timezone
@@ -178,6 +178,13 @@ def upload_statement_api(request):
             user=request.user,
             type='info',
             content=f"Extracto bancario '{stmt.file_name}' cargado exitosamente con {stmt.entry_count} transacciones."
+        )
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.UPLOAD_STATEMENT,
+            description=f"Estado de cuenta '{stmt.file_name}' subido ({stmt.entry_count} transacciones)",
+            metadata={'statement_id': str(stmt.id), 'file_name': stmt.file_name, 'entry_count': stmt.entry_count}
         )
 
         return JsonResponse({

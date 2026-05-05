@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
-from apps.users.models import User, UserRole, Role
+from apps.users.models import User, UserRole, Role, UserActivity
 from apps.users.permissions import can_access_admin
 from apps.bank_accounts.models import BankAccount, Office, Operation
 from django.utils import timezone
@@ -34,11 +34,16 @@ def login_view(request):
         if user is not None:
             login(request, user)
             if remember:
-                # Recordar por 3 horas (10800 segundos)
                 request.session.set_expiry(10800)
             else:
-                # Sesión hasta cerrar navegador
                 request.session.set_expiry(0)
+
+            UserActivity.objects.create(
+                user=user,
+                action=UserActivity.ActionType.LOGIN,
+                description=f'Inicio de sesión en el sistema',
+            )
+
             return redirect('dashboard')
         else:
             messages.error(request, 'Credenciales incorrectas')
@@ -54,8 +59,17 @@ def dashboard(request):
 
 @login_required
 def settings(request):
+    user = request.user
+    
+    user_roles = UserRole.objects.filter(user=user).select_related('role')
+    roles = [ur.role.name for ur in user_roles]
+    main_role = roles[0] if roles else 'Sin rol'
+    
     context = {
-        'current_page': 'settings'
+        'current_page': 'settings',
+        'profile_user': user,
+        'profile_role': main_role,
+        'profile_roles': roles,
     }
     return render(request, 'users/settings.html', context)
 
@@ -165,6 +179,13 @@ def create_user(request):
             content=f"Usuario '{username}' creado exitosamente."
         )
 
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.CREATE_USER,
+            description=f"Usuario '{username}' creado",
+            metadata={'user_id': str(user.id), 'role': role.name if role_id else None}
+        )
+
         return JsonResponse({'success': True, 'message': 'Usuario creado exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -193,6 +214,13 @@ def update_user(request, user_id):
             if data.get('role_id'):
                 role = get_object_or_404(Role, id=data.get('role_id'))
                 UserRole.objects.create(user=user, role=role)
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.UPDATE_USER,
+            description=f"Usuario '{user.username}' actualizado",
+            metadata={'user_id': str(user_id)}
+        )
         
         return JsonResponse({'success': True, 'message': 'Usuario actualizado exitosamente'})
     except Exception as e:
@@ -213,6 +241,13 @@ def delete_user(request, user_id):
             user=request.user,
             type='warning',
             content=f"Usuario '{username}' eliminado."
+        )
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.DELETE_USER,
+            description=f"Usuario '{username}' eliminado",
+            metadata={'deleted_user_id': str(user_id)}
         )
 
         return JsonResponse({'success': True, 'message': 'Usuario eliminado exitosamente'})
@@ -242,6 +277,13 @@ def create_operation(request):
             content=f"Operación '{code} - {name}' creada."
         )
 
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.CREATE_OPERATION,
+            description=f"Operación '{code} - {name}' creada",
+            metadata={'operation_code': code, 'operation_name': name}
+        )
+
         return JsonResponse({'success': True, 'message': 'Operación creada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -257,6 +299,13 @@ def update_operation(request, operation_id):
         operation.code = data.get('code', operation.code)
         operation.name = data.get('name', operation.name)
         operation.save()
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.UPDATE_OPERATION,
+            description=f"Operación '{operation.code}' actualizada",
+            metadata={'operation_id': str(operation_id)}
+        )
         
         return JsonResponse({'success': True, 'message': 'Operación actualizada exitosamente'})
     except Exception as e:
@@ -277,6 +326,13 @@ def delete_operation(request, operation_id):
             user=request.user,
             type='warning',
             content=f"Operación '{op_code}' eliminada."
+        )
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.DELETE_OPERATION,
+            description=f"Operación '{op_code}' eliminada",
+            metadata={'deleted_operation_id': str(operation_id)}
         )
 
         return JsonResponse({'success': True, 'message': 'Operación eliminada exitosamente'})
@@ -334,6 +390,13 @@ def create_bank_account(request):
             content=f"Cuenta bancaria '{code} - {name}' creada."
         )
 
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.CREATE_BANK,
+            description=f"Cuenta bancaria '{code} - {name}' creada",
+            metadata={'bank_code': code, 'bank_name': name}
+        )
+
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria creada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -349,6 +412,13 @@ def update_bank_account(request, account_id):
         account.code = data.get('code', account.code)
         account.name = data.get('name', account.name)
         account.save()
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.UPDATE_BANK,
+            description=f"Cuenta bancaria '{account.code}' actualizada",
+            metadata={'account_id': str(account_id), 'old_code': account.code}
+        )
         
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria actualizada exitosamente'})
     except Exception as e:
@@ -369,6 +439,13 @@ def delete_bank_account(request, account_id):
             user=request.user,
             type='warning',
             content=f"Cuenta bancaria '{acc_code}' eliminada."
+        )
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.DELETE_BANK,
+            description=f"Cuenta bancaria '{acc_code}' eliminada",
+            metadata={'deleted_account_id': str(account_id)}
         )
 
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria eliminada exitosamente'})
@@ -426,6 +503,13 @@ def create_office(request):
             content=f"Oficina '{code} - {name}' creada."
         )
 
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.CREATE_OFFICE,
+            description=f"Oficina '{code} - {name}' creada",
+            metadata={'office_code': code, 'office_name': name}
+        )
+
         return JsonResponse({'success': True, 'message': 'Oficina creada exitosamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
@@ -441,6 +525,13 @@ def update_office(request, office_id):
         office.code = data.get('code', office.code)
         office.name = data.get('name', office.name)
         office.save()
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.UPDATE_OFFICE,
+            description=f"Oficina '{office.code}' actualizada",
+            metadata={'office_id': str(office_id)}
+        )
         
         return JsonResponse({'success': True, 'message': 'Oficina actualizada exitosamente'})
     except Exception as e:
@@ -461,6 +552,13 @@ def delete_office(request, office_id):
             user=request.user,
             type='warning',
             content=f"Oficina '{off_code}' eliminada."
+        )
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.DELETE_OFFICE,
+            description=f"Oficina '{off_code}' eliminada",
+            metadata={'deleted_office_id': str(office_id)}
         )
 
         return JsonResponse({'success': True, 'message': 'Oficina eliminada exitosamente'})
@@ -626,6 +724,12 @@ def get_offices(request):
 
 @login_required
 def logout_view(request):
+    if request.user.is_authenticated:
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.LOGOUT,
+            description=f'Cierre de sesión',
+        )
     logout(request)
     return redirect('login')
 
@@ -664,3 +768,24 @@ def mark_notifications_read(request):
     ).update(read_at=timezone.now())
     
     return JsonResponse({'success': True})
+
+@login_required
+@require_GET
+def get_user_activities(request):
+    """Obtiene las últimas 10 actividades del usuario."""
+    activities = UserActivity.objects.filter(
+        user=request.user
+    ).order_by('-created_at')[:10]
+
+    data = [{
+        'id': str(a.id),
+        'action': a.action,
+        'description': a.description,
+        'metadata': a.metadata,
+        'created_at': a.created_at.strftime('%d/%m/%Y %H:%M'),
+    } for a in activities]
+
+    return JsonResponse({
+        'success': True,
+        'activities': data
+    })

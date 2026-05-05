@@ -11,7 +11,7 @@ from decimal import Decimal
 from apps.reconciliation.models import BankStatementTransaction
 from apps.users.permissions import can_upload_statements, can_reconcile
 from apps.bank_accounts.models import BankAccount, Office, Operation
-from apps.users.models import Notification
+from apps.users.models import Notification, UserActivity
 import json
 import io
 from datetime import datetime
@@ -270,15 +270,18 @@ def reconcile_transaction(request):
             transaction.status = BankStatementTransaction.StatusChoices.RECONCILED
             transaction.save()
 
-            # ==========================================
-            # NUEVO: Crear la notificación persistente
-            # ==========================================
             Notification.objects.create(
                 user=request.user,
-                type='info', # Ajusta a Notification.NotificationType.INFO si usas TextChoices en tu modelo
+                type='info',
                 content=f"Transacción {transaction.current_reference} conciliada correctamente."
             )
-            # ==========================================
+
+            UserActivity.objects.create(
+                user=request.user,
+                action=UserActivity.ActionType.CONCILIATION,
+                description=f"Transacción {transaction.current_reference} conciliada",
+                metadata={'transaction_id': str(tx_id), 'amount': str(transaction.amount), 'currency': transaction.currency}
+            )
 
             updated_at = timezone.localtime(transaction.updated_at).strftime('%d/%m/%Y %H:%M')
 
@@ -337,7 +340,14 @@ def reconcile_transactions_bulk(request):
             for tx in notified_transactions
         ]
         Notification.objects.bulk_create(notifications_to_create)
-        
+
+        UserActivity.objects.create(
+            user=request.user,
+            action=UserActivity.ActionType.CONCILIATION,
+            description=f"{count} transacción(es) conciliada(s) en lote",
+            metadata={'transaction_count': count, 'transaction_ids': [str(id) for id in transaction_ids]}
+        )
+
         return JsonResponse({
             'status': 'success',
             'message': f'{count} transacción(es) conciliada(s) correctamente.',
