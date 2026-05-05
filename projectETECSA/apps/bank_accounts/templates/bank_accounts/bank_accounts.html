@@ -96,13 +96,76 @@
   </div>
   {% endif %}
 
+<!-- Filter Bar -->
+<div class="d-flex align-items-center gap-2 mb-3">
+  <button id="toggleFiltersBtn" class="btn btn-primary d-flex align-items-center gap-2 shadow-sm" type="button">
+    <span class="material-symbols-outlined">filter_alt</span>
+    <span id="toggleFiltersText">Mostrar Filtros</span>
+    <span class="material-symbols-outlined expand-icon" style="font-size: 1.2rem;">expand_more</span>
+  </button>
+  <button class="btn btn-outline-secondary d-flex align-items-center gap-2 shadow-sm" onclick="resetFilters()">
+    <span class="material-symbols-outlined" style="font-size: 1.2rem;">refresh</span>
+    Reiniciar Filtros
+  </button>
+</div>
+
+<div id="filterContainer" class="filter-bar mb-4" style="display: none;">
+  <div class="row g-2">
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="input-group filter-input-group">
+        <span class="input-group-text" style="color: #999;">
+          <span class="material-symbols-outlined" style="font-size: 1.1rem;">account_balance</span>
+        </span>
+        <div class="dropdown dropdown-multiselect w-100">
+          <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="bankFilterBtn" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="bank-filter-text">Todos los Bancos</span>
+          </button>
+          <ul class="dropdown-menu w-100" id="bankFilterMenu">
+            <li><label class="dropdown-item"><input type="checkbox" value="" checked> Todos los Bancos</label></li>
+          </ul>
+          <input type="hidden" id="bankFilter" class="filter-input" value="">
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="input-group">
+        <span class="input-group-text" style="color: #999;">
+          <span class="material-symbols-outlined" style="font-size: 1.1rem;">calendar_today</span>
+        </span>
+        <input type="date" id="periodStartFilter" class="form-control filter-input" placeholder="Periodo desde">
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="input-group">
+        <span class="input-group-text" style="color: #999;">
+          <span class="material-symbols-outlined" style="font-size: 1.1rem;">calendar_today</span>
+        </span>
+        <input type="date" id="periodEndFilter" class="form-control filter-input" placeholder="Periodo hasta">
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="input-group">
+        <span class="input-group-text" style="color: #999;">
+          <span class="material-symbols-outlined" style="font-size: 1.1rem;">payments</span>
+        </span>
+        <input type="number" id="startingBalanceMin" class="form-control filter-input" placeholder="Min">
+        <span class="input-group-text" style="color: #999;">-</span>
+        <input type="number" id="startingBalanceMax" class="form-control filter-input" placeholder="Max">
+      </div>
+    </div>
+  </div>
+</div>
+
+
   <!-- Historial de Estados de Cuenta Table Section -->
   <div class="history-container">
     <!-- Table Header -->
     <div class="history-header">
       <h5 class="history-title">Historial de Estados de Cuenta</h5>
       <div class="history-actions">
-        <button class="history-action-btn" title="Filtrar"><span class="material-symbols-outlined">filter_list</span></button>
         <button class="history-action-btn" title="Descargar"><span class="material-symbols-outlined">download</span></button>
       </div>
     </div>

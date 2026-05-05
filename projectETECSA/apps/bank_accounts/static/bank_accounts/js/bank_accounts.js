@@ -87,10 +87,237 @@ function cleanMessage(message) {
     return cleaned;
 }
 
+/* ===== Filtros ===== */
+let currentFilters = { page: 1 };
+
+function handleMultiselectChange(checkbox) {
+    const menu = checkbox.closest('.dropdown-menu');
+    if (!menu) return;
+
+    const menuId = menu.id;
+    const btnId = menuId.replace('Menu', 'Btn');
+    const hiddenInputId = menuId.replace('FilterMenu', 'Filter');
+    
+    const btn = document.getElementById(btnId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    
+    if (!btn || !hiddenInput) return;
+
+    const allCheckboxes = menu.querySelectorAll('input[type="checkbox"]');
+    const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
+
+    const checkedValues = Array.from(checkedCheckboxes).map(cb => cb.value).filter(v => v);
+    const displayText = Array.from(checkedCheckboxes)
+        .map(cb => {
+            const label = cb.closest('label') || cb.nextElementSibling;
+            return label ? label.textContent.trim() : cb.value;
+        })
+        .filter(text => text);
+
+    hiddenInput.value = checkedValues.join(',');
+
+    const textSpan = btn.querySelector('span');
+    if (textSpan && displayText.length > 0) {
+        if (displayText.length > 2) {
+            textSpan.textContent = displayText.slice(0, 2).join(', ') + ` (+${displayText.length - 2})`;
+        } else {
+            textSpan.textContent = displayText.join(', ');
+        }
+    }
+
+    applyFilters();
+}
+
+function getFilterValues(menuId) {
+    const menu = document.getElementById(menuId);
+    if (!menu) return '';
+
+    const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
+    const specialValues = ['', 'Todos los Bancos', 'Todos', 'Todas'];
+    
+    const values = Array.from(checkedCheckboxes)
+        .map(cb => cb.value)
+        .filter(v => v && !specialValues.includes(v));
+
+    return values.join(',');
+}
+
+function applyFilters() {
+    const bankValue = getFilterValues('bankFilterMenu');
+    
+    currentFilters = {
+        bank_account: bankValue,
+        period_start: document.getElementById('periodStartFilter')?.value || '',
+        period_end: document.getElementById('periodEndFilter')?.value || '',
+        starting_balance_min: document.getElementById('startingBalanceMin')?.value || '',
+        starting_balance_max: document.getElementById('startingBalanceMax')?.value || '',
+        filterPanelOpen: document.getElementById('filterContainer')?.style.display !== 'none',
+        page: 1
+    };
+    
+    loadPage(1);
+}
+
+function loadFilterOptions() {
+    return fetch('/bank-accounts/api/filters/', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/json',
+        },
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            populateFilterOptions(data.filters);
+        }
+    })
+    .catch(error => {
+        console.error('Error loading filter options:', error);
+    });
+}
+
+function populateFilterOptions(filters) {
+    const populateMenu = (menuId, options) => {
+        const menu = document.getElementById(menuId);
+        if (!menu) return;
+        
+        menu.innerHTML = options.map(opt => `
+            <li class="dropdown-item">
+                <input type="checkbox" value="${opt.value}" id="chk-${menuId}-${opt.value}" class="form-check-input me-2">
+                <label class="form-check-label flex-grow-1 py-1 mb-0" for="chk-${menuId}-${opt.value}" style="cursor: pointer;">${opt.label}</label>
+            </li>
+        `).join('');
+        
+        menu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                handleMultiselectChange(this);
+            });
+        });
+    };
+    
+    if (filters.banks) {
+        populateMenu('bankFilterMenu', filters.banks);
+    }
+}
+
+function setupFilterToggle() {
+    const toggleBtn = document.getElementById('toggleFiltersBtn');
+    const filterContainer = document.getElementById('filterContainer');
+
+    if (toggleBtn && filterContainer) {
+        toggleBtn.addEventListener('click', function() {
+            const isHidden = filterContainer.style.display === 'none';
+            
+            filterContainer.style.display = isHidden ? 'block' : 'none';
+            
+            const icon = this.querySelector('.expand-icon');
+            const text = document.getElementById('toggleFiltersText');
+            
+            if (icon) {
+                icon.textContent = isHidden ? 'expand_less' : 'expand_more';
+            }
+            if (text) {
+                text.textContent = isHidden ? 'Ocultar Filtros' : 'Mostrar Filtros';
+            }
+        });
+    }
+}
+
+function resetFilters() {
+    const filterInputs = document.querySelectorAll('.filter-input:not([type="hidden"])');
+    filterInputs.forEach(input => {
+        input.value = '';
+    });
+
+    const isAllOption = (val) => val === '' || val === 'Todos' || val === 'Todas' || val === 'Todos los Bancos';
+    
+    document.querySelectorAll('.dropdown-multiselect').forEach(dropdown => {
+        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.checked = isAllOption(cb.value);
+        });
+
+        const btn = dropdown.querySelector('.dropdown-toggle');
+        const menuId = dropdown.querySelector('.dropdown-menu').id;
+        
+        const defaultTexts = {
+            'bankFilterMenu': 'Todos los Bancos'
+        };
+        
+        if (btn && defaultTexts[menuId]) {
+            const textSpan = btn.querySelector('span:first-child');
+            if (textSpan) textSpan.textContent = defaultTexts[menuId];
+        }
+    });
+    
+    document.querySelectorAll('input[type="hidden"].filter-input').forEach(input => {
+        input.value = '';
+    });
+
+    applyFilters();
+    showNotification('Filtros reiniciados correctamente', 'info');
+}
+
+function initFilterEvents() {
+    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax').forEach(input => {
+        input.addEventListener('change', applyFilters);
+    });
+    
+    const debouncedApplyFilters = debounce(applyFilters, 500);
+    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax').forEach(input => {
+        input.addEventListener('input', debouncedApplyFilters);
+    });
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function initDropdowns() {
+    const buttons = document.querySelectorAll('.dropdown-multiselect button');
+    
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = this.closest('.dropdown-multiselect');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            
+            document.querySelectorAll('.dropdown-multiselect .dropdown-menu.show').forEach(openMenu => {
+                if (openMenu !== menu) {
+                    openMenu.classList.remove('show');
+                }
+            });
+            
+            menu.classList.toggle('show');
+        });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.dropdown-multiselect')) {
+            document.querySelectorAll('.dropdown-multiselect .dropdown-menu.show').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeFileUpload();
     initializeHistoryActions();
     initializePagination();
+    setupFilterToggle();
+    loadFilterOptions();
+    initFilterEvents();
+    initDropdowns();
 });
 
 /**
@@ -466,6 +693,15 @@ function initializePagination() {
 function loadPage(pageNumber) {
     const url = new URL(window.location);
     url.searchParams.set('page', pageNumber);
+    
+    // Añadir parámetros de filtro
+    if (currentFilters) {
+        if (currentFilters.bank_account) url.searchParams.set('bank_account', currentFilters.bank_account);
+        if (currentFilters.period_start) url.searchParams.set('period_start', currentFilters.period_start);
+        if (currentFilters.period_end) url.searchParams.set('period_end', currentFilters.period_end);
+        if (currentFilters.starting_balance_min) url.searchParams.set('starting_balance_min', currentFilters.starting_balance_min);
+        if (currentFilters.starting_balance_max) url.searchParams.set('starting_balance_max', currentFilters.starting_balance_max);
+    }
     
     fetch(url, {
         method: 'GET',

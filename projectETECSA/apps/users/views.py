@@ -4,6 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 import json
 from apps.users.models import User, UserRole, Role
 from apps.users.permissions import can_access_admin
@@ -125,6 +126,7 @@ def admin_panel(request):
     }
     return render(request, 'users/admin_panel.html', context)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def create_user(request):
@@ -167,6 +169,7 @@ def create_user(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def update_user(request, user_id):
@@ -195,6 +198,7 @@ def update_user(request, user_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST", "DELETE"])
 def delete_user(request, user_id):
@@ -215,6 +219,7 @@ def delete_user(request, user_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def create_operation(request):
@@ -241,6 +246,7 @@ def create_operation(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def update_operation(request, operation_id):
@@ -256,6 +262,7 @@ def update_operation(request, operation_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST", "DELETE"])
 def delete_operation(request, operation_id):
@@ -276,6 +283,7 @@ def delete_operation(request, operation_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["GET"])
 def get_operations(request):
@@ -303,6 +311,7 @@ def get_operations(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def create_bank_account(request):
@@ -329,6 +338,7 @@ def create_bank_account(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def update_bank_account(request, account_id):
@@ -344,6 +354,7 @@ def update_bank_account(request, account_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST", "DELETE"])
 def delete_bank_account(request, account_id):
@@ -364,6 +375,7 @@ def delete_bank_account(request, account_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["GET"])
 def get_bank_accounts(request):
@@ -391,6 +403,7 @@ def get_bank_accounts(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def create_office(request):
@@ -417,6 +430,7 @@ def create_office(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST"])
 def update_office(request, office_id):
@@ -432,6 +446,7 @@ def update_office(request, office_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["POST", "DELETE"])
 def delete_office(request, office_id):
@@ -452,6 +467,7 @@ def delete_office(request, office_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 @require_http_methods(["GET"])
 def get_offices(request):
@@ -479,6 +495,7 @@ def get_offices(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 def get_users(request):
     """API endpoint para obtener la lista de usuarios"""
@@ -527,6 +544,7 @@ def get_users(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 def get_operations(request):
     """API endpoint para obtener la lista de operaciones"""
@@ -553,6 +571,7 @@ def get_operations(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 def get_bank_accounts(request):
     """API endpoint para obtener la lista de cuentas bancarias"""
@@ -578,6 +597,7 @@ def get_bank_accounts(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@csrf_exempt
 @login_required
 def get_offices(request):
     """API endpoint para obtener la lista de oficinas"""

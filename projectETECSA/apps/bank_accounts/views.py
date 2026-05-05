@@ -20,6 +20,52 @@ logger = logging.getLogger(__name__)
 def bank_accounts(request):
     accounts = BankAccount.objects.all().order_by('code')
     statements = BankStatement.objects.select_related('bank_account').order_by('-created_at')
+    
+    # Filtros
+    bank_account = request.GET.get('bank_account', '')
+    period_start = request.GET.get('period_start', '')
+    period_end = request.GET.get('period_end', '')
+    starting_balance_min = request.GET.get('starting_balance_min', '')
+    starting_balance_max = request.GET.get('starting_balance_max', '')
+    
+    # Filtro por banco (múltiple)
+    if bank_account:
+        bank_list = [b.strip() for b in bank_account.split(',') if b.strip()]
+        if bank_list:
+            statements = statements.filter(bank_account__code__in=bank_list)
+    
+    # Filtro por periodo desde
+    if period_start:
+        try:
+            start_date = timezone.datetime.strptime(period_start, '%Y-%m-%d').date()
+            statements = statements.filter(period_start__gte=start_date)
+        except ValueError:
+            pass
+    
+    # Filtro por periodo hasta
+    if period_end:
+        try:
+            end_date = timezone.datetime.strptime(period_end, '%Y-%m-%d').date()
+            statements = statements.filter(period_end__lte=end_date)
+        except ValueError:
+            pass
+    
+    # Filtro por saldo inicial min
+    if starting_balance_min:
+        try:
+            min_balance = float(starting_balance_min)
+            statements = statements.filter(starting_balance__gte=min_balance)
+        except ValueError:
+            pass
+    
+    # Filtro por saldo inicial max
+    if starting_balance_max:
+        try:
+            max_balance = float(starting_balance_max)
+            statements = statements.filter(starting_balance__lte=max_balance)
+        except ValueError:
+            pass
+    
     page_number = request.GET.get('page', 1)
     paginator = Paginator(statements, 5)
     page_obj = paginator.get_page(page_number)
@@ -257,4 +303,31 @@ def download_statement(request, statement_file):
         logger.error(f"Error al descargar estado: {str(e)}", exc_info=True)
         return JsonResponse({
             'error': f'Error al descargar el estado de cuenta: {str(e)}'
+        }, status=500)
+
+
+@require_http_methods(["GET"])
+@login_required
+def get_filter_options(request):
+    """
+    API para obtener las opciones disponibles para los filtros
+    """
+    try:
+        banks = BankAccount.objects.values('code', 'name').order_by('code')
+        bank_options = [{'value': '', 'label': 'Todos los Bancos'}]
+        bank_options.extend([
+            {'value': bank['code'], 'label': f"{bank['code']} - {bank['name']}"}
+            for bank in banks
+        ])
+
+        return JsonResponse({
+            'status': 'success',
+            'filters': {
+                'banks': bank_options
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
         }, status=500)
