@@ -89,6 +89,112 @@ function cleanMessage(message) {
 
 /* ===== Filtros ===== */
 let currentFilters = { page: 1 };
+let pendingRestore = false;
+
+function getStorageKey(key) {
+    const userData = document.getElementById('userPermissionsData');
+    const userId = userData ? userData.dataset.userId : 'anonymous';
+    return `bank_accounts_${userId}_${key}`;
+}
+
+function tryRestoreState() {
+    const storageKey = getStorageKey('State');
+    const savedState = sessionStorage.getItem(storageKey);
+    if (savedState) {
+        try {
+            const state = JSON.parse(savedState);
+            if (state && state.filters) {
+                currentFilters = state.filters;
+                pendingRestore = true;
+                sessionStorage.setItem(getStorageKey('RestorePending'), 'true');
+                return true;
+            }
+        } catch (e) {
+            console.error('Error restoring state:', e);
+            sessionStorage.removeItem(storageKey);
+        }
+    }
+    return false;
+}
+
+function finishStateRestore() {
+    if (pendingRestore) {
+        pendingRestore = false;
+        sessionStorage.removeItem(getStorageKey('State'));
+        sessionStorage.removeItem(getStorageKey('RestorePending'));
+    }
+}
+
+function restoreMultiselectDropdown(menuId, values) {
+    const menu = document.getElementById(menuId);
+    if (!menu) return;
+    
+    const valueArray = values.split(',').filter(v => v);
+    
+    menu.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    
+    valueArray.forEach(val => {
+        const checkbox = Array.from(menu.querySelectorAll('input[type="checkbox"]'))
+            .find(cb => cb.value === val);
+        if (checkbox) checkbox.checked = true;
+    });
+    
+    const btn = document.querySelector(`#${menuId.replace('Menu', 'Btn')}`);
+    if (btn) {
+        const textSpan = btn.querySelector('span');
+        if (textSpan && valueArray.length > 0) {
+            textSpan.textContent = valueArray.length > 2 
+                ? valueArray.slice(0, 2).join(', ') + ` (+${valueArray.length - 2})`
+                : valueArray.join(', ');
+        }
+    }
+}
+
+function applyFiltersFromState() {
+    if (currentFilters.bank_account) {
+        restoreMultiselectDropdown('bankFilterMenu', currentFilters.bank_account);
+    }
+    if (currentFilters.period_start) {
+        document.getElementById('periodStartFilter').value = currentFilters.period_start;
+    }
+    if (currentFilters.period_end) {
+        document.getElementById('periodEndFilter').value = currentFilters.period_end;
+    }
+    if (currentFilters.starting_balance_min) {
+        document.getElementById('startingBalanceMin').value = currentFilters.starting_balance_min;
+    }
+    if (currentFilters.starting_balance_max) {
+        document.getElementById('startingBalanceMax').value = currentFilters.starting_balance_max;
+    }
+    if (currentFilters.ending_balance_min) {
+        document.getElementById('endingBalanceMin').value = currentFilters.ending_balance_min;
+    }
+    if (currentFilters.ending_balance_max) {
+        document.getElementById('endingBalanceMax').value = currentFilters.ending_balance_max;
+    }
+    
+    const filterContainer = document.getElementById('filterContainer');
+    const toggleText = document.getElementById('toggleFiltersText');
+    const expandIcon = document.querySelector('.expand-icon');
+    
+    if (currentFilters.filterPanelOpen && filterContainer) {
+        filterContainer.style.display = 'block';
+        if (toggleText) toggleText.textContent = 'Ocultar Filtros';
+        if (expandIcon) expandIcon.textContent = 'expand_less';
+    }
+}
+
+function saveState() {
+    const userData = document.getElementById('userPermissionsData');
+    const currentUserId = userData ? userData.dataset.userId : null;
+    
+    if (currentUserId) {
+        sessionStorage.setItem(getStorageKey('UserId'), currentUserId);
+    }
+    sessionStorage.setItem(getStorageKey('State'), JSON.stringify({
+        filters: currentFilters
+    }));
+}
 
 function handleMultiselectChange(checkbox) {
     const menu = checkbox.closest('.dropdown-menu');
@@ -104,9 +210,33 @@ function handleMultiselectChange(checkbox) {
     if (!btn || !hiddenInput) return;
 
     const allCheckboxes = menu.querySelectorAll('input[type="checkbox"]');
-    const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
+    
+    // Lógica de sincronización: Si selecciona "Todos", desmarca individuales y viceversa
+    if (checkbox.value === '' || checkbox.value === 'Todos los Bancos') {
+        if (checkbox.checked) {
+            allCheckboxes.forEach(cb => {
+                if (cb.value !== '' && cb.value !== 'Todos los Bancos') {
+                    cb.checked = false;
+                }
+            });
+        } else {
+            allCheckboxes.forEach(cb => {
+                if (cb.value !== '' && cb.value !== 'Todos los Bancos') {
+                    cb.checked = true;
+                }
+            });
+        }
+    } else {
+        const allOption = Array.from(allCheckboxes).find(cb => cb.value === '' || cb.value === 'Todos los Bancos');
+        if (allOption && checkbox.checked) {
+            allOption.checked = false;
+        }
+    }
 
+    // Obtener checkboxes DESPUÉS de la sincronización
+    const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
     const checkedValues = Array.from(checkedCheckboxes).map(cb => cb.value).filter(v => v);
+    
     const displayText = Array.from(checkedCheckboxes)
         .map(cb => {
             const label = cb.closest('label') || cb.nextElementSibling;
@@ -123,6 +253,8 @@ function handleMultiselectChange(checkbox) {
         } else {
             textSpan.textContent = displayText.join(', ');
         }
+    } else if (textSpan) {
+        textSpan.textContent = 'Todos los Bancos';
     }
 
     applyFilters();
@@ -145,17 +277,51 @@ function getFilterValues(menuId) {
 function applyFilters() {
     const bankValue = getFilterValues('bankFilterMenu');
     
+    const startingBalanceMinInput = document.getElementById('startingBalanceMin');
+    const startingBalanceMaxInput = document.getElementById('startingBalanceMax');
+    const endingBalanceMinInput = document.getElementById('endingBalanceMin');
+    const endingBalanceMaxInput = document.getElementById('endingBalanceMax');
+    
+    let startingBalanceMin = startingBalanceMinInput?.value || '';
+    let startingBalanceMax = startingBalanceMaxInput?.value || '';
+    let endingBalanceMin = endingBalanceMinInput?.value || '';
+    let endingBalanceMax = endingBalanceMaxInput?.value || '';
+    
+    if (startingBalanceMin && parseFloat(startingBalanceMin) < 0) {
+        startingBalanceMinInput.value = '';
+        startingBalanceMin = '';
+    }
+    if (startingBalanceMax && parseFloat(startingBalanceMax) < 0) {
+        startingBalanceMaxInput.value = '';
+        startingBalanceMax = '';
+    }
+    if (endingBalanceMin && parseFloat(endingBalanceMin) < 0) {
+        endingBalanceMinInput.value = '';
+        endingBalanceMin = '';
+    }
+    if (endingBalanceMax && parseFloat(endingBalanceMax) < 0) {
+        endingBalanceMaxInput.value = '';
+        endingBalanceMax = '';
+    }
+    
     currentFilters = {
         bank_account: bankValue,
         period_start: document.getElementById('periodStartFilter')?.value || '',
         period_end: document.getElementById('periodEndFilter')?.value || '',
-        starting_balance_min: document.getElementById('startingBalanceMin')?.value || '',
-        starting_balance_max: document.getElementById('startingBalanceMax')?.value || '',
+        starting_balance_min: startingBalanceMin,
+        starting_balance_max: startingBalanceMax,
+        ending_balance_min: endingBalanceMin,
+        ending_balance_max: endingBalanceMax,
         filterPanelOpen: document.getElementById('filterContainer')?.style.display !== 'none',
-        page: 1
+        page: pendingRestore ? (currentFilters.page || 1) : 1
     };
     
-    loadPage(1);
+    if (pendingRestore) {
+        pendingRestore = false;
+    }
+    
+    saveState();
+    loadPage(currentFilters.page);
 }
 
 function loadFilterOptions() {
@@ -182,9 +348,9 @@ function populateFilterOptions(filters) {
         const menu = document.getElementById(menuId);
         if (!menu) return;
         
-        menu.innerHTML = options.map(opt => `
+        menu.innerHTML = options.map((opt, index) => `
             <li class="dropdown-item">
-                <input type="checkbox" value="${opt.value}" id="chk-${menuId}-${opt.value}" class="form-check-input me-2">
+                <input type="checkbox" value="${opt.value}" id="chk-${menuId}-${opt.value}" class="form-check-input me-2" ${index === 0 ? 'checked' : ''}>
                 <label class="form-check-label flex-grow-1 py-1 mb-0" for="chk-${menuId}-${opt.value}" style="cursor: pointer;">${opt.label}</label>
             </li>
         `).join('');
@@ -260,12 +426,12 @@ function resetFilters() {
 }
 
 function initFilterEvents() {
-    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax').forEach(input => {
+    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax, #endingBalanceMin, #endingBalanceMax').forEach(input => {
         input.addEventListener('change', applyFilters);
     });
     
     const debouncedApplyFilters = debounce(applyFilters, 500);
-    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax').forEach(input => {
+    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax, #endingBalanceMin, #endingBalanceMax').forEach(input => {
         input.addEventListener('input', debouncedApplyFilters);
     });
 }
@@ -311,13 +477,32 @@ function initDropdowns() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    tryRestoreState();
+    
     initializeFileUpload();
     initializeHistoryActions();
     initializePagination();
     setupFilterToggle();
-    loadFilterOptions();
+    loadFilterOptions().then(() => {
+        if (pendingRestore) {
+            setTimeout(() => {
+                applyFiltersFromState();
+            }, 100);
+        }
+        
+        const pageToLoad = pendingRestore ? (currentFilters.page || 1) : 1;
+        loadPage(pageToLoad);
+        
+        if (pendingRestore) {
+            setTimeout(() => finishStateRestore(), 500);
+        }
+    });
     initFilterEvents();
     initDropdowns();
+    
+    window.addEventListener('beforeunload', () => {
+        saveState();
+    });
 });
 
 /**
@@ -691,6 +876,9 @@ function initializePagination() {
 }
 
 function loadPage(pageNumber) {
+    currentFilters.page = pageNumber;
+    saveState();
+    
     const url = new URL(window.location);
     url.searchParams.set('page', pageNumber);
     
@@ -701,6 +889,8 @@ function loadPage(pageNumber) {
         if (currentFilters.period_end) url.searchParams.set('period_end', currentFilters.period_end);
         if (currentFilters.starting_balance_min) url.searchParams.set('starting_balance_min', currentFilters.starting_balance_min);
         if (currentFilters.starting_balance_max) url.searchParams.set('starting_balance_max', currentFilters.starting_balance_max);
+        if (currentFilters.ending_balance_min) url.searchParams.set('ending_balance_min', currentFilters.ending_balance_min);
+        if (currentFilters.ending_balance_max) url.searchParams.set('ending_balance_max', currentFilters.ending_balance_max);
     }
     
     fetch(url, {

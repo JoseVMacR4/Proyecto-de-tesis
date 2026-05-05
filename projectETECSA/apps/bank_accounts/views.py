@@ -4,6 +4,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, FileResponse
 from django.views.decorators.http import require_POST, require_http_methods
+from django.db.models import Q
+from decimal import Decimal
 from apps.bank_accounts.models import BankAccount
 from apps.reconciliation.models import BankStatement, BankStatementTransaction
 from apps.reconciliation.services import process_statement_upload
@@ -27,6 +29,8 @@ def bank_accounts(request):
     period_end = request.GET.get('period_end', '')
     starting_balance_min = request.GET.get('starting_balance_min', '')
     starting_balance_max = request.GET.get('starting_balance_max', '')
+    ending_balance_min = request.GET.get('ending_balance_min', '')
+    ending_balance_max = request.GET.get('ending_balance_max', '')
     
     # Filtro por banco (múltiple)
     if bank_account:
@@ -50,20 +54,34 @@ def bank_accounts(request):
         except ValueError:
             pass
     
-    # Filtro por saldo inicial min
+    # Filtro por saldo inicial
     if starting_balance_min:
         try:
-            min_balance = float(starting_balance_min)
+            min_balance = Decimal(starting_balance_min)
             statements = statements.filter(starting_balance__gte=min_balance)
-        except ValueError:
+        except:
             pass
     
-    # Filtro por saldo inicial max
     if starting_balance_max:
         try:
-            max_balance = float(starting_balance_max)
+            max_balance = Decimal(starting_balance_max)
             statements = statements.filter(starting_balance__lte=max_balance)
-        except ValueError:
+        except:
+            pass
+    
+    # Filtro por saldo final
+    if ending_balance_min:
+        try:
+            min_balance = Decimal(ending_balance_min)
+            statements = statements.filter(ending_balance__gte=min_balance)
+        except:
+            pass
+    
+    if ending_balance_max:
+        try:
+            max_balance = Decimal(ending_balance_max)
+            statements = statements.filter(ending_balance__lte=max_balance)
+        except:
             pass
     
     page_number = request.GET.get('page', 1)

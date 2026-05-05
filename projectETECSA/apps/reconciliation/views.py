@@ -7,6 +7,7 @@ from django.utils.formats import date_format
 from django.utils import timezone
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+from decimal import Decimal
 from apps.reconciliation.models import BankStatementTransaction
 from apps.users.permissions import can_upload_statements, can_reconcile
 from apps.bank_accounts.models import BankAccount, Office, Operation
@@ -172,15 +173,15 @@ def get_reconciliation_data(request):
 		# Filtro por rango de monto
 		if amount_min:
 			try:
-				min_amount = float(amount_min)
+				min_amount = Decimal(amount_min)
 				transactions = transactions.filter(amount__gte=min_amount)
-			except ValueError:
+			except:
 				pass
 		if amount_max:
 			try:
-				max_amount = float(amount_max)
+				max_amount = Decimal(amount_max)
 				transactions = transactions.filter(amount__lte=max_amount)
-			except ValueError:
+			except:
 				pass
 
 # Filtro por moneda (múltiple)
@@ -548,15 +549,15 @@ def get_export_data(request):
 
         if amount_min:
             try:
-                min_amount = float(amount_min)
+                min_amount = Decimal(amount_min)
                 transactions = transactions.filter(amount__gte=min_amount)
-            except ValueError:
+            except:
                 pass
         if amount_max:
             try:
-                max_amount = float(amount_max)
+                max_amount = Decimal(amount_max)
                 transactions = transactions.filter(amount__lte=max_amount)
-            except ValueError:
+            except:
                 pass
 
         if currency:

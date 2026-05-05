@@ -111,7 +111,7 @@
 
 <div id="filterContainer" class="filter-bar mb-4" style="display: none;">
   <div class="row g-2">
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col">
       <div class="input-group filter-input-group">
         <span class="input-group-text" style="color: #999;">
           <span class="material-symbols-outlined" style="font-size: 1.1rem;">account_balance</span>
@@ -128,32 +128,43 @@
       </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col">
       <div class="input-group">
         <span class="input-group-text" style="color: #999;">
           <span class="material-symbols-outlined" style="font-size: 1.1rem;">calendar_today</span>
         </span>
-        <input type="date" id="periodStartFilter" class="form-control filter-input" placeholder="Periodo desde">
+        <input type="date" id="periodStartFilter" class="form-control filter-input" placeholder="Desde">
       </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col">
       <div class="input-group">
         <span class="input-group-text" style="color: #999;">
           <span class="material-symbols-outlined" style="font-size: 1.1rem;">calendar_today</span>
         </span>
-        <input type="date" id="periodEndFilter" class="form-control filter-input" placeholder="Periodo hasta">
+        <input type="date" id="periodEndFilter" class="form-control filter-input" placeholder="Hasta">
       </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col">
       <div class="input-group">
         <span class="input-group-text" style="color: #999;">
-          <span class="material-symbols-outlined" style="font-size: 1.1rem;">payments</span>
+          <span class="material-symbols-outlined" style="font-size: 1.1rem;">trending_up</span>
         </span>
-        <input type="number" id="startingBalanceMin" class="form-control filter-input" placeholder="Min">
+        <input type="number" id="startingBalanceMin" class="form-control filter-input" placeholder="Min" min="0" step="0.01" lang="en" inputmode="decimal">
         <span class="input-group-text" style="color: #999;">-</span>
-        <input type="number" id="startingBalanceMax" class="form-control filter-input" placeholder="Max">
+        <input type="number" id="startingBalanceMax" class="form-control filter-input" placeholder="Max" min="0" step="0.01" lang="en" inputmode="decimal">
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="input-group">
+        <span class="input-group-text" style="color: #999;">
+          <span class="material-symbols-outlined" style="font-size: 1.1rem;">trending_down</span>
+        </span>
+        <input type="number" id="endingBalanceMin" class="form-control filter-input" placeholder="Min" min="0" step="0.01" lang="en" inputmode="decimal">
+        <span class="input-group-text" style="color: #999;">-</span>
+        <input type="number" id="endingBalanceMax" class="form-control filter-input" placeholder="Max" min="0" step="0.01" lang="en" inputmode="decimal">
       </div>
     </div>
   </div>
