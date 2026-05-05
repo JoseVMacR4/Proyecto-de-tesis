@@ -73,10 +73,10 @@
             <div class="position-relative">
                 <button class="btn btn-link p-0 text-dark position-relative" type="button"
                     id="notificationBtn" aria-expanded="false" aria-controls="notificationMenu"
-                    style="cursor: pointer; text-decoration: none;">
+                    style="cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
                     <span class="material-symbols-outlined" style="font-size: 1.5rem;">notifications</span>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                        id="globalNotificationCount" style="display: none; font-size: 0.65rem;">
+                        id="globalNotificationCount" style="display: none; font-size: 0.65rem; padding: 0.25rem 0.5rem; min-width: 18px; height: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;">
                         0
                     </span>
                 </button>
@@ -187,9 +187,9 @@
 
     <!-- Bootstrap JS (local) -->
 <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-    {% if user.is_authenticated %}
-    <script>window.currentUserId = '{{ user.id }}';</script>
-    <script src="{% static 'users/js/dashboard.js' %}"></script>
+{% if user.is_authenticated %}
+<script>window.currentUserId = '{{ user.id }}';</script>
+<script src="{% static 'users/js/dashboard.js' %}"></script>
 {% endif %}
     {% block extra_js %}{% endblock %}
     <script>
