@@ -149,6 +149,7 @@ class RolePermission(models.Model):
 class Notification(models.Model):
     class NotificationType(models.TextChoices):
         INFO = 'info', _('Info')
+        SUCCESS = 'success', _('Success')
         WARNING = 'warning', _('Warning')
         ERROR = 'error', _('Error')
 
@@ -172,6 +173,7 @@ class Notification(models.Model):
         indexes = [
             models.Index(fields=['type']),
             models.Index(fields=['created_at']),
+            models.Index(fields=['user', '-created_at']),
         ]
 
     def __str__(self):

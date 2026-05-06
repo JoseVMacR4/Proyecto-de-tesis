@@ -20,6 +20,7 @@ build/
 .env
 .env.local
 *.env.*
+statements
 
 # Editors
 .vscode/

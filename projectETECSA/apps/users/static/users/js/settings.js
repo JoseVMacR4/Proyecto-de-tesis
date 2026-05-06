@@ -140,3 +140,170 @@ function createActivityItem(activity) {
         </div>
     `;
 }
+
+let notificationsPage = 1;
+const maxPages = 5;
+const itemsPerPage = 20;
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadUserNotifications(notificationsPage);
+});
+
+async function loadUserNotifications(page) {
+    console.log('[DEBUG] loadUserNotifications iniciado, page:', page);
+
+    const tableBody = document.getElementById('notificationsTableBody');
+    const paginationInfo = document.getElementById('paginationInfo');
+    const paginationControls = document.getElementById('paginationControls');
+    const notificationTotal = document.getElementById('notificationTotal');
+
+    if (!tableBody) {
+        console.error('[DEBUG] Elemento notificationsTableBody no encontrado');
+        return;
+    }
+
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="4" class="text-center py-4">
+                <div class="d-flex flex-column align-items-center">
+                    <span class="material-symbols-outlined" style="font-size: 2rem; color: var(--outline);">hourglass_empty</span>
+                    <p class="text-on-surface-variant small mt-2">Cargando notificaciones...</p>
+                </div>
+            </td>
+        </tr>
+    `;
+
+    try {
+        const response = await fetch(`/api/user/notifications/?page=${page}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('[DEBUG] Data notificaciones:', data);
+
+        if (data.success) {
+            notificationTotal.textContent = `${data.total_count} notificaciones`;
+            
+            if (data.notifications && data.notifications.length > 0) {
+                tableBody.innerHTML = data.notifications.map(notif => createNotificationRow(notif)).join('');
+                renderPagination(data, page);
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center py-4">
+                            <div class="d-flex flex-column align-items-center">
+                                <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--outline);">inbox</span>
+                                <p class="text-on-surface-variant mt-2">No hay notificaciones</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                paginationInfo.textContent = '';
+                paginationControls.innerHTML = '';
+            }
+        } else {
+            throw new Error(data.error || 'Error desconocido');
+        }
+    } catch (error) {
+        console.error('[DEBUG] Error cargando notificaciones:', error);
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4">
+                    <div class="d-flex flex-column align-items-center">
+                        <span class="material-symbols-outlined" style="font-size: 2rem; color: var(--error);">error</span>
+                        <p class="text-on-surface-variant small mt-2">Error al cargar notificaciones</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function createNotificationRow(notif) {
+    const typeLabels = {
+        'info': 'Info',
+        'success': 'Éxito',
+        'warning': 'Advertencia',
+        'error': 'Error'
+    };
+
+    const typeIcons = {
+        'info': 'info',
+        'success': 'check_circle',
+        'warning': 'warning',
+        'error': 'error'
+    };
+
+    const label = typeLabels[notif.type] || notif.type;
+    const icon = typeIcons[notif.type] || 'notifications';
+    const truncatedContent = notif.content.length > 60 ? notif.content.substring(0, 60) + '...' : notif.content;
+    
+    const statusBadge = notif.is_read 
+        ? `<span class="status-read"><span class="material-symbols-outlined" style="font-size: 0.9rem;">visibility</span>Leída</span>`
+        : `<span class="status-unread"><span class="material-symbols-outlined" style="font-size: 0.9rem;">visibility_off</span>No leída</span>`;
+
+    return `
+        <tr>
+            <td>
+                <span class="notification-badge ${notif.type}">
+                    <span class="material-symbols-outlined" style="font-size: 0.9rem;">${icon}</span>
+                    ${label}
+                </span>
+            </td>
+            <td>
+                <span class="notification-content" title="${notif.content.replace(/'/g, "\\'")}">${truncatedContent}</span>
+            </td>
+            <td>${notif.created_at}</td>
+            <td>${statusBadge}</td>
+        </tr>
+    `;
+}
+
+function renderPagination(data, currentPage) {
+    const paginationInfo = document.getElementById('paginationInfo');
+    const paginationControls = document.getElementById('paginationControls');
+    
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, data.total_count);
+    
+    paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${data.total_count} notificaciones`;
+    
+    let paginationHtml = '';
+    
+    if (data.has_previous) {
+        paginationHtml += `<button class="pagination-btn" data-page="${currentPage - 1}" title="Página anterior">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página anterior" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </span>`;
+    }
+    
+    for (let i = 1; i <= data.total_pages; i++) {
+        const isActive = i === currentPage;
+        paginationHtml += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (data.has_next) {
+        paginationHtml += `<button class="pagination-btn" data-page="${currentPage + 1}" title="Página siguiente">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página siguiente" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </span>`;
+    }
+    
+    paginationControls.innerHTML = paginationHtml;
+    
+    paginationControls.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const page = parseInt(this.getAttribute('data-page'));
+            notificationsPage = page;
+            loadUserNotifications(page);
+        });
+    });
+}

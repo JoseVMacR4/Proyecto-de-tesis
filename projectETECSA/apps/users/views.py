@@ -789,3 +789,58 @@ def get_user_activities(request):
         'success': True,
         'activities': data
     })
+
+@login_required
+@require_GET
+def get_user_notifications(request):
+    """Obtiene las notificaciones del usuario con paginación.
+    
+    Limite: 20 notificaciones por página
+    Máximo: 5 páginas (100 notificaciones totales)
+    """
+    try:
+        page = int(request.GET.get('page', 1))
+        items_per_page = 20
+        max_pages = 5
+        
+        if page < 1:
+            page = 1
+        if page > max_pages:
+            page = max_pages
+        
+        offset = (page - 1) * items_per_page
+        limit = items_per_page
+        
+        queryset = Notification.objects.filter(user=request.user).order_by('-created_at')
+        
+        total_count = queryset.count()
+        
+        notifications = queryset[offset:offset + limit]
+        
+        total_pages = min((total_count + items_per_page - 1) // items_per_page, max_pages)
+        if total_count == 0:
+            total_pages = 1
+        
+        data = [{
+            'id': str(n.id),
+            'type': n.type,
+            'content': n.content,
+            'read_at': n.read_at.strftime('%d/%m/%Y %H:%M') if n.read_at else None,
+            'created_at': n.created_at.strftime('%d/%m/%Y %H:%M'),
+            'is_read': n.read_at is not None
+        } for n in notifications]
+        
+        has_next = page < total_pages and offset + items_per_page < total_count
+        has_previous = page > 1
+        
+        return JsonResponse({
+            'success': True,
+            'notifications': data,
+            'current_page': page,
+            'total_pages': total_pages,
+            'has_next': has_next,
+            'has_previous': has_previous,
+            'total_count': total_count
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

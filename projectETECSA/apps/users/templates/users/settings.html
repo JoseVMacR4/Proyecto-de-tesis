@@ -12,7 +12,7 @@
     <!-- Section Header -->
     <header class="settings-header">
         <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Configuración del Sistema</h1>
-        <p class="text-muted fw-medium mb-0 small">Gestione los parámetros institucionales y preferencias de su terminal financiero.</p>
+        <p class="text-muted fw-medium mb-0 small">Gestione la información de su perfil de usuario.</p>
     </header>
     
     <!-- Navigation Tabs -->
@@ -80,14 +80,40 @@
         <div class="tab-content" data-tab-content="notifications">
             <div class="settings-grid">
                 <div class="settings-card" style="grid-column: span 12;">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">notifications</span>
-                        <h3 class="settings-card-title mb-0">Historial de Notificaciones</h3>
-                    </div>
-                    <div class="empty-state">
-                        <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--outline);">inbox</span>
-                        <p class="text-on-surface-variant">Sección en desarrollo</p>
-                        <p class="text-xs text-on-surface-variant">Esta funcionalidad se implementará próximamente.</p>
+                    <div class="notifications-container">
+                        <div class="notifications-header">
+                            <h5 class="notifications-title">
+                                <span class="material-symbols-outlined">notifications</span>
+                                Historial de Notificaciones
+                            </h5>
+                            <span class="notification-total" id="notificationTotal">0 notificaciones</span>
+                        </div>
+                        <div class="table-responsive notifications-table-wrapper">
+                            <table class="table table-custom mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 100px;">Tipo</th>
+                                        <th>Contenido</th>
+                                        <th style="width: 140px;">Fecha</th>
+                                        <th style="width: 100px;">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="notificationsTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <span class="material-symbols-outlined" style="font-size: 2rem; color: var(--outline);">hourglass_empty</span>
+                                                <p class="text-on-surface-variant small mt-2">Cargando notificaciones...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination-footer" id="notificationsPagination">
+                            <p class="pagination-info" id="paginationInfo"></p>
+                            <div class="pagination-controls" id="paginationControls"></div>
+                        </div>
                     </div>
                 </div>
             </div>
