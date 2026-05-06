@@ -52,8 +52,104 @@ def login_view(request):
 
 @login_required
 def dashboard(request):
+    from apps.reconciliation.models import BankStatement, BankStatementTransaction
+    from apps.bank_accounts.models import BankAccount
+
+    last_statement = BankStatement.objects.order_by('-statement_date').first()
+    last_account_stmt = BankStatement.objects.select_related('bank_account').order_by('-created_at').first()
+
+    if last_statement:
+        total_balance = sum(
+            bs.ending_balance for bs in BankStatement.objects.all()
+        )
+        available_balance = sum(
+            bs.available_balance for bs in BankStatement.objects.all()
+        )
+        reserved_balance = sum(
+            bs.reserved_balance for bs in BankStatement.objects.all()
+        )
+        overdraft_balance = sum(
+            bs.overdraft_balance for bs in BankStatement.objects.all()
+        )
+        total_transactions = sum(
+            bs.entry_count for bs in BankStatement.objects.all()
+        )
+        last_update_date = last_statement.statement_date.strftime('%b %d, %Y')
+        last_update_time = last_statement.created_at.strftime('%H:%M')
+    else:
+        total_balance = 0
+        available_balance = 0
+        reserved_balance = 0
+        overdraft_balance = 0
+        total_transactions = 0
+        last_update_date = 'Sin datos'
+        last_update_time = ''
+
+    active_accounts = BankAccount.objects.count()
+
+    if last_account_stmt:
+        last_account_date = last_account_stmt.statement_date.strftime('%b %d, %Y')
+        last_account_name = last_account_stmt.bank_account.name
+        last_account_starting = last_account_stmt.starting_balance
+        last_account_ending = last_account_stmt.ending_balance
+        last_account_entries = last_account_stmt.entry_count
+        last_account_load_date = last_account_stmt.created_at.strftime('%b %d, %Y')
+        last_account_load_time = last_account_stmt.created_at.strftime('%H:%M')
+    else:
+        last_account_date = 'Sin datos'
+        last_account_name = ''
+        last_account_starting = 0
+        last_account_ending = 0
+        last_account_entries = 0
+        last_account_load_date = ''
+        last_account_load_time = ''
+
+    total_reconciled = BankStatementTransaction.objects.filter(
+        status=BankStatementTransaction.StatusChoices.RECONCILED
+    ).count()
+
+    total_pending = BankStatementTransaction.objects.filter(
+        status=BankStatementTransaction.StatusChoices.PENDING
+    ).count()
+
+    total_bank_accounts = BankAccount.objects.count()
+    total_offices = Office.objects.count()
+    total_operations = Operation.objects.count()
+
+    total_users = User.objects.count()
+    active_users = User.objects.filter(is_active=True).count()
+    inactive_users = User.objects.filter(is_active=False).count()
+
     context = {
-        'current_page': 'dashboard'
+        'current_page': 'dashboard',
+        'total_balance': total_balance,
+        'available_balance': available_balance,
+        'reserved_balance': reserved_balance,
+        'overdraft_balance': overdraft_balance,
+        'total_transactions': total_transactions,
+        'active_accounts': active_accounts,
+        'last_update_date': last_update_date,
+        'last_update_time': last_update_time,
+        'last_account_date': last_account_date,
+        'last_account_name': last_account_name,
+        'last_account_starting': last_account_starting,
+        'last_account_ending': last_account_ending,
+        'last_account_entries': last_account_entries,
+        'last_account_load_date': last_account_load_date,
+        'last_account_load_time': last_account_load_time,
+        'total_reconciled': total_reconciled,
+        'total_pending': total_pending,
+        'recent_reports': [
+            {'name': 'Estado Mensual Abril', 'type': 'financial', 'date': 'May 02, 2026', 'status': 'completed'},
+            {'name': 'Conciliación Q1', 'type': 'compliance', 'date': 'Apr 28, 2026', 'status': 'completed'},
+            {'name': 'Resumen Ejecutivo', 'type': 'custom', 'date': 'Apr 25, 2026', 'status': 'completed'},
+        ],
+        'total_bank_accounts': total_bank_accounts,
+        'total_offices': total_offices,
+        'total_operations': total_operations,
+        'total_users': total_users,
+        'active_users': active_users,
+        'inactive_users': inactive_users,
     }
     return render(request, 'users/dashboard.html', context)
 
