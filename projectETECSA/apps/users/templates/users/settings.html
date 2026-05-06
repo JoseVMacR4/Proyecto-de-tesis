@@ -19,7 +19,7 @@
     <div class="settings-tabs">
         <button class="settings-tab active" data-tab="profile">Perfil de Usuario</button>
         <button class="settings-tab" data-tab="notifications">Historial de Notificaciones</button>
-        <button class="settings-tab" data-tab="reports">Mis Reportes</button>
+        <button class="settings-tab" data-tab="reports">Reportes</button>
     </div>
     
     <!-- Tab Content Container -->
@@ -123,15 +123,65 @@
         <div class="tab-content" data-tab-content="reports">
             <div class="settings-grid">
                 <div class="settings-card" style="grid-column: span 12;">
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <span class="material-symbols-outlined" style="color: var(--primary); font-size: 1.5rem;">description</span>
-                        <h3 class="settings-card-title mb-0">Mis Reportes</h3>
+                    <div class="reports-container">
+                        <div class="reports-header">
+                            <h5 class="reports-title">
+                                <span class="material-symbols-outlined">description</span>
+                                Reportes
+                            </h5>
+                            <span class="reports-total" id="reportsCount">0 reportes</span>
+                        </div>
+                        <div class="table-responsive reports-table-wrapper">
+                            <table class="table table-custom mb-0">
+                                <thead>
+                                    <tr>
+                                    <th>Tipo</th>
+                                    <th>Asunto</th>
+                                    <th style="min-width: 200px; width: 40%;">Descripción</th>
+                                    <th>Reportado por</th>
+                                        <th>Fecha</th>
+                                        <th>Estado</th>
+                                        {% if user_permissions.can_access_admin %}
+                                        <th style="width: 80px;">Acciones</th>
+                                        {% endif %}
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsTableBody">
+                                    <tr>
+                                        <td colspan="{% if user_permissions.can_access_admin %}7{% else %}6{% endif %}" class="text-center py-4">
+                                            <div class="d-flex flex-column align-items-center">
+                                                <span class="material-symbols-outlined" style="font-size: 2rem; color: var(--outline);">hourglass_empty</span>
+                                                <p class="text-on-surface-variant small mt-2">Cargando reportes...</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination-footer" id="reportsPagination">
+                            <p class="pagination-info" id="reportsPaginationInfo"></p>
+                            <div class="pagination-controls" id="reportsPaginationControls"></div>
+                        </div>
                     </div>
-                    <div class="empty-state">
-                        <span class="material-symbols-outlined" style="font-size: 3rem; color: var(--outline);">folder_open</span>
-                        <p class="text-on-surface-variant">Sección en desarrollo</p>
-                        <p class="text-xs text-on-surface-variant">Esta funcionalidad se implementará próximamente.</p>
-                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación de Reporte -->
+    <div class="modal fade" id="modalDeleteReport" tabindex="-1" aria-labelledby="modalDeleteReportLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-manrope fw-bold" id="modalDeleteReportLabel">Confirmar Eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>¿Está seguro de que desea eliminar este reporte? Esta acción no se puede deshacer.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btnConfirmDeleteReport">Eliminar</button>
                 </div>
             </div>
         </div>
@@ -140,5 +190,8 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    window.userCanAccessAdmin = {{ user_permissions.can_access_admin|yesno:"true,false" }};
+</script>
 <script src="{% static 'users/js/settings.js' %}"></script>
 {% endblock %}

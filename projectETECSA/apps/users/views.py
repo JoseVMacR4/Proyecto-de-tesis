@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
-from apps.users.models import User, UserRole, Role, UserActivity
+from apps.users.models import User, UserRole, Role, UserActivity, BugReport
 from apps.users.permissions import can_access_admin
 from apps.bank_accounts.models import BankAccount, Office, Operation
 from django.utils import timezone
@@ -938,5 +938,127 @@ def get_user_notifications(request):
             'has_previous': has_previous,
             'total_count': total_count
         })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def get_reports(request):
+    try:
+        page = int(request.GET.get('page', 1))
+        items_per_page = int(request.GET.get('items_per_page', 20))
+        
+        if page < 1:
+            page = 1
+        if items_per_page < 1 or items_per_page > 100:
+            items_per_page = 20
+        
+        total_count = BugReport.objects.count()
+        total_pages = (total_count + items_per_page - 1) // items_per_page
+        
+        offset = (page - 1) * items_per_page
+        reports = BugReport.objects.select_related('reporter').all().order_by('-created_at')[offset:offset + items_per_page]
+        
+        data = [{
+            'id': str(r.id),
+            'reporter_id': str(r.reporter.id),
+            'reporter_name': r.reporter.username,
+            'reporter_full_name': f"{r.reporter.first_name} {r.reporter.last_name}",
+            'type': r.type,
+            'subject': r.subject,
+            'description': r.description,
+            'status': r.status,
+            'created_at': r.created_at.strftime('%d/%m/%Y %H:%M'),
+            'updated_at': r.updated_at.strftime('%d/%m/%Y %H:%M'),
+        } for r in reports]
+        
+        has_next = page < total_pages
+        has_previous = page > 1
+        
+        return JsonResponse({
+            'success': True,
+            'reports': data,
+            'current_page': page,
+            'total_pages': total_pages,
+            'has_next': has_next,
+            'has_previous': has_previous,
+            'total_count': total_count
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_report(request):
+    try:
+        data = json.loads(request.body)
+        
+        report_type = data.get('type')
+        subject = data.get('subject')
+        description = data.get('description')
+        
+        if not report_type or not subject or not description:
+            return JsonResponse({'success': False, 'error': 'Todos los campos son requeridos'}, status=400)
+        
+        report = BugReport.objects.create(
+            reporter=request.user,
+            type=report_type,
+            subject=subject,
+            description=description,
+            status='pending'
+        )
+        
+        Notification.objects.create(
+            user=request.user,
+            type='success',
+            content=f'Reporte "{subject}" enviado correctamente'
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Reporte enviado correctamente',
+            'report_id': str(report.id)
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["PATCH"])
+def update_report_status(request, report_id):
+    try:
+        if not can_access_admin(request.user):
+            return JsonResponse({'success': False, 'error': 'No tienes permiso para realizar esta acción'}, status=403)
+        
+        report = get_object_or_404(BugReport, id=report_id)
+        data = json.loads(request.body)
+        
+        new_status = data.get('status')
+        if new_status not in ['pending', 'resolved']:
+            return JsonResponse({'success': False, 'error': 'Estado inválido'}, status=400)
+        
+        report.status = new_status
+        report.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Reporte marcado como {"solucionado" if new_status == "resolved" else "pendiente"}'
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["DELETE"])
+def delete_report(request, report_id):
+    try:
+        if not can_access_admin(request.user):
+            return JsonResponse({'success': False, 'error': 'No tienes permiso para realizar esta acción'}, status=403)
+        
+        report = get_object_or_404(BugReport, id=report_id)
+        report.delete()
+        
+        return JsonResponse({'success': True, 'message': 'Reporte eliminado correctamente'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

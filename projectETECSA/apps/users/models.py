@@ -222,3 +222,45 @@ class UserActivity(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.action} - {self.created_at}"
+
+
+class BugReport(models.Model):
+    class ReportType(models.TextChoices):
+        ERROR = 'error', _('Error')
+        ESTADOS_CUENTA = 'estados_cuenta', _('Estados de cuenta')
+        CONCILIACION = 'conciliacion', _('Conciliación')
+        TRANSACCIONES = 'transacciones', _('Transacciones')
+        EXPORTACION = 'exportacion', _('Exportación')
+        INFORMES = 'informes', _('Informes')
+        NOTIFICACIONES = 'notificaciones', _('Notificaciones')
+        OTRO = 'otro', _('Otro')
+
+    class StatusType(models.TextChoices):
+        PENDING = 'pending', _('Pendiente')
+        RESOLVED = 'resolved', _('Solucionado')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    reporter = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='bug_reports',
+    )
+    type = models.CharField(max_length=30, choices=ReportType.choices)
+    subject = models.CharField(max_length=255)
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=StatusType.choices, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = _('Bug Report')
+        verbose_name_plural = _('Bug Reports')
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['type']),
+            models.Index(fields=['status']),
+            models.Index(fields=['reporter', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.subject} - {self.reporter.username}"

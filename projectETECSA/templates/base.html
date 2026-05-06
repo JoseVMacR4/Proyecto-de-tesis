@@ -5,6 +5,7 @@
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,36 +21,17 @@
     <link href="{% static 'css/material-symbols.css' %}" rel="stylesheet">
 
     <!-- Dashboard CSS Base -->
-    <link rel="stylesheet" href="{% static 'users/css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
     <!-- Estilos para notificaciones flotantes -->
     <style>
-        body > .bank-alert,
-        body > .reconciliation-alert,
-        body > .reporting-alert,
-        body > .admin-alert,
-        div.bank-alert,
-        div.reconciliation-alert,
-        div.reporting-alert,
-        div.admin-alert {
-            position: fixed !important;
-            top: 80px !important;
-            right: 20px !important;
-            z-index: 10000 !important;
-            width: 350px !important;
-            max-width: 90% !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-            animation: slideInNotification 0.3s ease !important;
-        }
-        @keyframes slideInNotification {
-            from { opacity: 0; transform: translateX(100px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+
     </style>
 
     <!-- Block for additional CSS -->
     {% block extra_css %}{% endblock %}
 </head>
+
 <body>
 
     <!-- Top Navbar -->
@@ -71,12 +53,13 @@
             </div>
 
             <div class="position-relative">
-                <button class="btn btn-link p-0 text-dark position-relative" type="button"
-                    id="notificationBtn" aria-expanded="false" aria-controls="notificationMenu"
+                <button class="btn btn-link p-0 text-dark position-relative" type="button" id="notificationBtn"
+                    aria-expanded="false" aria-controls="notificationMenu"
                     style="cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
                     <span class="material-symbols-outlined" style="font-size: 1.5rem;">notifications</span>
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                        id="globalNotificationCount" style="display: none; font-size: 0.65rem; padding: 0.25rem 0.5rem; min-width: 18px; height: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;">
+                        id="globalNotificationCount"
+                        style="display: none; font-size: 0.65rem; padding: 0.25rem 0.5rem; min-width: 18px; height: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;">
                         0
                     </span>
                 </button>
@@ -171,12 +154,10 @@
         </nav>
 
         <div class="mt-auto pt-4 border-top" style="border-color: var(--surface-container-high) !important;">
-            {% if user_permissions.can_view_all %}
-            <a href="#" class="nav-item-custom mb-3">
+            <a href="#" class="nav-item-custom mb-3" id="openReportModalBtn">
                 <span class="material-symbols-outlined">summarize</span>
-                Reportes
+                Enviar Reporte
             </a>
-            {% endif %}
         </div>
     </aside>
 
@@ -185,23 +166,219 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Modal Crear Reporte -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title font-manrope fw-extrabold" id="reportModalLabel">
+                        <span class="material-symbols-outlined me-2" style="color: var(--primary);">summarize</span>
+                        Crear Reporte
+                    </h5>
+                    <button type="button" class="btn-close" onclick="closeReportModal()"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reportForm">
+                        <div class="mb-3">
+                            <label for="reportType" class="form-label fw-bold">Tipo de Reporte</label>
+                            <select class="form-select" id="reportType" required>
+                                <option value="" selected disabled>Seleccione un tipo...</option>
+                                <option value="error">Error</option>
+                                <option value="estados_cuenta">Estados de Cuenta</option>
+                                <option value="conciliacion">Conciliación</option>
+                                <option value="transacciones">Transacciones</option>
+                                <option value="exportacion">Exportación</option>
+                                <option value="informes">Informes</option>
+                                <option value="notificaciones">Notificaciones</option>
+                                <option value="otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="reportSubject" class="form-label fw-bold">Asunto</label>
+                            <input type="text" class="form-control" id="reportSubject"
+                                placeholder="Breve descripción del problema" required maxlength="255">
+                        </div>
+                        <div class="mb-3">
+                            <label for="reportDescription" class="form-label fw-bold">Descripción</label>
+                            <textarea class="form-control" id="reportDescription" rows="5"
+                                placeholder="Describa detalladamente el problema o sugerencia..."
+                                required maxlength="400"></textarea>
+                            <div class="form-text text-end"><span id="descCharCount">0</span>/400 caracteres</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeReportModal()">Cancelar</button>
+                    <button type="button" class="btn btn-primary-gradient" id="submitReportBtn">
+                        <span class="material-symbols-outlined me-1">send</span>
+                        Enviar Reporte
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS (local) -->
-<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-{% if user.is_authenticated %}
-<script>window.currentUserId = '{{ user.id }}';</script>
-<script src="{% static 'users/js/dashboard.js' %}"></script>
-{% endif %}
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    {% if user.is_authenticated %}
+    <script>window.currentUserId = '{{ user.id }}';</script>
+    <script src="{% static 'js/base.js' %}"></script>
+    {% endif %}
     {% block extra_js %}{% endblock %}
     <script>
-    function cleanupSessionAndLogout(event) {
-        event.preventDefault();
-        var logoutUrl = event.currentTarget.getAttribute('href');
-        // Primero limpiar todo el estado anterior
-        sessionStorage.clear();
-        // Luego guardar la marca de logout (para que sobrevivga al redirect)
-        sessionStorage.setItem('reconciliation_intentional_logout', 'true');
-        window.location.href = logoutUrl;
-    }
+        function cleanupSessionAndLogout(event) {
+            event.preventDefault();
+            var logoutUrl = event.currentTarget.getAttribute('href');
+            sessionStorage.clear();
+            sessionStorage.setItem('reconciliation_intentional_logout', 'true');
+            window.location.href = logoutUrl;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            // === CONTROL MANUAL DEL MODAL DE REPORTES ===
+            const reportModalEl = document.getElementById('reportModal');
+            let reportModalInstance = null;
+
+            // Función para abrir el modal
+            window.openReportModal = function() {
+                if (!reportModalInstance) {
+                    reportModalInstance = new bootstrap.Modal(reportModalEl);
+                }
+                reportModalInstance.show();
+            };
+
+            // Función para cerrar el modal
+            window.closeReportModal = function() {
+                if (reportModalInstance) {
+                    reportModalInstance.hide();
+                }
+            };
+
+            // Cleanup cuando el modal se cierra completamente
+            reportModalEl.addEventListener('hidden.bs.modal', function() {
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+                
+                // Reset del formulario cuando se cierra sin enviar
+                const reportForm = document.getElementById('reportForm');
+                if (reportForm) {
+                    reportForm.reset();
+                }
+                const descCharCount = document.getElementById('descCharCount');
+                if (descCharCount) {
+                    descCharCount.textContent = '0';
+                }
+            });
+
+            // Asignar evento al botón del sidebar
+            document.getElementById('openReportModalBtn').addEventListener('click', function(e) {
+                e.preventDefault();
+                openReportModal();
+            });
+            // === FIN CONTROL MANUAL DEL MODAL ===
+
+            const submitBtn = document.getElementById('submitReportBtn');
+            const reportForm = document.getElementById('reportForm');
+            const reportDescription = document.getElementById('reportDescription');
+            
+            if (reportDescription) {
+                reportDescription.addEventListener('input', function() {
+                    document.getElementById('descCharCount').textContent = this.value.length;
+                });
+            }
+
+            if (submitBtn) {
+                submitBtn.addEventListener('click', async function () {
+                    const type = document.getElementById('reportType').value;
+                    const subject = document.getElementById('reportSubject').value.trim();
+                    const description = document.getElementById('reportDescription').value.trim();
+
+                    document.getElementById('descCharCount').textContent = description.length;
+
+                    if (!type || !subject || !description) {
+                        showToast('Por favor complete todos los campos', 'error');
+                        return;
+                    }
+
+                    if (description.length > 400) {
+                        showToast('La descripción no puede exceder 400 caracteres', 'error');
+                        return;
+                    }
+
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Enviando...';
+
+                    try {
+                        const response = await fetch('/api/reports/create/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ type, subject, description })
+                        });
+
+                        const data = await response.json();
+
+                        if (data.success) {
+                            closeReportModal();
+                            
+                            reportForm.reset();
+                            document.getElementById('descCharCount').textContent = '0';
+                            
+                            showToast('Reporte enviado correctamente', 'success');
+                            localStorage.setItem('reportes_actualizar', 'true');
+                            window.dispatchEvent(new CustomEvent('reporte-creado'));
+                        } else {
+                            showToast(data.error || 'Error al enviar el reporte', 'error');
+                        }
+                    } catch (error) {
+                        showToast('Error al enviar el reporte', 'error');
+                        console.error('Error:', error);
+                    } finally {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span class="material-symbols-outlined me-1">send</span> Enviar Reporte';
+                    }
+                });
+            }
+
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            function showToast(message, type) {
+                const toast = document.createElement('div');
+                toast.className = `toast-notification toast-${type}`;
+                toast.innerHTML = `
+                    <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : 'error'}</span>
+                    <span>${message}</span>
+                `;
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.add('show');
+                }, 10);
+
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                    setTimeout(() => toast.remove(), 300);
+                }, 4000);
+            }
+        });
     </script>
+
 </body>
+
 </html>

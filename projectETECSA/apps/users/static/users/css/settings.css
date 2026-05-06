@@ -688,6 +688,10 @@
     border-radius: 0.5rem;
 }
 
+.table-custom {
+    width: 100%;
+}
+
 .table-custom thead th {
     font-size: 0.7rem;
     font-weight: 700;
@@ -819,4 +823,194 @@
 .notifications-container .pagination-footer {
     margin: 0;
     border-radius: 0;
+}
+
+/* Reports Section */
+.reports-container {
+    background-color: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    margin: -1.5rem -1.5rem -1.5rem;
+}
+
+.reports-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: rgba(245, 243, 243, 0.5);
+    border-bottom: 1px solid var(--surface-container-high);
+}
+
+.reports-header .reports-title {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.reports-header .reports-title .material-symbols-outlined {
+    font-size: 1.5rem;
+}
+
+.reports-table-wrapper {
+    margin: 0;
+}
+
+.reports-container .pagination-footer {
+    margin: 0;
+    border-radius: 0;
+}
+
+.reports-total {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--on-surface-variant);
+    background-color: var(--surface-container-low);
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.report-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    background-color: var(--surface-container-low);
+    color: var(--on-surface);
+}
+
+.report-type-badge .material-symbols-outlined {
+    font-size: 0.9rem;
+    color: var(--primary);
+}
+
+.report-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.report-status-badge.pending {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #b38600;
+}
+
+.report-status-badge.resolved {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754;
+}
+
+/* Toast Notifications */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-family: 'Manrope', sans-serif;
+}
+
+.toast-notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.toast-error {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.toast-notification .material-symbols-outlined {
+    font-size: 1.25rem;
+}
+
+.reports-table-wrapper td:nth-child(3) {
+    max-width: 350px; /* Esto evita que la tabla crezca infinitamente */
+    width: 40%; /* Intenta ocupar este espacio si hay lugar */
+}
+
+/* Y mantén las clases del texto que ya tenías: */
+.report-desc-text {
+    vertical-align: middle;
+}
+
+.report-desc-text.truncated {
+    display: inline-block;
+    max-width: calc(100% - 65px); /* Se adapta al límite de la celda dejando lugar al botón */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.report-desc-text.expanded {
+    display: inline;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* Botón Ver más / Ver menos */
+.report-read-more {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: var(--primary);
+    font-weight: 700;
+    vertical-align: middle;
+    margin-left: 4px;
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.report-read-more:hover {
+    text-decoration: underline;
+}
+
+/* Botones de acción en reportes */
+.btn-action-solve,
+.btn-action-delete {
+    transition: all 0.2s ease;
+    color: var(--outline);
+}
+
+.btn-action-solve:hover {
+    color: #198754 !important;
+    transform: scale(1.1);
+}
+
+.btn-action-delete:hover {
+    color: #dc3545 !important;
+    transform: scale(1.1);
 }

@@ -36,4 +36,10 @@ urlpatterns = [
     path('admin-panel/offices/<uuid:office_id>/update/', views.update_office, name='update_office'),
     path('admin-panel/offices/<uuid:office_id>/delete/', views.delete_office, name='delete_office'),
     path('admin-panel/offices/list/', views.get_offices, name='get_offices'),
+
+    # API Reportes
+    path('api/reports/list/', views.get_reports, name='get_reports'),
+    path('api/reports/create/', views.create_report, name='create_report'),
+    path('api/reports/<uuid:report_id>/status/', views.update_report_status, name='update_report_status'),
+    path('api/reports/<uuid:report_id>/delete/', views.delete_report, name='delete_report'),
 ]

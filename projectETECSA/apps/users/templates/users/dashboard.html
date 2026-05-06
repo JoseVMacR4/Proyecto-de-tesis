@@ -4,100 +4,7 @@
 {% block title %}ETECSA Finanzas - Gestión Central{% endblock %}
 
 {% block extra_css %}
-<style>
-    .dashboard-grid {
-        display: grid;
-        grid-template-rows: 1fr 1fr 1fr;
-        gap: 1.25rem;
-        min-height: calc(100vh - 200px);
-        max-height: 650px;
-    }
-
-    .grid-row {
-        display: grid;
-        gap: 1.25rem;
-    }
-
-    .grid-row-70-30 { grid-template-columns: 7fr 3fr; }
-    .grid-row-30-70 { grid-template-columns: 3fr 7fr; }
-
-    .grid-card {
-        border-radius: 0.75rem;
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
-
-    .grid-card.justify-between {
-        justify-content: space-between;
-    }
-
-    .card-balance {
-        background: linear-gradient(135deg, var(--primary-container) 0%, var(--primary) 100%);
-        color: white;
-        justify-content: space-between;
-    }
-
-    .balance-total {
-        font-size: 0.9rem;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: rgba(162, 201, 255, 0.9);
-        font-weight: 700;
-    }
-
-    .balance-amount {
-        font-family: 'Manrope', sans-serif;
-        font-weight: 800;
-        font-size: clamp(2.5rem, 5vw, 3.5rem);
-        line-height: 1.1;
-    }
-
-    .balance-stats {
-        display: flex;
-        justify-content: space-between;
-        font-size: 1rem;
-        opacity: 0.9;
-    }
-
-    .card-pending {
-        background-color: var(--surface-container-lowest);
-        border-bottom: 4px solid var(--tertiary);
-    }
-
-    .card-rate {
-        background-color: var(--surface-container-low);
-    }
-
-    .card-summary {
-        background-color: var(--surface-container-lowest);
-        border-left: 4px solid var(--primary-container);
-    }
-
-    .card-summary-content {
-        margin-bottom: 1rem;
-    }
-
-    .card-transactions {
-        background-color: var(--surface-container-lowest);
-    }
-
-    .card-reports {
-        background-color: var(--surface-container-low);
-    }
-
-    @media (max-width: 991.98px) {
-        .dashboard-grid {
-            min-height: auto;
-            max-height: none;
-            grid-template-rows: auto;
-        }
-        .grid-row {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
+    <link rel="stylesheet" href="{% static 'users/css/dashboard.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -262,49 +169,11 @@
             </div>
         </div>
 
+<div id="dashboard-data" data-reconciled="{{ total_reconciled }}" data-pending="{{ total_pending }}"></div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'js/chart.umd.min.js' %}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const reconciled = {{ total_reconciled }};
-        const pending = {{ total_pending }};
-
-        const ctx = document.getElementById('pieChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['Conciliados', 'Pendientes'],
-                datasets: [{
-                    data: [reconciled, pending],
-                    backgroundColor: ['#005596', '#87C038'],
-                    borderColor: '#ffffff',
-                    borderWidth: 3,
-                    hoverOffset: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = total > 0 ? Math.round((context.raw / total) * 100) : 0;
-                                return context.label + ': ' + context.raw + ' (' + percentage + '%)';
-                            }
-                        }
-                    }
-                },
-                animation: {
-                    animateScale: true,
-                    duration: 800
-                }
-            }
-        });
-    });
-</script>
+<script src="{% static 'users/js/dashboard.js' %}"></script>
 {% endblock %}
