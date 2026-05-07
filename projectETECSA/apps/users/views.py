@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.db.models import ProtectedError
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -140,9 +141,16 @@ def dashboard(request):
         'total_reconciled': total_reconciled,
         'total_pending': total_pending,
         'recent_reports': [
-            {'name': 'Estado Mensual Abril', 'type': 'financial', 'date': 'May 02, 2026', 'status': 'completed'},
-            {'name': 'Conciliación Q1', 'type': 'compliance', 'date': 'Apr 28, 2026', 'status': 'completed'},
-            {'name': 'Resumen Ejecutivo', 'type': 'custom', 'date': 'Apr 25, 2026', 'status': 'completed'},
+            {
+                'name': bug.subject,
+                'type': bug.type,
+                'type_name': bug.get_type_display(),
+                'date': bug.updated_at.strftime('%b %d, %Y'),
+                'status': bug.get_status_display(),
+            }
+            for bug in BugReport.objects.filter(
+                status=BugReport.StatusType.RESOLVED
+            ).order_by('-updated_at')[:3]
         ],
         'total_bank_accounts': total_bank_accounts,
         'total_offices': total_offices,
@@ -545,6 +553,11 @@ def delete_bank_account(request, account_id):
         )
 
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria eliminada exitosamente'})
+    except ProtectedError:
+        return JsonResponse({
+            'success': False,
+            'error': 'No se puede eliminar porque está asociado a transacciones.'
+        }, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
