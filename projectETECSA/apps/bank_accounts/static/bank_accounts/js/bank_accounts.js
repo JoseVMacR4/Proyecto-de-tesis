@@ -87,178 +87,212 @@ function cleanMessage(message) {
     return cleaned;
 }
 
-/* ===== Filtros ===== */
-let currentFilters = { page: 1 };
-let pendingRestore = false;
+/* ===== Manejo de Estado, Filtros y Paginación Refactorizado ===== */
 
-function getStorageKey(key) {
-    const userData = document.getElementById('userPermissionsData');
-    const userId = userData ? userData.dataset.userId : 'anonymous';
-    return `bank_accounts_${userId}_${key}`;
+// Leer valores actuales del DOM
+function getFiltersFromDOM() {
+    return {
+        bank_account: document.getElementById('bankFilter')?.value || '',
+        period_start: document.getElementById('periodStartFilter')?.value || '',
+        period_end: document.getElementById('periodEndFilter')?.value || '',
+        starting_balance_min: document.getElementById('startingBalanceMin')?.value || '',
+        starting_balance_max: document.getElementById('startingBalanceMax')?.value || '',
+        ending_balance_min: document.getElementById('endingBalanceMin')?.value || '',
+        ending_balance_max: document.getElementById('endingBalanceMax')?.value || ''
+    };
 }
 
-function tryRestoreState() {
-    const storageKey = getStorageKey('State');
-    const savedState = sessionStorage.getItem(storageKey);
-    if (savedState) {
-        try {
-            const state = JSON.parse(savedState);
-            if (state && state.filters) {
-                currentFilters = state.filters;
-                pendingRestore = true;
-                sessionStorage.setItem(getStorageKey('RestorePending'), 'true');
-                return true;
-            }
-        } catch (e) {
-            console.error('Error restoring state:', e);
-            sessionStorage.removeItem(storageKey);
-        }
-    }
-    return false;
+// Aplicar filtros desencadena una carga en la página 1
+function applyFilters() {
+    loadPage(1);
 }
 
-function finishStateRestore() {
-    if (pendingRestore) {
-        pendingRestore = false;
-        sessionStorage.removeItem(getStorageKey('State'));
-        sessionStorage.removeItem(getStorageKey('RestorePending'));
-    }
+// Función debounce para evitar múltiples llamadas AJAX al escribir rápido
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
 }
 
-function restoreMultiselectDropdown(menuId, values) {
-    const menu = document.getElementById(menuId);
-    if (!menu) return;
-    
-    const valueArray = values.split(',').filter(v => v);
-    
-    menu.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-    
-    valueArray.forEach(val => {
-        const checkbox = Array.from(menu.querySelectorAll('input[type="checkbox"]'))
-            .find(cb => cb.value === val);
-        if (checkbox) checkbox.checked = true;
-    });
-    
-    const btn = document.querySelector(`#${menuId.replace('Menu', 'Btn')}`);
-    if (btn) {
-        const textSpan = btn.querySelector('span');
-        if (textSpan && valueArray.length > 0) {
-            textSpan.textContent = valueArray.length > 2 
-                ? valueArray.slice(0, 2).join(', ') + ` (+${valueArray.length - 2})`
-                : valueArray.join(', ');
-        }
-    }
-}
-
-function applyFiltersFromState() {
-    if (currentFilters.bank_account) {
-        restoreMultiselectDropdown('bankFilterMenu', currentFilters.bank_account);
-    }
-    if (currentFilters.period_start) {
-        document.getElementById('periodStartFilter').value = currentFilters.period_start;
-    }
-    if (currentFilters.period_end) {
-        document.getElementById('periodEndFilter').value = currentFilters.period_end;
-    }
-    if (currentFilters.starting_balance_min) {
-        document.getElementById('startingBalanceMin').value = currentFilters.starting_balance_min;
-    }
-    if (currentFilters.starting_balance_max) {
-        document.getElementById('startingBalanceMax').value = currentFilters.starting_balance_max;
-    }
-    if (currentFilters.ending_balance_min) {
-        document.getElementById('endingBalanceMin').value = currentFilters.ending_balance_min;
-    }
-    if (currentFilters.ending_balance_max) {
-        document.getElementById('endingBalanceMax').value = currentFilters.ending_balance_max;
-    }
-    
-    const filterContainer = document.getElementById('filterContainer');
-    const toggleText = document.getElementById('toggleFiltersText');
-    const expandIcon = document.querySelector('.expand-icon');
-    
-    if (currentFilters.filterPanelOpen && filterContainer) {
-        filterContainer.style.display = 'block';
-        if (toggleText) toggleText.textContent = 'Ocultar Filtros';
-        if (expandIcon) expandIcon.textContent = 'expand_less';
-    }
-}
-
-function saveState() {
-    const userData = document.getElementById('userPermissionsData');
-    const currentUserId = userData ? userData.dataset.userId : null;
-    
-    if (currentUserId) {
-        sessionStorage.setItem(getStorageKey('UserId'), currentUserId);
-    }
-    sessionStorage.setItem(getStorageKey('State'), JSON.stringify({
-        filters: currentFilters
-    }));
-}
-
+// Logica visual del Dropdown (Multiselect)
 function handleMultiselectChange(checkbox) {
     const menu = checkbox.closest('.dropdown-menu');
     if (!menu) return;
 
-    const menuId = menu.id;
-    const btnId = menuId.replace('Menu', 'Btn');
-    const hiddenInputId = menuId.replace('FilterMenu', 'Filter');
-    
-    const btn = document.getElementById(btnId);
-    const hiddenInput = document.getElementById(hiddenInputId);
-    
-    if (!btn || !hiddenInput) return;
-
     const allCheckboxes = menu.querySelectorAll('input[type="checkbox"]');
-    
-    // Lógica de sincronización: Si selecciona "Todos", desmarca individuales y viceversa
-    if (checkbox.value === '' || checkbox.value === 'Todos los Bancos') {
-        if (checkbox.checked) {
-            allCheckboxes.forEach(cb => {
-                if (cb.value !== '' && cb.value !== 'Todos los Bancos') {
-                    cb.checked = false;
-                }
-            });
-        } else {
-            allCheckboxes.forEach(cb => {
-                if (cb.value !== '' && cb.value !== 'Todos los Bancos') {
-                    cb.checked = true;
-                }
-            });
-        }
+    const isAllOption = checkbox.value === '' || checkbox.value === 'Todos los Bancos';
+
+    if (isAllOption) {
+        allCheckboxes.forEach(cb => { if (cb !== checkbox) cb.checked = !checkbox.checked; });
     } else {
         const allOption = Array.from(allCheckboxes).find(cb => cb.value === '' || cb.value === 'Todos los Bancos');
-        if (allOption && checkbox.checked) {
-            allOption.checked = false;
-        }
+        if (allOption && checkbox.checked) allOption.checked = false;
     }
 
-    // Obtener checkboxes DESPUÉS de la sincronización
     const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
-    const checkedValues = Array.from(checkedCheckboxes).map(cb => cb.value).filter(v => v);
+    const checkedValues = Array.from(checkedCheckboxes).map(cb => cb.value).filter(v => v && v !== 'Todos los Bancos');
     
-    const displayText = Array.from(checkedCheckboxes)
-        .map(cb => {
-            const label = cb.closest('label') || cb.nextElementSibling;
-            return label ? label.textContent.trim() : cb.value;
-        })
-        .filter(text => text);
+    // Actualizar hidden input
+    const hiddenInput = document.getElementById('bankFilter');
+    if (hiddenInput) hiddenInput.value = checkedValues.join(',');
 
-    hiddenInput.value = checkedValues.join(',');
-
-    const textSpan = btn.querySelector('span');
-    if (textSpan && displayText.length > 0) {
-        if (displayText.length > 2) {
-            textSpan.textContent = displayText.slice(0, 2).join(', ') + ` (+${displayText.length - 2})`;
+    // Actualizar texto del botón
+    const btnSpan = document.querySelector('#bankFilterBtn span');
+    if (btnSpan) {
+        if (checkedValues.length === 0) {
+            btnSpan.textContent = 'Todos los Bancos';
+            const allOpt = Array.from(allCheckboxes).find(cb => cb.value === '');
+            if (allOpt) allOpt.checked = true;
+        } else if (checkedValues.length > 2) {
+            btnSpan.textContent = `${checkedValues.slice(0, 2).join(', ')} (+${checkedValues.length - 2})`;
         } else {
-            textSpan.textContent = displayText.join(', ');
+            btnSpan.textContent = checkedValues.join(', ');
         }
-    } else if (textSpan) {
-        textSpan.textContent = 'Todos los Bancos';
     }
 
     applyFilters();
 }
+
+// Resetear Filtros
+function resetFilters() {
+    document.querySelectorAll('.filter-input').forEach(input => input.value = '');
+    
+    const bankMenu = document.getElementById('bankFilterMenu');
+    if (bankMenu) {
+        bankMenu.querySelectorAll('input[type="checkbox"]').forEach((cb, idx) => cb.checked = (idx === 0));
+    }
+    const bankBtnSpan = document.querySelector('#bankFilterBtn span');
+    if (bankBtnSpan) bankBtnSpan.textContent = 'Todos los Bancos';
+
+    showNotification('Filtros reiniciados', 'info');
+    loadPage(1);
+}
+
+// Toggle de panel de filtros
+function setupFilterToggle() {
+    const toggleBtn = document.getElementById('toggleFiltersBtn');
+    const filterContainer = document.getElementById('filterContainer');
+
+    if (toggleBtn && filterContainer) {
+        toggleBtn.addEventListener('click', function() {
+            const isHidden = filterContainer.style.display === 'none';
+            filterContainer.style.display = isHidden ? 'block' : 'none';
+            this.querySelector('.expand-icon').textContent = isHidden ? 'expand_less' : 'expand_more';
+            document.getElementById('toggleFiltersText').textContent = isHidden ? 'Ocultar Filtros' : 'Mostrar Filtros';
+        });
+    }
+}
+
+function initFilterEvents() {
+    const debouncedApply = debounce(applyFilters, 500);
+
+    // Inputs de texto/fecha/número usan debounce
+    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax, #endingBalanceMin, #endingBalanceMax').forEach(input => {
+        input.addEventListener('input', debouncedApply);
+    });
+
+    // Filtro de banco (detectado por el hidden input o los checkboxes)
+    const bankFilterMenu = document.getElementById('bankFilterMenu');
+    if (bankFilterMenu) {
+        bankFilterMenu.addEventListener('change', (e) => {
+            if (e.target.type === 'checkbox') {
+                handleMultiselectChange(e.target);
+            }
+        });
+    }
+}
+
+// Carga principal por AJAX
+function loadPage(pageNumber) {
+    const filters = getFiltersFromDOM();
+    const urlParams = new URLSearchParams();
+    
+    urlParams.set('page', pageNumber);
+    for (const [key, value] of Object.entries(filters)) {
+        if (value) urlParams.set(key, value);
+    }
+
+    const apiUrl = `/bank-accounts/api/pagination/?${urlParams.toString()}`;
+
+    // Mostrar estado de carga en la tabla
+    const tbody = document.querySelector('.upload-history-table tbody');
+    if (tbody) tbody.style.opacity = '0.5';
+
+    fetch(apiUrl, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.status === 'error') throw new Error(data.message);
+        
+        updateTable(data.statements);
+        updatePagination(data.pagination);
+        
+        // Sincronizar URL del navegador sin recargar
+        window.history.pushState({ page: pageNumber }, '', `?${urlParams.toString()}`);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al cargar los datos', 'error');
+    })
+    .finally(() => {
+        if (tbody) tbody.style.opacity = '1';
+    });
+}
+
+/* ===== INICIALIZACIÓN UNIFICADA ===== */
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Subida de archivos
+    if (typeof initializeFileUpload === 'function') initializeFileUpload();
+    
+    // 2. Historial
+    if (typeof initializeHistoryActions === 'function') initializeHistoryActions();
+    
+    // 3. Restaurar Filtros desde URL ANTES de cargar
+    restoreFiltersFromURL();
+    setupFilterToggle();
+    loadFilterOptions(); // Rellena dropdown usando la info restaurada
+    initFilterEvents();
+
+    // 4. Paginación (delegation)
+    const paginationFooter = document.querySelector('.pagination-footer');
+    if (paginationFooter) {
+        paginationFooter.addEventListener('click', (e) => {
+            const btn = e.target.closest('.pagination-btn');
+            if (!btn || btn.disabled || btn.hasAttribute('aria-disabled')) return;
+            e.preventDefault();
+            const page = btn.getAttribute('data-page');
+            if (page) loadPage(parseInt(page));
+        });
+    }
+
+    // 5. Dropdowns (SOLUCIÓN AL CIERRE ACCIDENTAL)
+    document.querySelectorAll('.dropdown-multiselect button').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            btn.nextElementSibling.classList.toggle('show');
+        });
+    });
+
+    // Solo cierra el menú si el clic fue AFUERA del componente de filtro
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown-multiselect')) {
+            document.querySelectorAll('.dropdown-multiselect .dropdown-menu.show').forEach(m => {
+                m.classList.remove('show');
+            });
+        }
+    });
+
+    // 6. Navegación en el historial del navegador (Atrás/Adelante)
+    window.addEventListener('popstate', () => {
+        window.location.reload();
+    });
+
+    // NO cargamos datos por AJAX aquí porque Django ya renderiza la tabla filtrada 
+    // desde el servidor basándose en la URL. Esto ahorra una doble petición AJAX.
+});
 
 function getFilterValues(menuId) {
     const menu = document.getElementById(menuId);
@@ -272,56 +306,6 @@ function getFilterValues(menuId) {
         .filter(v => v && !specialValues.includes(v));
 
     return values.join(',');
-}
-
-function applyFilters() {
-    const bankValue = getFilterValues('bankFilterMenu');
-    
-    const startingBalanceMinInput = document.getElementById('startingBalanceMin');
-    const startingBalanceMaxInput = document.getElementById('startingBalanceMax');
-    const endingBalanceMinInput = document.getElementById('endingBalanceMin');
-    const endingBalanceMaxInput = document.getElementById('endingBalanceMax');
-    
-    let startingBalanceMin = startingBalanceMinInput?.value || '';
-    let startingBalanceMax = startingBalanceMaxInput?.value || '';
-    let endingBalanceMin = endingBalanceMinInput?.value || '';
-    let endingBalanceMax = endingBalanceMaxInput?.value || '';
-    
-    if (startingBalanceMin && parseFloat(startingBalanceMin) < 0) {
-        startingBalanceMinInput.value = '';
-        startingBalanceMin = '';
-    }
-    if (startingBalanceMax && parseFloat(startingBalanceMax) < 0) {
-        startingBalanceMaxInput.value = '';
-        startingBalanceMax = '';
-    }
-    if (endingBalanceMin && parseFloat(endingBalanceMin) < 0) {
-        endingBalanceMinInput.value = '';
-        endingBalanceMin = '';
-    }
-    if (endingBalanceMax && parseFloat(endingBalanceMax) < 0) {
-        endingBalanceMaxInput.value = '';
-        endingBalanceMax = '';
-    }
-    
-    currentFilters = {
-        bank_account: bankValue,
-        period_start: document.getElementById('periodStartFilter')?.value || '',
-        period_end: document.getElementById('periodEndFilter')?.value || '',
-        starting_balance_min: startingBalanceMin,
-        starting_balance_max: startingBalanceMax,
-        ending_balance_min: endingBalanceMin,
-        ending_balance_max: endingBalanceMax,
-        filterPanelOpen: document.getElementById('filterContainer')?.style.display !== 'none',
-        page: pendingRestore ? (currentFilters.page || 1) : 1
-    };
-    
-    if (pendingRestore) {
-        pendingRestore = false;
-    }
-    
-    saveState();
-    loadPage(currentFilters.page);
 }
 
 function loadFilterOptions() {
@@ -343,18 +327,90 @@ function loadFilterOptions() {
     });
 }
 
+// --- NUEVO: Rellena inputs DESDE la URL al recargar ---
+function restoreFiltersFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    const inputs = {
+        'period_start': 'periodStartFilter',
+        'period_end': 'periodEndFilter',
+        'starting_balance_min': 'startingBalanceMin',
+        'starting_balance_max': 'startingBalanceMax',
+        'ending_balance_min': 'endingBalanceMin',
+        'ending_balance_max': 'endingBalanceMax'
+    };
+
+    let hasFilters = false;
+
+    // Restaurar inputs
+    for (const [urlKey, domId] of Object.entries(inputs)) {
+        const val = urlParams.get(urlKey);
+        if (val) {
+            const el = document.getElementById(domId);
+            if (el) {
+                el.value = val;
+                hasFilters = true;
+            }
+        }
+    }
+
+    // Restaurar banco
+    const bankVal = urlParams.get('bank_account');
+    if (bankVal) {
+        const bankInput = document.getElementById('bankFilter');
+        if (bankInput) {
+            bankInput.value = bankVal;
+            hasFilters = true;
+        }
+    }
+
+    // Mantener panel abierto si hay filtros
+    if (hasFilters) {
+        const filterContainer = document.getElementById('filterContainer');
+        if (filterContainer) {
+            filterContainer.style.display = 'block';
+            const toggleText = document.getElementById('toggleFiltersText');
+            if (toggleText) toggleText.textContent = 'Ocultar Filtros';
+            const expandIcon = document.querySelector('#toggleFiltersBtn .expand-icon');
+            if (expandIcon) expandIcon.textContent = 'expand_less';
+        }
+    }
+}
+
+// --- ACTUALIZADO: Rellena las opciones del banco respetando la URL ---
 function populateFilterOptions(filters) {
     const populateMenu = (menuId, options) => {
         const menu = document.getElementById(menuId);
         if (!menu) return;
         
-        menu.innerHTML = options.map((opt, index) => `
+        const hiddenInput = document.getElementById('bankFilter');
+        const selectedValues = hiddenInput && hiddenInput.value ? hiddenInput.value.split(',') : [];
+
+        menu.innerHTML = options.map((opt, index) => {
+            const isChecked = selectedValues.length > 0 
+                ? selectedValues.includes(opt.value) 
+                : (index === 0);
+
+            return `
             <li class="dropdown-item">
-                <input type="checkbox" value="${opt.value}" id="chk-${menuId}-${opt.value}" class="form-check-input me-2" ${index === 0 ? 'checked' : ''}>
+                <input type="checkbox" value="${opt.value}" id="chk-${menuId}-${opt.value}" class="form-check-input me-2" ${isChecked ? 'checked' : ''}>
                 <label class="form-check-label flex-grow-1 py-1 mb-0" for="chk-${menuId}-${opt.value}" style="cursor: pointer;">${opt.label}</label>
             </li>
-        `).join('');
+        `}).join('');
         
+        // Actualizar el texto del botón
+        const btnSpan = document.querySelector('#bankFilterBtn span');
+        if (btnSpan) {
+            if (selectedValues.length === 0) {
+                btnSpan.textContent = 'Todos los Bancos';
+            } else if (selectedValues.length > 2) {
+                btnSpan.textContent = `${selectedValues.slice(0, 2).join(', ')} (+${selectedValues.length - 2})`;
+            } else {
+                btnSpan.textContent = selectedValues.join(', ');
+            }
+        }
+
+        // Asignar eventos
         menu.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 handleMultiselectChange(this);
@@ -365,87 +421,6 @@ function populateFilterOptions(filters) {
     if (filters.banks) {
         populateMenu('bankFilterMenu', filters.banks);
     }
-}
-
-function setupFilterToggle() {
-    const toggleBtn = document.getElementById('toggleFiltersBtn');
-    const filterContainer = document.getElementById('filterContainer');
-
-    if (toggleBtn && filterContainer) {
-        toggleBtn.addEventListener('click', function() {
-            const isHidden = filterContainer.style.display === 'none';
-            
-            filterContainer.style.display = isHidden ? 'block' : 'none';
-            
-            const icon = this.querySelector('.expand-icon');
-            const text = document.getElementById('toggleFiltersText');
-            
-            if (icon) {
-                icon.textContent = isHidden ? 'expand_less' : 'expand_more';
-            }
-            if (text) {
-                text.textContent = isHidden ? 'Ocultar Filtros' : 'Mostrar Filtros';
-            }
-        });
-    }
-}
-
-function resetFilters() {
-    const filterInputs = document.querySelectorAll('.filter-input:not([type="hidden"])');
-    filterInputs.forEach(input => {
-        input.value = '';
-    });
-
-    const isAllOption = (val) => val === '' || val === 'Todos' || val === 'Todas' || val === 'Todos los Bancos';
-    
-    document.querySelectorAll('.dropdown-multiselect').forEach(dropdown => {
-        const checkboxes = dropdown.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => {
-            cb.checked = isAllOption(cb.value);
-        });
-
-        const btn = dropdown.querySelector('.dropdown-toggle');
-        const menuId = dropdown.querySelector('.dropdown-menu').id;
-        
-        const defaultTexts = {
-            'bankFilterMenu': 'Todos los Bancos'
-        };
-        
-        if (btn && defaultTexts[menuId]) {
-            const textSpan = btn.querySelector('span:first-child');
-            if (textSpan) textSpan.textContent = defaultTexts[menuId];
-        }
-    });
-    
-    document.querySelectorAll('input[type="hidden"].filter-input').forEach(input => {
-        input.value = '';
-    });
-
-    applyFilters();
-    showNotification('Filtros reiniciados correctamente', 'info');
-}
-
-function initFilterEvents() {
-    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax, #endingBalanceMin, #endingBalanceMax').forEach(input => {
-        input.addEventListener('change', applyFilters);
-    });
-    
-    const debouncedApplyFilters = debounce(applyFilters, 500);
-    document.querySelectorAll('#periodStartFilter, #periodEndFilter, #startingBalanceMin, #startingBalanceMax, #endingBalanceMin, #endingBalanceMax').forEach(input => {
-        input.addEventListener('input', debouncedApplyFilters);
-    });
-}
-
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
 }
 
 function initDropdowns() {
@@ -473,39 +448,10 @@ function initDropdowns() {
                 menu.classList.remove('show');
             });
         }
-    });
+});
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    tryRestoreState();
-    
-    initializeFileUpload();
-    initializeHistoryActions();
-    initializePagination();
-    setupFilterToggle();
-    loadFilterOptions().then(() => {
-        if (pendingRestore) {
-            setTimeout(() => {
-                applyFiltersFromState();
-            }, 100);
-        }
-        
-        const pageToLoad = pendingRestore ? (currentFilters.page || 1) : 1;
-        loadPage(pageToLoad);
-        
-        if (pendingRestore) {
-            setTimeout(() => finishStateRestore(), 500);
-        }
-    });
-    initFilterEvents();
-    initDropdowns();
-    
-    window.addEventListener('beforeunload', () => {
-        saveState();
-    });
-});
-
-/**
+ /**
  * Configura la zona de carga (Drag & Drop + Click)
  */
 function initializeFileUpload() {
@@ -640,6 +586,28 @@ function shouldReloadAfterUpload() {
     return currentPage !== 1 || currentRows >= 5;
 }
 
+function updateLastProcessing(createdAtFormatted) {
+    const container = document.getElementById('lastProcessingTime');
+    if (!container) return;
+    
+    // createdAtFormatted viene en formato "dd/mm/YYYY HH:MM"
+    const parts = createdAtFormatted.split(' ');
+    if (parts.length >= 2) {
+        const time = parts[1]; // HH:MM
+        const dateParts = parts[0].split('/');
+        const day = parseInt(dateParts[0]);
+        const month = parseInt(dateParts[1]);
+        const year = parseInt(dateParts[2]);
+        
+        const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const monthName = monthNames[month - 1];
+        
+        const dateStr = `${day} ${monthName} ${year}`;
+        
+        container.innerHTML = `<span class="time">${time}</span><span class="date">${dateStr}</span>`;
+    }
+}
+
 function uploadFile(file, accountId) {
     const btn = document.getElementById('selectFilesBtn');
     const originalBtnContent = btn.innerHTML;
@@ -682,6 +650,10 @@ function uploadFile(file, accountId) {
             } else {
                 addHistoryRow(data.data);
                 displayNotification(data.message, 'success');
+            }
+            // Actualizar último procesamiento en tiempo real
+            if (data.data && data.data.created_at) {
+                updateLastProcessing(data.data.created_at);
             }
             return reload;
         } else {
@@ -766,9 +738,7 @@ function addHistoryRow(data) {
     tr.innerHTML = `
         <td>
             <div class="file-item">
-                <div class="file-icon txt">
-                    <span class="material-symbols-outlined">text_snippet</span>
-                </div>
+                ${getFileIcon(data.file_extension || 'txt')}
                 <div class="file-info">
                     <p class="file-name">${data.file}</p>
                     <p class="file-size">${data.tx_count} transacciones${fileSizeLabel}</p>
@@ -847,72 +817,6 @@ function initializeHistoryActions() {
     document.querySelectorAll('.upload-history-table .action-btn').forEach(btn => {
         // Los botones ya tienen eventos onclick en el HTML
         // Este método se mantiene para compatibilidad futura
-    });
-}
-
-/**
- * Paginación visual
- */
-function initializePagination() {
-    document.querySelectorAll('.pagination-btn').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.preventDefault();
-            const icon = btn.querySelector('.material-symbols-outlined')?.textContent || '';
-            let page = null;
-            
-            if (icon.includes('chevron_left')) {
-                page = btn.getAttribute('data-page') || document.querySelector('.pagination-btn.active')?.previousElementSibling?.textContent;
-            } else if (icon.includes('chevron_right')) {
-                page = btn.getAttribute('data-page') || document.querySelector('.pagination-btn.active')?.nextElementSibling?.textContent;
-            } else {
-                page = btn.textContent.trim();
-            }
-            
-            if (page && !isNaN(page)) {
-                loadPage(parseInt(page));
-            }
-        });
-    });
-}
-
-function loadPage(pageNumber) {
-    currentFilters.page = pageNumber;
-    saveState();
-    
-    const url = new URL(window.location);
-    url.searchParams.set('page', pageNumber);
-    
-    // Añadir parámetros de filtro
-    if (currentFilters) {
-        if (currentFilters.bank_account) url.searchParams.set('bank_account', currentFilters.bank_account);
-        if (currentFilters.period_start) url.searchParams.set('period_start', currentFilters.period_start);
-        if (currentFilters.period_end) url.searchParams.set('period_end', currentFilters.period_end);
-        if (currentFilters.starting_balance_min) url.searchParams.set('starting_balance_min', currentFilters.starting_balance_min);
-        if (currentFilters.starting_balance_max) url.searchParams.set('starting_balance_max', currentFilters.starting_balance_max);
-        if (currentFilters.ending_balance_min) url.searchParams.set('ending_balance_min', currentFilters.ending_balance_min);
-        if (currentFilters.ending_balance_max) url.searchParams.set('ending_balance_max', currentFilters.ending_balance_max);
-    }
-    
-    fetch(url, {
-        method: 'GET',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin',
-    })
-    .then(response => response.json())
-    .then(data => {
-        updateTable(data.statements);
-        updatePagination(data.pagination);
-        // Update URL without reloading
-        const newUrl = new URL(window.location);
-        newUrl.searchParams.set('page', pageNumber);
-        window.history.pushState({}, '', newUrl);
-    })
-    .catch(error => {
-        console.error('Error loading page:', error);
-        showNotification('Error al cargar la página', 'danger');
     });
 }
 
@@ -999,9 +903,6 @@ function updatePagination(pagination) {
     }
     
     paginationControls.innerHTML = buttonsHtml;
-    
-    // Re-initialize pagination listeners
-    initializePagination();
 }
 
 function getFileIcon(extension) {

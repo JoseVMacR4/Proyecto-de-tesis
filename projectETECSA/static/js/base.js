@@ -199,6 +199,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadAllNotifications();
                 updateNotificationTimes();
             }
+
+            // Cerrar dropdown de usuario si está abierto
+            if (!isShown && userMenu) {
+                userMenu.style.display = 'none';
+                userMenuBtn.setAttribute('aria-expanded', 'false');
+            }
         });
 
         // Cerrar al hacer click fuera
@@ -206,6 +212,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!notifBtn.contains(e.target) && !notifMenu.contains(e.target)) {
                 notifMenu.style.display = 'none';
                 notifBtn.setAttribute('aria-expanded', 'false');
+            }
+            // También cerrar dropdown de usuario
+            if (userMenu && userMenuBtn && userMenu.style.display === 'block') {
+                if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                    userMenu.style.display = 'none';
+                    userMenuBtn.setAttribute('aria-expanded', 'false');
+                }
             }
         });
 
@@ -220,6 +233,45 @@ document.addEventListener('DOMContentLoaded', () => {
         clearBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             markNotificationsAsRead();
+        });
+    }
+
+    // Toggle del dropdown de usuario (similar a notificaciones)
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userMenu = document.getElementById('userMenu');
+
+    if (userMenuBtn && userMenu) {
+        userMenuBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isShown = userMenu.style.display === 'block';
+            userMenu.style.display = isShown ? 'none' : 'block';
+            userMenuBtn.setAttribute('aria-expanded', isShown ? 'false' : 'true');
+
+            // Cerrar dropdown de notificaciones si está abierto
+            if (!isShown && notifMenu) {
+                notifMenu.style.display = 'none';
+                notifBtn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Cerrar al hacer click fuera
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.style.display = 'none';
+                userMenuBtn.setAttribute('aria-expanded', 'false');
+            }
+            // También cerrar dropdown de notificaciones
+            if (notifMenu && notifBtn && notifMenu.style.display === 'block') {
+                if (!notifBtn.contains(e.target) && !notifMenu.contains(e.target)) {
+                    notifMenu.style.display = 'none';
+                    notifBtn.setAttribute('aria-expanded', 'false');
+                }
+            }
+        });
+
+        userMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
         });
     }
 });

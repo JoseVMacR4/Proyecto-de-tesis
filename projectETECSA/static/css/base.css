@@ -86,6 +86,7 @@ h1, h2, h3, h4, h5, h6, .font-manrope {
     border-image: linear-gradient(to right, var(--primary), var(--primary-container)) 1;
     height: 64px;
     z-index: 1030;
+    overflow: visible;
 }
 
 .btn-primary-gradient {
@@ -415,4 +416,118 @@ h1, h2, h3, h4, h5, h6, .font-manrope {
 
 .toast-error {
     background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* User Avatar Circle */
+.user-avatar-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-container) 0%, var(--primary) 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.9rem;
+    font-family: 'Manrope', sans-serif;
+    transition: all 0.2s ease;
+}
+
+.user-avatar-circle:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 62, 111, 0.3);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    background-color: var(--surface-container-lowest);
+    z-index: 1050;
+}
+
+.top-navbar .dropdown-menu {
+    z-index: 1050;
+    position: absolute;
+}
+
+/* User Menu Dropdown */
+.user-menu-dropdown .card {
+    border-radius: 0.75rem;
+    background-color: var(--surface-container-lowest);
+}
+
+.user-menu-dropdown .card-body {
+    padding: 0.5rem;
+}
+
+.user-menu-dropdown .user-menu-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--on-surface);
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.user-menu-dropdown .user-menu-item:hover {
+    background-color: var(--surface-container-low);
+    color: var(--primary);
+}
+
+.user-menu-dropdown .user-menu-item.text-danger {
+    color: var(--error) !important;
+}
+
+.user-menu-dropdown .user-menu-item.text-danger:hover {
+    background-color: rgba(186, 26, 26, 0.1);
+}
+
+.user-menu-dropdown .user-menu-divider {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 0;
+    opacity: 0.5;
+}
+
+.user-menu-dropdown .user-menu-header {
+    border-bottom: 1px solid var(--surface-container-high);
+}
+
+.user-menu-dropdown .user-menu-header .fw-bold {
+    font-size: 0.9rem;
+}
+
+.user-menu-dropdown .user-menu-header small {
+    font-size: 0.75rem;
+}
+
+.dropdown-item {
+    border-radius: 0.5rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--on-surface);
+    transition: all 0.15s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--surface-container-low);
+    color: var(--primary);
+}
+
+.dropdown-item.text-danger {
+    color: var(--error) !important;
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: rgba(186, 26, 26, 0.1);
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-top: 1px solid var(--surface-container-high);
 }

@@ -70,11 +70,15 @@
 
             <div class="vr mx-1 d-none d-sm-block"></div>
 
-            <a href="{% url 'logout' %}" onclick="cleanupSessionAndLogout(event)"
-                class="btn btn-primary-gradient logout-button d-flex align-items-center gap-2 py-2 px-3 fw-bold text-white">
-                <span class="material-symbols-outlined">logout</span>
-                <span class="d-none d-sm-inline">Cerrar Sesión</span>
-            </a>
+            <!-- User Menu Dropdown -->
+            <div class="position-relative">
+                <button class="btn btn-link p-0 text-decoration-none" type="button" id="userMenuBtn"
+                    aria-expanded="false" style="width: 36px; height: 36px;">
+                    <div class="user-avatar-circle">
+                        {{ user.username|slice:":1"|upper }}
+                    </div>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -94,6 +98,49 @@
                         No tienes notificaciones nuevas
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Menu Dropdown -->
+    <div class="user-menu-dropdown position-fixed" style="top: 55px; right: 10px; z-index: 9999;">
+        <div class="card shadow-lg border-0" id="userMenu"
+            style="width: 220px; display: none;">
+            <div class="card-body p-0">
+                <div class="user-menu-header px-3 py-2">
+                    <div class="fw-bold text-dark">{{ user.username }}</div>
+                    <small class="text-muted">{{ user.email }}</small>
+                </div>
+                <ul class="list-unstyled mb-0">
+                    <li>
+                        <a href="{% url 'settings' %}?tab=profile" class="user-menu-item d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined" style="font-size: 1.25rem;">person</span>
+                            Perfil de usuario
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'settings' %}?tab=notifications" class="user-menu-item d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined" style="font-size: 1.25rem;">notifications</span>
+                            Historial de notificaciones
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'settings' %}?tab=reports" class="user-menu-item d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined" style="font-size: 1.25rem;">description</span>
+                            Reportes
+                        </a>
+                    </li>
+                </ul>
+                <hr class="user-menu-divider">
+                <ul class="list-unstyled mb-0">
+                    <li>
+                        <a href="{% url 'logout' %}" onclick="cleanupSessionAndLogout(event)"
+                            class="user-menu-item d-flex align-items-center gap-2 text-danger">
+                            <span class="material-symbols-outlined" style="font-size: 1.25rem;">logout</span>
+                            Cerrar sesión
+                        </a>
+                    </li>
+                </ul>
             </div>
         </div>
     </div>

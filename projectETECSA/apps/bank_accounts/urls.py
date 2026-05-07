@@ -7,4 +7,5 @@ urlpatterns = [
     path('api/bank-statements/<path:statement_file>/download/', views.download_statement, name='download_statement'),
     path('api/bank-statements/<path:statement_file>/', views.get_statement_detail, name='get_statement_detail'),
     path('api/filters/', views.get_filter_options, name='get_filter_options'),
+    path('api/pagination/', views.bank_accounts_pagination_api, name='bank_accounts_pagination_api'),
 ]

@@ -245,6 +245,7 @@ function applyFiltersFromState() {
     if (currentFilters.currency) {
         restoreMultiselectDropdown('currencyFilterMenu', currentFilters.currency);
     }
+    updateSummaryStats();
 }
 
 function restoreMultiselectDropdown(menuId, values) {
@@ -318,7 +319,7 @@ function initializeReconciliation() {
         loadTransactions(currentFilters);
         
         if (pendingRestore) {
-            setTimeout(() => finishStateRestore(), 500);
+            finishStateRestore();
         }
     })
     .catch(error => {
@@ -749,7 +750,7 @@ function createTransactionRow(tx) {
     tr.setAttribute('data-bank-fee', tx.bank_fee);
     tr.setAttribute('data-entry-type', tx.entry_type);
     tr.setAttribute('data-status-display', tx.status_display);
-    tr.setAttribute('data-name', tx.entity);
+    tr.setAttribute('data-name', tx.description);
     tr.setAttribute('data-operation-type', tx.operation_type || '--');
     tr.setAttribute('data-currency', tx.currency);
     tr.setAttribute('data-created-at', tx.created_at || '--');
@@ -1404,28 +1405,29 @@ async function handleExport() {
 async function getCurrentPageData() {
     const rows = document.querySelectorAll('.reconciliation-table tbody tr');
     const transactions = [];
-    
+
     rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
         const checkbox = row.querySelector('input[name="row-select"]');
         transactions.push({
             id: checkbox?.dataset.transactionId || '',
-            date: cells[1]?.textContent.trim() || '',
-            reference: cells[2]?.textContent.trim() || '',
-            original_reference: cells[3]?.textContent.trim() || '',
-            bank: cells[4]?.textContent.trim() || '',
-            office: cells[5]?.textContent.trim() || '',
-            operation_type: cells[6]?.textContent.trim() || '',
-            operations: cells[7]?.textContent.trim() || '',
-            amount: parseFloat(cells[8]?.textContent.replace(/[^0-9.-]/g, '') || 0),
-            entry_type: cells[9]?.textContent.trim() || '',
-            status: cells[10]?.textContent.trim() || '',
-            status_display: cells[10]?.textContent.trim() || '',
-            entity: '',
-            created_at: '',
+            date: row.dataset.date || '',
+            reference: row.dataset.currentReference || '',
+            original_reference: row.dataset.originalReference || '',
+            bank: row.dataset.bank || '',
+            office: row.dataset.office || '',
+            operation_type: row.dataset.operationType || '',
+            operations: row.dataset.operations || '',
+            amount: parseFloat(row.dataset.amount) || 0,
+            entry_type: row.dataset.entryType || '',
+            status: row.dataset.status || '',
+            status_display: row.dataset.statusDisplay || '',
+            description: row.dataset.name || '',
+            currency: row.dataset.currency || '',
+            bank_fee: parseFloat(row.dataset.bankFee) || 0,
+            created_at: row.dataset.createdAt || '',
         });
     });
-    
+
     return { transactions, filters_applied: {} };
 }
 

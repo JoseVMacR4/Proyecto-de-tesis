@@ -3,7 +3,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, FileResponse
-from django.views.decorators.http import require_POST, require_http_methods
+from django.views.decorators.http import require_POST, require_http_methods, require_GET
 from django.db.models import Q
 from decimal import Decimal
 from apps.bank_accounts.models import BankAccount
@@ -138,12 +138,24 @@ def bank_accounts(request):
             }
         })
 
+    # Último statement cargado (para mostrar en la sidebar)
+    last_statement = BankStatement.objects.order_by('-created_at').first()
+    last_processing = None
+    if last_statement:
+        from django.utils.formats import date_format
+        last_processing = {
+            'time': date_format(last_statement.created_at, 'H:i'),
+            'date': date_format(last_statement.created_at, 'd M Y'),
+            'full_date': date_format(last_statement.created_at, 'd/m/Y'),
+        }
+
     context = {
         'current_page': 'bank_accounts',
         'bank_accounts': accounts,
         'page_obj': page_obj,
         'page_range': page_range,
-        'total_statements': paginator.count
+        'total_statements': paginator.count,
+        'last_processing': last_processing,
     }
     
     return render(request, 'bank_accounts/bank_accounts.html', context)
@@ -193,6 +205,7 @@ def upload_statement_api(request):
             'data': {
                 'id': str(stmt.id),
                 'file': stmt.file_name,
+                'file_extension': stmt.file_extension,
                 'date': stmt.statement_date.isoformat(),
                 'tx_count': stmt.entry_count,
                 'bank_name': stmt.bank_account.name,
@@ -349,6 +362,128 @@ def get_filter_options(request):
             'status': 'success',
             'filters': {
                 'banks': bank_options
+            }
+        })
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': str(e)
+        }, status=500)
+
+
+@login_required
+def bank_accounts_pagination_api(request):
+    """API endpoint dedicado para paginación AJAX con filtros"""
+    try:
+        page = int(request.GET.get('page', 1))
+        
+        # Aplicar filtros (igual que en la vista principal)
+        statements = BankStatement.objects.select_related('bank_account').order_by('-created_at')
+        
+        # Filtro por banco (múltiple)
+        bank_account = request.GET.get('bank_account', '')
+        if bank_account:
+            bank_list = [b.strip() for b in bank_account.split(',') if b.strip()]
+            if bank_list:
+                statements = statements.filter(bank_account__code__in=bank_list)
+        
+        # Filtro por periodo desde
+        period_start = request.GET.get('period_start', '')
+        if period_start:
+            try:
+                start_date = timezone.datetime.strptime(period_start, '%Y-%m-%d').date()
+                statements = statements.filter(period_start__gte=start_date)
+            except ValueError:
+                pass
+        
+        # Filtro por periodo hasta
+        period_end = request.GET.get('period_end', '')
+        if period_end:
+            try:
+                end_date = timezone.datetime.strptime(period_end, '%Y-%m-%d').date()
+                statements = statements.filter(period_end__lte=end_date)
+            except ValueError:
+                pass
+        
+        # Filtro por saldo inicial
+        starting_balance_min = request.GET.get('starting_balance_min', '')
+        if starting_balance_min:
+            try:
+                min_balance = Decimal(starting_balance_min)
+                statements = statements.filter(starting_balance__gte=min_balance)
+            except:
+                pass
+        
+        starting_balance_max = request.GET.get('starting_balance_max', '')
+        if starting_balance_max:
+            try:
+                max_balance = Decimal(starting_balance_max)
+                statements = statements.filter(starting_balance__lte=max_balance)
+            except:
+                pass
+        
+        # Filtro por saldo final
+        ending_balance_min = request.GET.get('ending_balance_min', '')
+        if ending_balance_min:
+            try:
+                min_balance = Decimal(ending_balance_min)
+                statements = statements.filter(ending_balance__gte=min_balance)
+            except:
+                pass
+        
+        ending_balance_max = request.GET.get('ending_balance_max', '')
+        if ending_balance_max:
+            try:
+                max_balance = Decimal(ending_balance_max)
+                statements = statements.filter(ending_balance__lte=max_balance)
+            except:
+                pass
+        
+        paginator = Paginator(statements, 5)
+        page_obj = paginator.get_page(page)
+        
+        statements_data = [{
+            'id': str(s.id),
+            'file_name': s.file_name,
+            'file_extension': s.file_extension,
+            'file_size': s.file_size,
+            'bank_account_name': s.bank_account.name,
+            'created_at': date_format(s.created_at, 'd/m/Y H:i'),
+            'period_start': date_format(s.period_start, 'd/m/Y'),
+            'period_end': date_format(s.period_end, 'd/m/Y'),
+            'starting_balance': float(s.starting_balance),
+            'ending_balance': float(s.ending_balance),
+            'entry_count': s.entry_count,
+        } for s in page_obj.object_list]
+        
+        # Calcular page_range
+        total_pages = paginator.num_pages
+        current_page = page_obj.number
+        window = 5
+        if total_pages <= window:
+            page_range = list(range(1, total_pages + 1))
+        else:
+            left = max(current_page - 2, 1)
+            right = min(current_page + 2, total_pages)
+            if left == 1:
+                right = 5
+            elif right == total_pages:
+                left = total_pages - 4
+            page_range = list(range(left, right + 1))
+        
+        return JsonResponse({
+            'statements': statements_data,
+            'pagination': {
+                'current_page': current_page,
+                'total_pages': total_pages,
+                'has_previous': page_obj.has_previous(),
+                'has_next': page_obj.has_next(),
+                'previous_page_number': page_obj.previous_page_number() if page_obj.has_previous() else None,
+                'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None,
+                'page_range': page_range,
+                'start_index': page_obj.start_index(),
+                'end_index': page_obj.end_index(),
+                'total_statements': paginator.count,
             }
         })
     except Exception as e:

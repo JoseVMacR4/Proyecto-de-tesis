@@ -212,7 +212,7 @@ def get_reconciliation_data(request):
 					'office': office_display,
 					'office_code': office_value,
 					'operations': tx.operation_count,
-					'entity': tx.name,
+'description': tx.name,
 					'amount': float(tx.amount),
 					'entry_type': tx.entry_type,
 					'bank_fee': float(tx.bank_fee),
@@ -693,7 +693,7 @@ def get_export_data(request):
                     'office': office_display,
                     'office_code': office_value,
                     'operations': tx.operation_count,
-                    'entity': tx.name,
+                    'description': tx.name,
                     'amount': float(tx.amount),
                     'entry_type': tx.entry_type,
                     'bank_fee': float(tx.bank_fee),
@@ -788,8 +788,9 @@ def export_to_xls(transactions, filters):
     )
     
     headers = [
-        'Fecha', 'Referencia', 'Ref. Original', 'Banco', 'Oficina', 
-        'Tipo de Operación', 'Cant. Oper.', 'Entidad', 'Monto', 'Tipo', 'Estado', 'Fecha Creación'
+        'Fecha', 'Ref. Corriente', 'Ref. Original', 'Banco', 'Oficina',
+        'Tipo de Operación', 'Cant. Oper.', 'Descripción', 'Monto', 'Moneda',
+        'Comisión', 'Tipo', 'Estado', 'Fecha Creación'
     ]
     
     for col, header in enumerate(headers, 1):
@@ -810,16 +811,23 @@ def export_to_xls(transactions, filters):
         ws.cell(row=row_idx, column=5, value=tx.get('office', '')).border = thin_border
         ws.cell(row=row_idx, column=6, value=tx.get('operation_type', '')).border = thin_border
         ws.cell(row=row_idx, column=7, value=tx.get('operations', '')).border = thin_border
-        ws.cell(row=row_idx, column=8, value=tx.get('entity', '')).border = thin_border
-        
+        ws.cell(row=row_idx, column=8, value=tx.get('description', '')).border = thin_border
+
         amount_cell = ws.cell(row=row_idx, column=9, value=tx.get('amount', 0))
         amount_cell.number_format = '#,##0.00'
         amount_cell.border = thin_border
         amount_cell.alignment = Alignment(horizontal="right")
-        
-        ws.cell(row=row_idx, column=10, value=tx.get('entry_type', '')).border = thin_border
-        ws.cell(row=row_idx, column=11, value=tx.get('status_display', '')).border = thin_border
-        ws.cell(row=row_idx, column=12, value=tx.get('created_at', '')).border = thin_border
+
+        ws.cell(row=row_idx, column=10, value=tx.get('currency', '')).border = thin_border
+
+        fee_cell = ws.cell(row=row_idx, column=11, value=tx.get('bank_fee', 0))
+        fee_cell.number_format = '#,##0.00'
+        fee_cell.border = thin_border
+        fee_cell.alignment = Alignment(horizontal="right")
+
+        ws.cell(row=row_idx, column=12, value=tx.get('entry_type', '')).border = thin_border
+        ws.cell(row=row_idx, column=13, value=tx.get('status_display', '')).border = thin_border
+        ws.cell(row=row_idx, column=14, value=tx.get('created_at', '')).border = thin_border
     
     total_row = len(transactions) + 2
     ws.cell(row=total_row, column=8, value="TOTAL:")
@@ -828,8 +836,8 @@ def export_to_xls(transactions, filters):
     ws.cell(row=total_row, column=9).number_format = '#,##0.00'
     ws.cell(row=total_row, column=9).font = Font(bold=True)
     ws.cell(row=total_row, column=9).alignment = Alignment(horizontal="right")
-    
-    col_widths = [12, 18, 18, 20, 15, 20, 12, 30, 15, 8, 12, 16]
+
+    col_widths = [12, 18, 18, 20, 18, 22, 12, 35, 12, 10, 12, 10, 12, 16]
     for col, width in enumerate(col_widths, 1):
         ws.column_dimensions[get_column_letter(col)].width = width
     
@@ -902,6 +910,16 @@ def export_to_pdf(transactions, filters):
         filter_lines.append(f"Banco: {filters['bank']}")
     if filters.get('status'):
         filter_lines.append(f"Estado: {filters['status']}")
+    if filters.get('entry_type'):
+        filter_lines.append(f"Tipo: {filters['entry_type']}")
+    if filters.get('operation_type'):
+        filter_lines.append(f"Tipo de operación: {filters['operation_type']}")
+    if filters.get('currency'):
+        filter_lines.append(f"Moneda: {filters['currency']}")
+    if filters.get('amount_min') or filters.get('amount_max'):
+        min_amt = filters.get('amount_min', '0')
+        max_amt = filters.get('amount_max', 'Sin límite')
+        filter_lines.append(f"Monto: {min_amt} - {max_amt}")
     
     if filter_lines:
         elements.append(Paragraph("Filtros aplicados:", ParagraphStyle('Bold', parent=styles['Normal'], bold=True, fontSize=9, spaceAfter=3)))
@@ -910,8 +928,8 @@ def export_to_pdf(transactions, filters):
     
     elements.append(Spacer(1, 10))
     
-    headers = ['Fecha', 'Referencia', 'Banco', 'Oficina', 'Entidad', 'Monto', 'Tipo', 'Estado']
-    col_widths = [60, 80, 70, 60, 100, 70, 40, 60]
+    headers = ['Fecha', 'Ref. Corriente', 'Ref. Original', 'Banco', 'Monto', 'Moneda', 'Tipo', 'Estado', 'Oficina']
+    col_widths = [50, 70, 50, 80, 70, 40, 40, 50, 65]
     
     table_data = [headers]
     
@@ -924,13 +942,14 @@ def export_to_pdf(transactions, filters):
         
         row = [
             tx.get('date', ''),
-            tx.get('reference', '')[:15] if tx.get('reference') else '',
-            tx.get('bank', '')[:12] if tx.get('bank') else '',
-            tx.get('office', '')[:10] if tx.get('office') else '',
-            tx.get('entity', '')[:20] if tx.get('entity') else '',
+            tx.get('reference', ''),
+            tx.get('original_reference', ''),
+            tx.get('bank', ''),
             f"{tx.get('amount', 0):,.2f}",
+            tx.get('currency', ''),
             tx.get('entry_type', ''),
             tx.get('status_display', ''),
+            tx.get('office', ''),
         ]
         table_data.append(row)
         
@@ -957,7 +976,7 @@ def export_to_pdf(transactions, filters):
             current_page += 1
     
     if table_data:
-        total_row = [['TOTAL', '', '', '', '', f"{total_amount:,.2f}", '', '']]
+        total_row = [['TOTAL', '', '', '', f"{total_amount:,.2f}", '', '', '', '']]
         
         t = Table(table_data + total_row, colWidths=col_widths)
         t.setStyle(TableStyle([

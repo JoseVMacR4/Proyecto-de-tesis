@@ -479,40 +479,6 @@ function initActionButtons() {
         });
     });
 
-    // Botones de Editar Banco
-    document.querySelectorAll('.btn-edit-bank').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const bankId = this.getAttribute('data-bank-id');
-            const bankItem = this.closest('.bank-item');
-            const name = bankItem.querySelector('.bank-name').textContent;
-            const code = bankItem.querySelector('.bank-description').textContent;
-            
-            document.getElementById('bankId').value = bankId;
-            document.getElementById('bankFormAction').value = 'edit';
-            document.getElementById('bankCode').value = code;
-            document.getElementById('bankName').value = name;
-            
-            document.getElementById('modalBankLabel').textContent = 'Editar Cuenta Bancaria';
-            bankModal.show();
-        });
-    });
-
-    // Botones de Eliminar Banco
-    document.querySelectorAll('.btn-delete-bank').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const bankId = this.getAttribute('data-bank-id');
-            const bankItem = this.closest('.bank-item');
-            const bankName = bankItem.querySelector('.bank-name').textContent;
-            
-            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la cuenta bancaria "${bankName}"?`;
-            document.getElementById('btnConfirmDelete').onclick = function() {
-                deleteItem(`/admin-panel/bank-accounts/${bankId}/delete/`, 'cuenta bancaria');
-                deleteModal.hide();
-            };
-            deleteModal.show();
-        });
-    });
-
     // Botones de Editar Oficina
     document.querySelectorAll('.btn-edit-office').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1257,7 +1223,7 @@ function reinitializeBankButtons() {
             const bankId = this.getAttribute('data-bank-id');
             const bankItem = this.closest('.bank-item');
             const name = bankItem.querySelector('.bank-name').textContent;
-            const code = bankItem.querySelector('.bank-description').textContent;
+            const code = bankItem.querySelector('.bank-code').textContent;
             
             document.getElementById('bankId').value = bankId;
             document.getElementById('bankFormAction').value = 'edit';

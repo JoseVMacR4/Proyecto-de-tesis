@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabs = document.querySelectorAll('.settings-tab');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    // Function to switch tab
+    // Función para cambiar tab
     function switchTab(tabName) {
         // Remove active class from all tabs and contents
         tabs.forEach(t => t.classList.remove('active'));
@@ -32,6 +32,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (tabName === 'reports') {
             loadReports();
         }
+    }
+
+    // Leer parámetro tab de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    if (tabParam && document.querySelector(`.settings-tab[data-tab="${tabParam}"]`)) {
+        localStorage.setItem('settings_active_tab', tabParam);
     }
 
     // Restore tab from localStorage

@@ -67,7 +67,7 @@
           <ul class="format-guide-list">
             <li class="format-guide-item">
               <span class="material-symbols-outlined">check_circle</span>
-              <span>El archivo debe contener la columna 'Referencia'.</span>
+              <span>El archivo debe contener la fila 'Cuenta'.</span>
             </li>
             <li class="format-guide-item">
               <span class="material-symbols-outlined">check_circle</span>
@@ -75,15 +75,20 @@
             </li>
             <li class="format-guide-item">
               <span class="material-symbols-outlined">check_circle</span>
-              <span>Evite celdas combinadas en archivos XLSX.</span>
+              <span>El estado de cuenta debe ser extension 'TXT'.</span>
             </li>
           </ul>
         </div>
         <div class="last-processing">
           <p class="last-processing-label">Último Procesamiento</p>
-          <div class="last-processing-time">
-            <span class="time">14:32</span>
-            <span class="date">Hoy, 24 Oct</span>
+          <div class="last-processing-time" id="lastProcessingTime">
+            {% if last_processing %}
+              <span class="time">{{ last_processing.time }}</span>
+              <span class="date">{{ last_processing.date }}</span>
+            {% else %}
+              <span class="time">--:--</span>
+              <span class="date">Sin registros</span>
+            {% endif %}
           </div>
         </div>
       </div>
