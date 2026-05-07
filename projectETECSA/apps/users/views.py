@@ -707,15 +707,25 @@ def get_offices(request):
 def get_users(request):
     """API endpoint para obtener la lista de usuarios"""
     try:
+        page = int(request.GET.get('page', 1))
+        items_per_page = int(request.GET.get('items_per_page', 10))
+        
         users = User.objects.all().select_related()
+        total_count = users.count()
+        total_pages = (total_count + items_per_page - 1) // items_per_page if total_count > 0 else 1
+        start_index = (page - 1) * items_per_page
+        end_index = start_index + items_per_page
+        users_page = users[start_index:end_index]
+        
+        user_ids = [u.id for u in users_page]
         user_roles = {}
-        for ur in UserRole.objects.select_related('role').filter(user__in=users):
+        for ur in UserRole.objects.select_related('role').filter(user_id__in=user_ids):
             if ur.user.id not in user_roles:
                 user_roles[ur.user.id] = []
             user_roles[ur.user.id].append({'id': str(ur.role.id), 'name': ur.role.name})
         
         users_data = []
-        for user in users:
+        for user in users_page:
             role_info = user_roles.get(user.id, [])
             main_role = role_info[0]['name'] if role_info else 'Sin rol'
             users_data.append({
@@ -732,8 +742,6 @@ def get_users(request):
                 'updated_at': user.updated_at.strftime('%d/%m/%Y %H:%M')
             })
         
-        # Estadísticas
-        total_users = users.count()
         active_users = users.filter(is_active=True).count()
         inactive_users = users.filter(is_active=False).count()
         admin_count = UserRole.objects.filter(role__name='Administrador').count()
@@ -741,8 +749,15 @@ def get_users(request):
         return JsonResponse({
             'success': True,
             'users': users_data,
+            'pagination': {
+                'current_page': page,
+                'total_pages': total_pages,
+                'total_count': total_count,
+                'has_next': page < total_pages,
+                'has_previous': page > 1
+            },
             'stats': {
-                'total_users': total_users,
+                'total_users': total_count,
                 'active_users': active_users,
                 'inactive_users': inactive_users,
                 'admin_count': admin_count
@@ -756,9 +771,18 @@ def get_users(request):
 def get_operations(request):
     """API endpoint para obtener la lista de operaciones"""
     try:
+        page = int(request.GET.get('page', 1))
+        items_per_page = int(request.GET.get('items_per_page', 10))
+        
         operations = Operation.objects.all().order_by('code')
+        total_count = operations.count()
+        total_pages = (total_count + items_per_page - 1) // items_per_page if total_count > 0 else 1
+        start_index = (page - 1) * items_per_page
+        end_index = start_index + items_per_page
+        operations_page = operations[start_index:end_index]
+        
         operations_data = []
-        for op in operations:
+        for op in operations_page:
             operations_data.append({
                 'id': str(op.id),
                 'code': op.code,
@@ -770,9 +794,16 @@ def get_operations(request):
         return JsonResponse({
             'success': True,
             'operations': operations_data,
+            'pagination': {
+                'current_page': page,
+                'total_pages': total_pages,
+                'total_count': total_count,
+                'has_next': page < total_pages,
+                'has_previous': page > 1
+            },
             'stats': {
-                'total_operations': operations.count(),
-                'active_operations': operations.count()
+                'total_operations': total_count,
+                'active_operations': total_count
             }
         })
     except Exception as e:
@@ -783,9 +814,18 @@ def get_operations(request):
 def get_bank_accounts(request):
     """API endpoint para obtener la lista de cuentas bancarias"""
     try:
+        page = int(request.GET.get('page', 1))
+        items_per_page = int(request.GET.get('items_per_page', 10))
+        
         bank_accounts = BankAccount.objects.all().order_by('code')
+        total_count = bank_accounts.count()
+        total_pages = (total_count + items_per_page - 1) // items_per_page if total_count > 0 else 1
+        start_index = (page - 1) * items_per_page
+        end_index = start_index + items_per_page
+        banks_page = bank_accounts[start_index:end_index]
+        
         banks_data = []
-        for bank in bank_accounts:
+        for bank in banks_page:
             banks_data.append({
                 'id': str(bank.id),
                 'code': bank.code,
@@ -797,8 +837,15 @@ def get_bank_accounts(request):
         return JsonResponse({
             'success': True,
             'banks': banks_data,
+            'pagination': {
+                'current_page': page,
+                'total_pages': total_pages,
+                'total_count': total_count,
+                'has_next': page < total_pages,
+                'has_previous': page > 1
+            },
             'stats': {
-                'total_bank_accounts': bank_accounts.count()
+                'total_bank_accounts': total_count
             }
         })
     except Exception as e:
@@ -809,9 +856,18 @@ def get_bank_accounts(request):
 def get_offices(request):
     """API endpoint para obtener la lista de oficinas"""
     try:
+        page = int(request.GET.get('page', 1))
+        items_per_page = int(request.GET.get('items_per_page', 10))
+        
         offices = Office.objects.all().order_by('code')
+        total_count = offices.count()
+        total_pages = (total_count + items_per_page - 1) // items_per_page if total_count > 0 else 1
+        start_index = (page - 1) * items_per_page
+        end_index = start_index + items_per_page
+        offices_page = offices[start_index:end_index]
+        
         offices_data = []
-        for office in offices:
+        for office in offices_page:
             offices_data.append({
                 'id': str(office.id),
                 'code': office.code,
@@ -823,9 +879,16 @@ def get_offices(request):
         return JsonResponse({
             'success': True,
             'offices': offices_data,
+            'pagination': {
+                'current_page': page,
+                'total_pages': total_pages,
+                'total_count': total_count,
+                'has_next': page < total_pages,
+                'has_previous': page > 1
+            },
             'stats': {
-                'total_offices': offices.count(),
-                'active_offices': offices.count()
+                'total_offices': total_count,
+                'active_offices': total_count
             }
         })
     except Exception as e:

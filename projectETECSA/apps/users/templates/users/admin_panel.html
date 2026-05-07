@@ -28,7 +28,7 @@
         <div id="tab-users" class="tab-content active">
             <div class="row g-4">
                 <!-- User Management Card -->
-                <div class="col-12 col-lg-8">
+                <div class="col-12">
                     <div class="settings-card h-100">
                         <div class="settings-card-header">
                             <h5 class="settings-card-title mb-0">Gestión de Usuarios</h5>
@@ -54,34 +54,9 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-
-                <!-- User Stats Card -->
-                <div class="col-12 col-lg-4">
-                    <div class="settings-card h-100">
-                        <div class="settings-card-header">
-                            <h5 class="settings-card-title mb-0">Estadísticas</h5>
-                            <span class="material-symbols-outlined settings-card-icon">insights</span>
-                        </div>
-
-                        <div class="d-flex flex-column gap-3">
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Total Usuarios</span>
-                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">{{ total_users }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Activos</span>
-                                <div class="profile-info-value font-manrope fw-bold text-success">{{ active_users }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Inactivos</span>
-                                <div class="profile-info-value font-manrope fw-bold text-danger">{{ inactive_users }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Administradores</span>
-                                <div class="profile-info-value font-manrope fw-bold text-primary">{{ admin_count }}</div>
-                            </div>
+                        <div class="pagination-footer" id="usersPagination">
+                            <p class="pagination-info" id="usersPaginationInfo"></p>
+                            <div class="pagination-controls" id="usersPaginationControls"></div>
                         </div>
                     </div>
                 </div>
@@ -91,7 +66,7 @@
         <!-- Tab Content: Operations -->
         <div id="tab-operations" class="tab-content">
             <div class="row g-4">
-                <div class="col-12 col-lg-8">
+                <div class="col-12">
                     <div class="settings-card h-100">
                         <div class="settings-card-header">
                             <h5 class="settings-card-title mb-0">Tipos de Operaciones</h5>
@@ -129,29 +104,9 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-lg-4">
-                    <div class="settings-card h-100">
-                        <div class="settings-card-header">
-                            <h5 class="settings-card-title mb-0">Resumen</h5>
-                            <span class="material-symbols-outlined settings-card-icon">category</span>
-                        </div>
-
-                        <div class="d-flex flex-column gap-3">
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Total Operaciones</span>
-                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">{{ active_operations }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Operaciones Activas</span>
-                                <div class="profile-info-value font-manrope fw-bold text-success">{{ active_operations }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Última Actualización</span>
-                                <div class="profile-info-value font-manrope fw-medium">Hoy</div>
-                            </div>
+                        <div class="pagination-footer" id="operationsPagination">
+                            <p class="pagination-info" id="operationsPaginationInfo"></p>
+                            <div class="pagination-controls" id="operationsPaginationControls"></div>
                         </div>
                     </div>
                 </div>
@@ -161,7 +116,7 @@
         <!-- Tab Content: Banks -->
         <div id="tab-banks" class="tab-content">
             <div class="row g-4">
-                <div class="col-12 col-lg-8">
+                <div class="col-12">
                     <div class="settings-card h-100">
                         <div class="settings-card-header">
                             <h5 class="settings-card-title mb-0">Cuentas Bancarias</h5>
@@ -193,29 +148,9 @@
                             <div class="text-center text-muted py-4">No hay cuentas bancarias registradas</div>
                             {% endfor %}
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-lg-4">
-                    <div class="settings-card h-100">
-                        <div class="settings-card-header">
-                            <h5 class="settings-card-title mb-0">Información</h5>
-                            <span class="material-symbols-outlined settings-card-icon">info</span>
-                        </div>
-
-                        <div class="d-flex flex-column gap-3">
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Total Cuentas</span>
-                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">{{ total_bank_accounts }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Cuentas Activas</span>
-                                <div class="profile-info-value font-manrope fw-bold text-success">{{ total_bank_accounts }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Bancos Registrados</span>
-                                <div class="profile-info-value font-manrope fw-bold text-primary">{{ total_bank_accounts }}</div>
-                            </div>
+                        <div class="pagination-footer" id="banksPagination">
+                            <p class="pagination-info" id="banksPaginationInfo"></p>
+                            <div class="pagination-controls" id="banksPaginationControls"></div>
                         </div>
                     </div>
                 </div>
@@ -225,7 +160,7 @@
         <!-- Tab Content: Offices -->
         <div id="tab-offices" class="tab-content">
             <div class="row g-4">
-                <div class="col-12 col-lg-8">
+                <div class="col-12">
                     <div class="settings-card h-100">
                         <div class="settings-card-header">
                             <h5 class="settings-card-title mb-0">Gestión de Oficinas</h5>
@@ -263,29 +198,9 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-lg-4">
-                    <div class="settings-card h-100">
-                        <div class="settings-card-header">
-                            <h5 class="settings-card-title mb-0">Resumen</h5>
-                            <span class="material-symbols-outlined settings-card-icon">map</span>
-                        </div>
-
-                        <div class="d-flex flex-column gap-3">
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Total Oficinas</span>
-                                <div class="profile-info-value font-manrope fw-extrabold" style="font-size: 1.5rem;">{{ total_offices }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Oficinas Activas</span>
-                                <div class="profile-info-value font-manrope fw-bold text-success">{{ active_offices }}</div>
-                            </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Provincias Cubiertas</span>
-                                <div class="profile-info-value font-manrope fw-bold text-primary">{{ total_offices }}</div>
-                            </div>
+                        <div class="pagination-footer" id="officesPagination">
+                            <p class="pagination-info" id="officesPaginationInfo"></p>
+                            <div class="pagination-controls" id="officesPaginationControls"></div>
                         </div>
                     </div>
                 </div>

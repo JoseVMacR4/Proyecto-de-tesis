@@ -702,9 +702,21 @@ function getCookie(name) {
 /**
  * Carga la tabla de usuarios desde la API
  */
-async function loadUsersTable() {
+let usersPage = 1;
+const usersItemsPerPage = 10;
+let operationsPage = 1;
+const operationsItemsPerPage = 10;
+let banksPage = 1;
+const banksItemsPerPage = 10;
+let officesPage = 1;
+const officesItemsPerPage = 10;
+
+async function loadUsersTable(page) {
+    if (page === undefined) page = usersPage;
+    usersPage = page;
+    
     try {
-        const response = await fetch('/admin-panel/users/list/', {
+        const response = await fetch(`/admin-panel/users/list/?page=${page}&items_per_page=${usersItemsPerPage}`, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -717,13 +729,12 @@ async function loadUsersTable() {
             const tbody = document.querySelector('#tab-users tbody');
             if (!tbody) return;
             
-            // Limpiar tabla actual
             tbody.innerHTML = '';
             
             if (result.users.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No hay usuarios registrados</td></tr>';
             } else {
-                window.usersData = result.users; // Guardar datos para uso en modales
+                window.usersData = result.users;
                 result.users.forEach(user => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
@@ -740,24 +751,76 @@ async function loadUsersTable() {
                     tbody.appendChild(tr);
                 });
                 
-                // Re-inicializar los event listeners para los nuevos botones
                 reinitializeUserButtons();
             }
             
-            // Actualizar estadísticas
             updateStats('users', result.stats);
+            
+            // Renderizar paginación
+            renderUsersPagination(result.pagination);
         }
     } catch (error) {
         console.error('Error loading users:', error);
     }
 }
 
+function renderUsersPagination(pagination) {
+    const paginationInfo = document.getElementById('usersPaginationInfo');
+    const paginationControls = document.getElementById('usersPaginationControls');
+    
+    if (!paginationInfo || !paginationControls) return;
+    
+    const startItem = (pagination.current_page - 1) * usersItemsPerPage + 1;
+    const endItem = Math.min(pagination.current_page * usersItemsPerPage, pagination.total_count);
+    
+    paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${pagination.total_count} usuarios`;
+    
+    let paginationHtml = '';
+    
+    if (pagination.has_previous) {
+        paginationHtml += `<button class="pagination-btn" data-page="${pagination.current_page - 1}" title="Página anterior">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página anterior" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </span>`;
+    }
+    
+    for (let i = 1; i <= pagination.total_pages; i++) {
+        const isActive = i === pagination.current_page;
+        paginationHtml += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (pagination.has_next) {
+        paginationHtml += `<button class="pagination-btn" data-page="${pagination.current_page + 1}" title="Página siguiente">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página siguiente" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </span>`;
+    }
+    
+    paginationControls.innerHTML = paginationHtml;
+    
+    paginationControls.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const page = parseInt(this.getAttribute('data-page'));
+            loadUsersTable(page);
+        });
+    });
+}
+
 /**
  * Carga la tabla de operaciones desde la API
  */
-async function loadOperationsTable() {
+async function loadOperationsTable(page) {
+    if (page === undefined) page = operationsPage;
+    operationsPage = page;
+    
     try {
-        const response = await fetch('/admin-panel/operations/list/', {
+        const response = await fetch(`/admin-panel/operations/list/?page=${page}&items_per_page=${operationsItemsPerPage}`, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -770,7 +833,6 @@ async function loadOperationsTable() {
             const tbody = document.querySelector('#tab-operations tbody');
             if (!tbody) return;
             
-            // Limpiar tabla actual
             tbody.innerHTML = '';
             
             if (result.operations.length === 0) {
@@ -791,24 +853,75 @@ async function loadOperationsTable() {
                     tbody.appendChild(tr);
                 });
                 
-                // Re-inicializar los event listeners para los nuevos botones
                 reinitializeOperationButtons();
             }
             
-            // Actualizar estadísticas
             updateStats('operations', result.stats);
+            
+            renderOperationsPagination(result.pagination);
         }
     } catch (error) {
         console.error('Error loading operations:', error);
     }
 }
 
+function renderOperationsPagination(pagination) {
+    const paginationInfo = document.getElementById('operationsPaginationInfo');
+    const paginationControls = document.getElementById('operationsPaginationControls');
+    
+    if (!paginationInfo || !paginationControls) return;
+    
+    const startItem = (pagination.current_page - 1) * operationsItemsPerPage + 1;
+    const endItem = Math.min(pagination.current_page * operationsItemsPerPage, pagination.total_count);
+    
+    paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${pagination.total_count} operaciones`;
+    
+    let paginationHtml = '';
+    
+    if (pagination.has_previous) {
+        paginationHtml += `<button class="pagination-btn" data-page="${pagination.current_page - 1}" title="Página anterior">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página anterior" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </span>`;
+    }
+    
+    for (let i = 1; i <= pagination.total_pages; i++) {
+        const isActive = i === pagination.current_page;
+        paginationHtml += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (pagination.has_next) {
+        paginationHtml += `<button class="pagination-btn" data-page="${pagination.current_page + 1}" title="Página siguiente">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página siguiente" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </span>`;
+    }
+    
+    paginationControls.innerHTML = paginationHtml;
+    
+    paginationControls.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const page = parseInt(this.getAttribute('data-page'));
+            loadOperationsTable(page);
+        });
+    });
+}
+
 /**
  * Carga la lista de cuentas bancarias desde la API
  */
-async function loadBanksList() {
+async function loadBanksList(page) {
+    if (page === undefined) page = banksPage;
+    banksPage = page;
+    
     try {
-        const response = await fetch('/admin-panel/bank-accounts/list/', {
+        const response = await fetch(`/admin-panel/bank-accounts/list/?page=${page}&items_per_page=${banksItemsPerPage}`, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -821,7 +934,6 @@ async function loadBanksList() {
             const bankList = document.querySelector('#tab-banks .bank-list');
             if (!bankList) return;
             
-            // Limpiar lista actual
             bankList.innerHTML = '';
             
             if (result.banks.length === 0) {
@@ -836,9 +948,9 @@ async function loadBanksList() {
                             <div class="bank-icon-container">
                                 <span class="material-symbols-outlined">account_balance</span>
                             </div>
-                            <div>
-                                <div class="bank-name">${bank.name}</div>
-                                <div class="bank-description">${bank.code}</div>
+                            <div class="bank-info">
+                                <span class="bank-name">${bank.name}</span>
+                                <span class="bank-code">${bank.code}</span>
                             </div>
                         </div>
                         <div class="d-flex align-items-center gap-2">
@@ -850,24 +962,75 @@ async function loadBanksList() {
                     bankList.appendChild(div);
                 });
                 
-                // Re-inicializar los event listeners para los nuevos botones
                 reinitializeBankButtons();
             }
             
-            // Actualizar estadísticas
             updateStats('banks', result.stats);
+            
+            renderBanksPagination(result.pagination);
         }
     } catch (error) {
         console.error('Error loading banks:', error);
     }
 }
 
+function renderBanksPagination(pagination) {
+    const paginationInfo = document.getElementById('banksPaginationInfo');
+    const paginationControls = document.getElementById('banksPaginationControls');
+    
+    if (!paginationInfo || !paginationControls) return;
+    
+    const startItem = (pagination.current_page - 1) * banksItemsPerPage + 1;
+    const endItem = Math.min(pagination.current_page * banksItemsPerPage, pagination.total_count);
+    
+    paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${pagination.total_count} cuentas`;
+    
+    let paginationHtml = '';
+    
+    if (pagination.has_previous) {
+        paginationHtml += `<button class="pagination-btn" data-page="${pagination.current_page - 1}" title="Página anterior">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página anterior" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </span>`;
+    }
+    
+    for (let i = 1; i <= pagination.total_pages; i++) {
+        const isActive = i === pagination.current_page;
+        paginationHtml += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (pagination.has_next) {
+        paginationHtml += `<button class="pagination-btn" data-page="${pagination.current_page + 1}" title="Página siguiente">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página siguiente" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </span>`;
+    }
+    
+    paginationControls.innerHTML = paginationHtml;
+    
+    paginationControls.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const page = parseInt(this.getAttribute('data-page'));
+            loadBanksList(page);
+        });
+    });
+}
+
 /**
  * Carga la tabla de oficinas desde la API
  */
-async function loadOfficesTable() {
+async function loadOfficesTable(page) {
+    if (page === undefined) page = officesPage;
+    officesPage = page;
+    
     try {
-        const response = await fetch('/admin-panel/offices/list/', {
+        const response = await fetch(`/admin-panel/offices/list/?page=${page}&items_per_page=${officesItemsPerPage}`, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -880,7 +1043,6 @@ async function loadOfficesTable() {
             const tbody = document.querySelector('#tab-offices tbody');
             if (!tbody) return;
             
-            // Limpiar tabla actual
             tbody.innerHTML = '';
             
             if (result.offices.length === 0) {
@@ -901,16 +1063,64 @@ async function loadOfficesTable() {
                     tbody.appendChild(tr);
                 });
                 
-                // Re-inicializar los event listeners para los nuevos botones
                 reinitializeOfficeButtons();
             }
             
-            // Actualizar estadísticas
             updateStats('offices', result.stats);
+            
+            renderOfficesPagination(result.pagination);
         }
     } catch (error) {
         console.error('Error loading offices:', error);
     }
+}
+
+function renderOfficesPagination(pagination) {
+    const paginationInfo = document.getElementById('officesPaginationInfo');
+    const paginationControls = document.getElementById('officesPaginationControls');
+    
+    if (!paginationInfo || !paginationControls) return;
+    
+    const startItem = (pagination.current_page - 1) * officesItemsPerPage + 1;
+    const endItem = Math.min(pagination.current_page * officesItemsPerPage, pagination.total_count);
+    
+    paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${pagination.total_count} oficinas`;
+    
+    let paginationHtml = '';
+    
+    if (pagination.has_previous) {
+        paginationHtml += `<button class="pagination-btn" data-page="${pagination.current_page - 1}" title="Página anterior">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página anterior" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_left</span>
+        </span>`;
+    }
+    
+    for (let i = 1; i <= pagination.total_pages; i++) {
+        const isActive = i === pagination.current_page;
+        paginationHtml += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    
+    if (pagination.has_next) {
+        paginationHtml += `<button class="pagination-btn" data-page="${pagination.current_page + 1}" title="Página siguiente">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </button>`;
+    } else {
+        paginationHtml += `<span class="pagination-btn" title="Página siguiente" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+            <span class="material-symbols-outlined">chevron_right</span>
+        </span>`;
+    }
+    
+    paginationControls.innerHTML = paginationHtml;
+    
+    paginationControls.querySelectorAll('.pagination-btn[data-page]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const page = parseInt(this.getAttribute('data-page'));
+            loadOfficesTable(page);
+        });
+    });
 }
 
 /**
