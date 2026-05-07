@@ -43,8 +43,16 @@
     border-bottom: 3px solid var(--error);
 }
 
+.stats-card.primary {
+    border-bottom: 3px solid var(--primary);
+}
+
 .stats-card.success {
     border-bottom: 3px solid var(--success);
+}
+
+.stats-card.warning {
+    border-bottom: 3px solid var(--tertiary);
 }
 
 .stats-icon {
@@ -100,6 +108,14 @@
 
 .stats-card.success .stats-label {
     color: var(--success);
+}
+
+.stats-card.primary .stats-label {
+    color: var(--primary);
+}
+
+.stats-card.warning .stats-label {
+    color: var(--tertiary);
 }
 
 /* ===== Filter Bar ===== */

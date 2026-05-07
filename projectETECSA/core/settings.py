@@ -90,9 +90,11 @@ DATABASES = {
         'PASSWORD': 'admin',
         'HOST': 'localhost',
         'PORT': '5432',
+        'OPTIONS': {
+            'options': '-c timezone=America/Havana'
+        }
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -122,7 +124,7 @@ TIME_ZONE = 'America/Havana'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Default primary key field type

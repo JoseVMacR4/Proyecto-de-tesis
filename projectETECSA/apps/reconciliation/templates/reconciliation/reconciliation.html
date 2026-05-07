@@ -32,8 +32,8 @@
 
 <!-- Summary Stats (Bento Cards) -->
 <div class="row g-3 mb-4">
-    <div class="col-12 col-md-6 col-lg-3">
-        <div class="stats-card success">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="stats-card primary">
             <div class="d-flex align-items-start gap-3">
                 <div class="stats-icon primary">
                     <span class="material-symbols-outlined">payments</span>
@@ -46,7 +46,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-3">
+    <div class="col-12 col-md-6 col-lg-4">
         <div class="stats-card success">
             <div class="d-flex align-items-start gap-3">
                 <div class="stats-icon success">
@@ -54,14 +54,14 @@
                 </div>
                 <div>
                     <div id="reconciledCount" class="stats-value">{{ reconciled_count|default:0|intcomma }}</div>
-                    <div class="stats-label" style="color: var(--success);">Conciliadas (<span id="reconciledPercentage">{{ reconciled_percentage|default:0 }}</span>%)</div>
+                    <div class="stats-label">Conciliadas (<span id="reconciledPercentage">{{ reconciled_percentage|default:0 }}</span>%)</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-3">
-        <div class="stats-card">
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="stats-card warning">
             <div class="d-flex align-items-start gap-3">
                 <div class="stats-icon warning">
                     <span class="material-symbols-outlined">pending_actions</span>
@@ -74,19 +74,7 @@
         </div>
     </div>
 
-    <div class="col-12 col-md-6 col-lg-3">
-        <div class="stats-card critical">
-            <div class="d-flex align-items-start gap-3">
-                <div class="stats-icon error">
-                    <span class="material-symbols-outlined">warning</span>
-                </div>
-                <div>
-                    <div class="stats-value">0</div>
-                    <div class="stats-label">Discrepancias Críticas</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 </div>
 
 <!-- Filter Bar -->

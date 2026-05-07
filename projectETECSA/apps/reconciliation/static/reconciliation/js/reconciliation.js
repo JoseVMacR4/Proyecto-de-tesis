@@ -985,7 +985,12 @@ function loadTransactions(filters = {}) {
 }
 
 function updateSummaryStats() {
-    fetch('/reconciliation/api/stats/', {
+    const filters = getCurrentFilterValues();
+    const queryString = new URLSearchParams(filters).toString();
+    const url = `/reconciliation/api/stats/?${queryString}`;
+    console.log('Updating stats with filters:', url);
+    
+    fetch(url, {
         method: 'GET',
         headers: {
             'X-Requested-With': 'XMLHttpRequest',

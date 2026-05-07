@@ -114,7 +114,7 @@ def bank_accounts(request):
                 'file_extension': statement.file_extension,
                 'file_size': statement.file_size,
                 'bank_account_name': statement.bank_account.name,
-                'created_at': date_format(timezone.localtime(statement.created_at), 'd/m/Y H:i'),
+                'created_at': date_format(statement.created_at, 'd/m/Y H:i'),
                 'period_start': date_format(statement.period_start, 'd/m/Y'),
                 'period_end': date_format(statement.period_end, 'd/m/Y'),
                 'starting_balance': float(statement.starting_balance),
@@ -169,7 +169,7 @@ def upload_statement_api(request):
         from django.utils import timezone
         
         # Formatear fechas usando Django para consistencia con la plantilla
-        created_at_formatted = date_format(timezone.localtime(stmt.created_at), 'd/m/Y H:i')
+        created_at_formatted = date_format(stmt.created_at, 'd/m/Y H:i')
         period_start_formatted = date_format(stmt.period_start, 'd/m/Y')
         period_end_formatted = date_format(stmt.period_end, 'd/m/Y')
 

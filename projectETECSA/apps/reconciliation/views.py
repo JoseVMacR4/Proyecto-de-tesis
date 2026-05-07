@@ -14,7 +14,6 @@ from apps.bank_accounts.models import BankAccount, Office, Operation
 from apps.users.models import Notification, UserActivity
 import json
 import io
-from datetime import datetime
 
 try:
     from openpyxl import Workbook
@@ -223,8 +222,8 @@ def get_reconciliation_data(request):
 					'statement_date': date_format(tx.bank_statement.statement_date, 'd/m/Y') if tx.bank_statement else '',
 					'status': tx.status,
 					'status_display': tx.get_status_display(),
-      				'created_at': timezone.localtime(tx.created_at).strftime('%d/%m/%Y %H:%M') if tx.created_at else '',
-					'updated_at': timezone.localtime(tx.updated_at).strftime('%d/%m/%Y %H:%M') if tx.updated_at else '',
+      				'created_at': date_format(tx.created_at, 'd/m/Y H:i') if tx.created_at else '',
+					'updated_at': date_format(tx.updated_at, 'd/m/Y H:i') if tx.updated_at else '',
 				})
 			except Exception as e:
 				print(f"Error procesando transacción {tx.id}: {str(e)}")
@@ -283,7 +282,7 @@ def reconcile_transaction(request):
                 metadata={'transaction_id': str(tx_id), 'amount': str(transaction.amount), 'currency': transaction.currency}
             )
 
-            updated_at = timezone.localtime(transaction.updated_at).strftime('%d/%m/%Y %H:%M')
+            updated_at = date_format(transaction.updated_at, 'd/m/Y H:i')
 
             return JsonResponse({
                 'status': 'success',
@@ -457,9 +456,99 @@ def get_filter_options(request):
 @login_required
 def get_reconciliation_stats(request):
     try:
-        total_transactions = BankStatementTransaction.objects.count()
-        reconciled_count = BankStatementTransaction.objects.filter(status=BankStatementTransaction.StatusChoices.RECONCILED).count()
-        pending_count = total_transactions - reconciled_count
+        transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement')
+
+        date_range = request.GET.get('date_range', '')
+        date_from = request.GET.get('date_from', '')
+        date_to = request.GET.get('date_to', '')
+        bank = request.GET.get('bank', '')
+        status = request.GET.get('status', '')
+        reference = request.GET.get('reference', '')
+        name = request.GET.get('name', '')
+        office_code = request.GET.get('office_code', '')
+        entry_type = request.GET.get('entry_type', '')
+        operation_type = request.GET.get('operation_type', '')
+        amount_min = request.GET.get('amount_min', '')
+        amount_max = request.GET.get('amount_max', '')
+        currency = request.GET.get('currency', '')
+
+        if date_range:
+            parts = [part.strip() for part in date_range.split('-')]
+            if len(parts) == 2:
+                try:
+                    start_date = timezone.datetime.strptime(parts[0], '%d/%m/%Y').date()
+                    end_date = timezone.datetime.strptime(parts[1], '%d/%m/%Y').date()
+                    transactions = transactions.filter(bank_statement__statement_date__range=(start_date, end_date))
+                except ValueError:
+                    pass
+        elif date_from or date_to:
+            if date_from:
+                try:
+                    start_date = timezone.datetime.strptime(date_from, '%Y-%m-%d').date()
+                    transactions = transactions.filter(bank_statement__statement_date__gte=start_date)
+                except ValueError:
+                    pass
+            if date_to:
+                try:
+                    end_date = timezone.datetime.strptime(date_to, '%Y-%m-%d').date()
+                    transactions = transactions.filter(bank_statement__statement_date__lte=end_date)
+                except ValueError:
+                    pass
+
+        if bank:
+            bank_list = [b.strip() for b in bank.split(',') if b.strip()]
+            if bank_list:
+                transactions = transactions.filter(bank_account__code__in=bank_list)
+
+        if status:
+            status_list = [s.strip() for s in status.split(',') if s.strip()]
+            if status_list:
+                transactions = transactions.filter(status__in=status_list)
+
+        if reference:
+            transactions = transactions.filter(
+                Q(current_reference__icontains=reference) | Q(original_reference__icontains=reference)
+            )
+
+        if name:
+            transactions = transactions.filter(name__icontains=name)
+
+        if office_code:
+            office_list = [o.strip() for o in office_code.split(',') if o.strip()]
+            if office_list:
+                transactions = transactions.filter(office_code__in=office_list)
+
+        if entry_type:
+            entry_list = [e.strip() for e in entry_type.split(',') if e.strip()]
+            if entry_list:
+                transactions = transactions.filter(entry_type__in=entry_list)
+
+        if operation_type:
+            operation_list = [o.strip() for o in operation_type.split(',') if o.strip()]
+            if operation_list:
+                transactions = transactions.filter(operation_type__in=operation_list)
+
+        if amount_min:
+            try:
+                min_amount = Decimal(amount_min)
+                transactions = transactions.filter(amount__gte=min_amount)
+            except:
+                pass
+        if amount_max:
+            try:
+                max_amount = Decimal(amount_max)
+                transactions = transactions.filter(amount__lte=max_amount)
+            except:
+                pass
+
+        if currency:
+            currency_list = [c.strip() for c in currency.split(',') if c.strip()]
+            if currency_list:
+                transactions = transactions.filter(currency__in=currency_list)
+
+        total_transactions = transactions.count()
+        reconciled_count = transactions.filter(status=BankStatementTransaction.StatusChoices.RECONCILED).count()
+        pending_count = transactions.filter(status=BankStatementTransaction.StatusChoices.PENDING).count()
         
         reconciled_percentage = 0
         if total_transactions > 0:
@@ -473,6 +562,8 @@ def get_reconciliation_stats(request):
             'reconciled_percentage': reconciled_percentage,
         })
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
@@ -612,8 +703,8 @@ def get_export_data(request):
                     'statement_date': date_format(tx.bank_statement.statement_date, 'd/m/Y') if tx.bank_statement else '',
                     'status': tx.status,
                     'status_display': tx.get_status_display(),
-                    'created_at': timezone.localtime(tx.created_at).strftime('%d/%m/%Y %H:%M') if tx.created_at else '',
-                    'updated_at': timezone.localtime(tx.updated_at).strftime('%d/%m/%Y %H:%M') if tx.updated_at else '',
+                    'created_at': date_format(tx.created_at, 'd/m/Y H:i') if tx.created_at else '',
+                    'updated_at': date_format(tx.updated_at, 'd/m/Y H:i') if tx.updated_at else '',
                 })
             except Exception as e:
                 print(f"Error procesando transacción {tx.id}: {str(e)}")
@@ -745,8 +836,8 @@ def export_to_xls(transactions, filters):
     buffer = io.BytesIO()
     wb.save(buffer)
     buffer.seek(0)
-    
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
     response = HttpResponse(buffer.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename=transacciones_{timestamp}.xlsx'
     return response
@@ -797,8 +888,8 @@ def export_to_pdf(transactions, filters):
     elements = []
     
     elements.append(Paragraph("Reporte de Transacciones Bancarias", title_style))
-    
-    elements.append(Paragraph(f"Fecha de generación: {datetime.now().strftime('%d/%m/%Y %H:%M')}", subtitle_style))
+
+    elements.append(Paragraph(f"Fecha de generación: {timezone.now().strftime('%d/%m/%Y %H:%M')}", subtitle_style))
     
     filter_lines = []
     if filters.get('date_range'):
@@ -892,9 +983,9 @@ def export_to_pdf(transactions, filters):
     elements.append(Paragraph(f"Monto total: {total_amount:,.2f}", ParagraphStyle('Total', parent=styles['Normal'], fontSize=9, bold=True)))
     
     doc.build(elements)
-    
+
     buffer.seek(0)
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
     response = HttpResponse(buffer.getvalue(), content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=transacciones_{timestamp}.pdf'
     return response

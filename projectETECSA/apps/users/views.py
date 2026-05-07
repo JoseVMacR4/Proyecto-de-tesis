@@ -11,6 +11,7 @@ from apps.users.models import User, UserRole, Role, UserActivity, BugReport
 from apps.users.permissions import can_access_admin
 from apps.bank_accounts.models import BankAccount, Office, Operation
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.views.decorators.http import require_GET, require_POST
 from .models import Notification
 
@@ -75,8 +76,8 @@ def dashboard(request):
         total_transactions = sum(
             bs.entry_count for bs in BankStatement.objects.all()
         )
-        last_update_date = last_statement.statement_date.strftime('%b %d, %Y')
-        last_update_time = last_statement.created_at.strftime('%H:%M')
+        last_update_date = date_format(last_statement.statement_date, 'M d, Y')
+        last_update_time = date_format(last_statement.created_at, 'H:i')
     else:
         total_balance = 0
         available_balance = 0
@@ -94,8 +95,8 @@ def dashboard(request):
         last_account_starting = last_account_stmt.starting_balance
         last_account_ending = last_account_stmt.ending_balance
         last_account_entries = last_account_stmt.entry_count
-        last_account_load_date = last_account_stmt.created_at.strftime('%b %d, %Y')
-        last_account_load_time = last_account_stmt.created_at.strftime('%H:%M')
+        last_account_load_date = date_format(last_account_stmt.created_at, 'M d, Y')
+        last_account_load_time = date_format(last_account_stmt.created_at, 'H:i')
     else:
         last_account_date = 'Sin datos'
         last_account_name = ''
@@ -145,7 +146,7 @@ def dashboard(request):
                 'name': bug.subject,
                 'type': bug.type,
                 'type_name': bug.get_type_display(),
-                'date': bug.updated_at.strftime('%b %d, %Y'),
+                'date': date_format(bug.updated_at, 'M d, Y'),
                 'status': bug.get_status_display(),
             }
             for bug in BugReport.objects.filter(
@@ -738,8 +739,8 @@ def get_users(request):
                 'role_name': main_role,
                 'roles': [r['name'] for r in role_info],
                 'is_active': user.is_active,
-                'created_at': user.created_at.strftime('%d/%m/%Y %H:%M'),
-                'updated_at': user.updated_at.strftime('%d/%m/%Y %H:%M')
+                'created_at': date_format(user.created_at, 'd/m/Y H:i'),
+                'updated_at': date_format(user.updated_at, 'd/m/Y H:i')
             })
         
         active_users = users.filter(is_active=True).count()
@@ -787,8 +788,8 @@ def get_operations(request):
                 'id': str(op.id),
                 'code': op.code,
                 'name': op.name,
-                'created_at': op.created_at.strftime('%d/%m/%Y %H:%M'),
-                'updated_at': op.updated_at.strftime('%d/%m/%Y %H:%M')
+                'created_at': date_format(op.created_at, 'd/m/Y H:i'),
+                'updated_at': date_format(op.updated_at, 'd/m/Y H:i')
             })
         
         return JsonResponse({
@@ -830,8 +831,8 @@ def get_bank_accounts(request):
                 'id': str(bank.id),
                 'code': bank.code,
                 'name': bank.name,
-                'created_at': bank.created_at.strftime('%d/%m/%Y %H:%M'),
-                'updated_at': bank.updated_at.strftime('%d/%m/%Y %H:%M')
+                'created_at': date_format(bank.created_at, 'd/m/Y H:i'),
+                'updated_at': date_format(bank.updated_at, 'd/m/Y H:i')
             })
         
         return JsonResponse({
@@ -872,8 +873,8 @@ def get_offices(request):
                 'id': str(office.id),
                 'code': office.code,
                 'name': office.name,
-                'created_at': office.created_at.strftime('%d/%m/%Y %H:%M'),
-                'updated_at': office.updated_at.strftime('%d/%m/%Y %H:%M')
+                'created_at': date_format(office.created_at, 'd/m/Y H:i'),
+                'updated_at': date_format(office.updated_at, 'd/m/Y H:i')
             })
         
         return JsonResponse({
@@ -920,7 +921,7 @@ def get_unread_notifications(request):
         'id': str(n.id),
         'type': n.type,
         'content': n.content,
-        'created_at': n.created_at.strftime("%d/%m/%Y %H:%M"),
+        'created_at': date_format(n.created_at, 'd/m/Y H:i'),
         'timestamp': int(n.created_at.timestamp() * 1000)
     } for n in notifications]
     
@@ -954,7 +955,7 @@ def get_user_activities(request):
         'action': a.action,
         'description': a.description,
         'metadata': a.metadata,
-        'created_at': a.created_at.strftime('%d/%m/%Y %H:%M'),
+        'created_at': date_format(a.created_at, 'd/m/Y H:i'),
     } for a in activities]
 
     return JsonResponse({
@@ -997,8 +998,8 @@ def get_user_notifications(request):
             'id': str(n.id),
             'type': n.type,
             'content': n.content,
-            'read_at': n.read_at.strftime('%d/%m/%Y %H:%M') if n.read_at else None,
-            'created_at': n.created_at.strftime('%d/%m/%Y %H:%M'),
+            'read_at': date_format(n.read_at, 'd/m/Y H:i') if n.read_at else None,
+            'created_at': date_format(n.created_at, 'd/m/Y H:i'),
             'is_read': n.read_at is not None
         } for n in notifications]
         
@@ -1044,8 +1045,8 @@ def get_reports(request):
             'subject': r.subject,
             'description': r.description,
             'status': r.status,
-            'created_at': r.created_at.strftime('%d/%m/%Y %H:%M'),
-            'updated_at': r.updated_at.strftime('%d/%m/%Y %H:%M'),
+            'created_at': date_format(r.created_at, 'd/m/Y H:i'),
+            'updated_at': date_format(r.updated_at, 'd/m/Y H:i'),
         } for r in reports]
         
         has_next = page < total_pages
