@@ -1022,3 +1022,20 @@
         transform: translateY(0);
     }
 }
+
+/* ===== Sortable Table Headers ===== */
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+th.sortable:hover {
+    background-color: var(--surface-container-high);
+}
+
+th.sortable .sort-icon {
+    font-size: 0.85rem;
+    vertical-align: middle;
+    margin-left: 0.25rem;
+    color: #999;
+}

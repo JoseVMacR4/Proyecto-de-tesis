@@ -439,6 +439,24 @@ def bank_accounts_pagination_api(request):
             except:
                 pass
         
+        # Ordenamiento dinámico
+        sort_column = request.GET.get('sort', '')
+        sort_order = request.GET.get('order', 'desc')
+        
+        sort_mapping = {
+            'starting_balance': '-starting_balance',
+            'ending_balance': '-ending_balance',
+        }
+        
+        if sort_column and sort_column in sort_mapping:
+            if sort_order == 'asc':
+                order_field = sort_mapping[sort_column].lstrip('-')
+            else:
+                order_field = sort_mapping[sort_column]
+            statements = statements.order_by(order_field)
+        else:
+            statements = statements.order_by('-created_at')
+        
         paginator = Paginator(statements, 5)
         page_obj = paginator.get_page(page)
         

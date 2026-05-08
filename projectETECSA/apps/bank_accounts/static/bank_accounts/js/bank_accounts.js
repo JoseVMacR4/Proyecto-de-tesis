@@ -89,6 +89,10 @@ function cleanMessage(message) {
 
 /* ===== Manejo de Estado, Filtros y Paginación Refactorizado ===== */
 
+// Sorting state
+let currentSort = { column: null, direction: 'asc' };
+let sortListenersInitialized = false;
+
 // Leer valores actuales del DOM
 function getFiltersFromDOM() {
     return {
@@ -98,7 +102,9 @@ function getFiltersFromDOM() {
         starting_balance_min: document.getElementById('startingBalanceMin')?.value || '',
         starting_balance_max: document.getElementById('startingBalanceMax')?.value || '',
         ending_balance_min: document.getElementById('endingBalanceMin')?.value || '',
-        ending_balance_max: document.getElementById('endingBalanceMax')?.value || ''
+        ending_balance_max: document.getElementById('endingBalanceMax')?.value || '',
+        sort: currentSort.column || '',
+        order: currentSort.direction || 'asc'
     };
 }
 
@@ -166,6 +172,7 @@ function resetFilters() {
     const bankBtnSpan = document.querySelector('#bankFilterBtn span');
     if (bankBtnSpan) bankBtnSpan.textContent = 'Todos los Bancos';
 
+    clearSortState();
     showNotification('Filtros reiniciados', 'info');
     loadPage(1);
 }
@@ -205,8 +212,9 @@ function initFilterEvents() {
 }
 
 // Carga principal por AJAX
-function loadPage(pageNumber) {
-    const filters = getFiltersFromDOM();
+function loadPage(pageNumber, filters) {
+    if (!filters) filters = getFiltersFromDOM();
+    
     const urlParams = new URLSearchParams();
     
     urlParams.set('page', pageNumber);
@@ -216,7 +224,6 @@ function loadPage(pageNumber) {
 
     const apiUrl = `/bank-accounts/api/pagination/?${urlParams.toString()}`;
 
-    // Mostrar estado de carga en la tabla
     const tbody = document.querySelector('.upload-history-table tbody');
     if (tbody) tbody.style.opacity = '0.5';
 
@@ -229,8 +236,9 @@ function loadPage(pageNumber) {
         
         updateTable(data.statements);
         updatePagination(data.pagination);
+        setupSortListeners();
+        restoreSortState();
         
-        // Sincronizar URL del navegador sin recargar
         window.history.pushState({ page: pageNumber }, '', `?${urlParams.toString()}`);
     })
     .catch(error => {
@@ -256,6 +264,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFilterOptions(); // Rellena dropdown usando la info restaurada
     initFilterEvents();
 
+    // 3.5 Sorting listeners
+    setupSortListeners();
+    restoreSortState();
+
     // 4. Paginación (delegation)
     const paginationFooter = document.querySelector('.pagination-footer');
     if (paginationFooter) {
@@ -264,7 +276,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!btn || btn.disabled || btn.hasAttribute('aria-disabled')) return;
             e.preventDefault();
             const page = btn.getAttribute('data-page');
-            if (page) loadPage(parseInt(page));
+            if (page) {
+                const filters = getFiltersFromDOM();
+                loadPage(parseInt(page), filters);
+            }
         });
     }
 
@@ -1157,4 +1172,86 @@ function showNotification(message, type = 'info') {
             alertDiv.remove();
         }
     }, 5000);
+}
+
+// ===== Sorting Functions =====
+function setupSortListeners() {
+    if (sortListenersInitialized) return;
+    
+    const sortableHeaders = document.querySelectorAll('th.sortable');
+    sortableHeaders.forEach(th => {
+        th.addEventListener('click', (e) => {
+            const icon = th.querySelector('.sort-icon');
+            if (!icon) return;
+            
+            const column = icon.dataset.sort;
+            handleSort(column, th);
+        });
+    });
+    
+    sortListenersInitialized = true;
+}
+
+function handleSort(column, thElement) {
+    if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+    }
+    
+    updateSortIcons(column, currentSort.direction);
+    saveSortState();
+    
+    const filters = getFiltersFromDOM();
+    filters.sort = column;
+    filters.order = currentSort.direction;
+    filters.page = 1;
+    loadPage(1, filters);
+}
+
+function updateSortIcons(activeColumn, direction) {
+    const allIcons = document.querySelectorAll('th.sortable .sort-icon');
+    allIcons.forEach(icon => {
+        if (icon.dataset.sort === activeColumn) {
+            icon.textContent = direction === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
+        } else {
+            icon.textContent = 'unfold_more';
+        }
+    });
+}
+
+function saveSortState() {
+    const userData = document.getElementById('userPermissionsData');
+    const userId = userData ? userData.dataset.userId : 'anonymous';
+    sessionStorage.setItem(`bank_accounts_sort_${userId}`, JSON.stringify(currentSort));
+}
+
+function restoreSortState() {
+    const userData = document.getElementById('userPermissionsData');
+    const userId = userData ? userData.dataset.userId : 'anonymous';
+    const saved = sessionStorage.getItem(`bank_accounts_sort_${userId}`);
+    
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (parsed.column && parsed.direction) {
+                currentSort = parsed;
+                updateSortIcons(currentSort.column, currentSort.direction);
+            }
+        } catch (e) {
+            console.error('Error restoring sort state:', e);
+        }
+    }
+}
+
+function clearSortState() {
+    currentSort = { column: null, direction: 'asc' };
+    const userData = document.getElementById('userPermissionsData');
+    const userId = userData ? userData.dataset.userId : 'anonymous';
+    sessionStorage.removeItem(`bank_accounts_sort_${userId}`);
+    const allIcons = document.querySelectorAll('th.sortable .sort-icon');
+    allIcons.forEach(icon => {
+        icon.textContent = 'unfold_more';
+    });
 }
