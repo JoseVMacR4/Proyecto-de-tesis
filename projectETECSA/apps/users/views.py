@@ -1024,7 +1024,7 @@ def update_avatar_color(request):
     """Actualiza el color del avatar del usuario."""
     try:
         data = json.loads(request.body)
-        color = data.get('avatar_color', '#1E88E5')
+        color = data.get('avatar_color', '#003E6F')
         
         # Validar que es un color hex válido
         if not color.startswith('#') or len(color) != 7:

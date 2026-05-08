@@ -103,7 +103,7 @@ function initAvatarColorPicker() {
     if (!colorSwatches.length || !profileAvatarCircle) return;
     
     // Get current color from data attribute or fall back to default
-    const currentColor = profileAvatarCircle.dataset.color || '#1E88E5';
+    const currentColor = profileAvatarCircle.dataset.color || '#003E6F';
     
     // Mark active color based on dataset.color only
     colorSwatches.forEach(swatch => {

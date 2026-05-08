@@ -74,7 +74,7 @@
             <div class="position-relative">
                 <button class="btn btn-link p-0 text-decoration-none" type="button" id="userMenuBtn"
                     aria-expanded="false" style="width: 44px; height: 44px;">
-                    <div class="user-avatar-circle" data-color="{{ user.avatar_color|default:'#1E88E5' }}" style="background-color: {{ user.avatar_color|default:'#1E88E5' }};">
+                    <div class="user-avatar-circle" data-color="{{ user.avatar_color|default:'#003E6F' }}" style="background-color: {{ user.avatar_color|default:'#003E6F' }};">
                         {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
                     </div>
                 </button>
@@ -82,7 +82,7 @@
         </div>
     </nav>
 
-    <div class="notification-dropdown position-fixed" style="top: 52px; right: 30px; z-index: 9999;">
+    <div class="notification-dropdown position-fixed" style="top: 62px; right: 30px; z-index: 9999;">
         <div class="card shadow-lg border-0" id="notificationMenu"
             style="width: 280px; max-height: 320px; overflow-y: auto; display: none;">
             <div class="card-header d-flex justify-content-between align-items-center fw-bold bg-white">
@@ -103,7 +103,7 @@
     </div>
 
     <!-- User Menu Dropdown -->
-    <div class="user-menu-dropdown position-fixed" style="top: 55px; right: 10px; z-index: 9999;">
+    <div class="user-menu-dropdown position-fixed" style="top: 62px; right: 10px; z-index: 9999;">
         <div class="card shadow-lg border-0" id="userMenu"
             style="width: 220px; display: none;">
             <div class="card-body p-0">
