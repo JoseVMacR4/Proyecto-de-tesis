@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="max-width-container">
+<div class="max-width-container" data-user-can-access-admin="{{ user_permissions.can_access_admin|yesno:"true,false" }}">
     <!-- Section Header -->
     <header class="settings-header">
         <h1 class="font-manrope fw-extrabold text-primary mb-1" style="letter-spacing: -0.02em;">Configuración del Sistema</h1>
@@ -190,8 +190,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script>
-    window.userCanAccessAdmin = {{ user_permissions.can_access_admin|yesno:"true,false" }};
-</script>
 <script src="{% static 'users/js/settings.js' %}"></script>
 {% endblock %}

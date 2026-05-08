@@ -5,6 +5,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] DOMContentLoaded ejecutado');
 
+    const settingsContainer = document.querySelector('[data-user-can-access-admin]');
+    window.userCanAccessAdmin = settingsContainer?.dataset.userCanAccessAdmin === 'true';
+
     // ===== TABS NAVIGATION =====
     const tabs = document.querySelectorAll('.settings-tab');
     const tabContents = document.querySelectorAll('.tab-content');

@@ -107,12 +107,53 @@
             </div>
             <nav class="d-flex flex-wrap justify-content-between gap-4 gap-md-5">
                 <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Seguridad</a>
-                <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Términos</a>
+                <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Términos y Condiciones</a>
                 <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Documentación</a>
-                <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Soporte</a>
+                <a href="#" id="soporteLink" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link" data-bs-toggle="modal" data-bs-target="#soporteModal">Soporte</a>
             </nav>
         </div>
     </footer>
+
+    <!-- Soporte Modal -->
+    <div class="modal fade" id="soporteModal" tabindex="-1" aria-labelledby="soporteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-2">
+                    <h5 class="modal-title fw-extrabold text-primary-dark tracking-tight" id="soporteModalLabel">Soporte Técnico</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <div class="contact-item d-flex align-items-center gap-3 mb-3">
+                        <div class="contact-icon bg-light rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <img src="{% static 'svg/user.svg' %}" alt="Usuario" width="22" height="22">
+                        </div>
+                        <div class="contact-info flex-grow-1">
+                            <p class="mb-0 small text-muted fw-medium text-uppercase tracking-widest">Desarrollador</p>
+                            <p class="mb-0 fw-bold text-primary-dark">José Enrique Villafruela Macias</p>
+                        </div>
+                    </div>
+                    <div class="contact-item d-flex align-items-center gap-3 mb-3">
+                        <div class="contact-icon bg-light rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <img src="{% static 'svg/mail.svg' %}" alt="Email" width="22" height="22">
+                        </div>
+                        <div class="contact-info flex-grow-1">
+                            <p class="mb-0 small text-muted fw-medium text-uppercase tracking-widest">Email</p>
+                            <p class="mb-0 fw-bold text-primary-dark">jose.vmac28@gmail.com</p>
+                        </div>
+                    </div>
+                    <div class="contact-item d-flex align-items-center gap-3">
+                        <div class="contact-icon bg-light rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <img src="{% static 'svg/phone.svg' %}" alt="Teléfono" width="22" height="22">
+                        </div>
+                        <div class="contact-info flex-grow-1">
+                            <p class="mb-0 small text-muted fw-medium text-uppercase tracking-widest">Teléfono</p>
+                            <p class="mb-0 fw-bold text-primary-dark">+53 55317542</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Bootstrap JS (local) -->
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>

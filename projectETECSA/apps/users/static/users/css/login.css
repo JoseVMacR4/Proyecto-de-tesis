@@ -172,3 +172,33 @@ body {
         padding: 2rem !important;
     }
 }
+
+/* Soporte Modal */
+#soporteModal .modal-dialog {
+    max-width: 400px;
+}
+
+#soporteModal .modal-content {
+    background-color: #ffffff;
+}
+
+#soporteModal .btn-close {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+#soporteModal .btn-close:hover {
+    opacity: 1;
+}
+
+#soporteModal .contact-icon {
+    flex-shrink: 0;
+}
+
+#soporteModal .contact-info {
+    min-width: 0;
+}
+
+#soporteModal .contact-info p:last-child {
+    font-size: 0.95rem;
+}

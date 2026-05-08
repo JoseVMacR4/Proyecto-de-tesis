@@ -102,8 +102,23 @@ def get_reconciliation_data(request):
 		amount_max = request.GET.get('amount_max', '')
 		currency = request.GET.get('currency', '')
 		page = request.GET.get('page', 1)
+		sort_column = request.GET.get('sort', '')
+		sort_order = request.GET.get('order', 'asc')
 
-		transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement').order_by('-bank_statement__statement_date', 'current_reference')
+		transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement')
+
+		# Ordenamiento dinámico
+		sort_mapping = {
+			'date': 'bank_statement__statement_date',
+			'operations': 'operation_count',
+			'amount': 'amount',
+		}
+
+		if sort_column and sort_column in sort_mapping:
+			order_prefix = '-' if sort_order == 'desc' else ''
+			transactions = transactions.order_by(f"{order_prefix}{sort_mapping[sort_column]}")
+		else:
+			transactions = transactions.order_by('-bank_statement__statement_date')
 
 		# Filtro por rango de fechas
 		if date_range:

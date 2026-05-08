@@ -96,6 +96,10 @@ document.addEventListener('DOMContentLoaded', function() {
 let savedSelectedIds = [];
 let pendingRestore = false;
 
+// Sorting state
+let currentSort = { column: null, direction: 'asc' };
+let sortListenersInitialized = false;
+
 function getStorageKey(key) {
     const userData = document.getElementById('userPermissionsData');
     const userId = userData ? userData.dataset.userId : 'anonymous';
@@ -505,7 +509,7 @@ function applyFilters() {
         amountMax = '';
     }
     
-    currentFilters = {
+currentFilters = {
         date_from: document.getElementById('dateFrom')?.value || '',
         date_to: document.getElementById('dateTo')?.value || '',
         bank: bankValue,
@@ -518,6 +522,8 @@ function applyFilters() {
         amount_min: amountMin,
         amount_max: amountMax,
         currency: getFilterValues('currencyFilterMenu'),
+        sort: currentSort.column || '',
+        order: currentSort.direction || 'asc',
         filterPanelOpen: document.getElementById('filterContainer')?.style.display !== 'none',
         page: pendingRestore ? (currentFilters.page || 1) : 1
     };
@@ -757,7 +763,7 @@ function createTransactionRow(tx) {
     tr.setAttribute('data-updated-at', tx.updated_at || '--');
 
     const amountClass = tx.entry_type === 'Db' ? 'error' : 'primary';
-    const amountSign = tx.entry_type === 'Db' ? '-' : '';
+    const amountSign = '';
     const statusClass = tx.status === 'reconciled' ? 'status-matched' : 'status-pending';
     const statusText = tx.status_display;
 
@@ -928,11 +934,14 @@ function resetFilters() {
         }
     });
     
-    // 4. Limpiar los inputs ocultos
+    // 5. Limpiar los inputs ocultos
     document.querySelectorAll('input[type="hidden"].filter-input').forEach(input => {
         input.value = '';
     });
 
+    // 6. Limpiar estado de ordenamiento
+    clearSortState();
+    
     // Disparar búsqueda en blanco
     applyFilters();
     showNotification('Filtros reiniciados correctamente', 'info');
@@ -953,6 +962,8 @@ function getCurrentFilterValues() {
         amount_min: document.getElementById('amountMinFilter')?.value || '',
         amount_max: document.getElementById('amountMaxFilter')?.value || '',
         currency: getFilterValues('currencyFilterMenu'),
+        sort: currentSort.column || '',
+        order: currentSort.direction || 'asc',
         page: 1
     };
 }
@@ -977,8 +988,11 @@ function loadTransactions(filters = {}) {
     .then(response => response.json())
     .then(data => {
         if (data.status === 'success') {
+            window.loadedTransactions = data.transactions;
             updateTable(data.transactions);
             updatePagination(data);
+            setupSortListeners();
+            restoreSortState();
             updateSummaryStats();
         }
     })
@@ -1023,6 +1037,120 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+// ===== Sorting Functions =====
+function setupSortListeners() {
+    if (sortListenersInitialized) return;
+    
+    const sortableHeaders = document.querySelectorAll('th.sortable');
+    sortableHeaders.forEach(th => {
+        th.addEventListener('click', (e) => {
+            const icon = th.querySelector('.sort-icon');
+            if (!icon) return;
+            
+            const column = icon.dataset.sort;
+            handleSort(column, th);
+        });
+    });
+    
+    sortListenersInitialized = true;
+}
+
+function handleSort(column, thElement) {
+    if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+    }
+    
+    updateSortIcons(column, currentSort.direction);
+    saveSortState();
+    
+    const filters = getCurrentFilterValues();
+    filters.page = 1;
+    loadTransactions(filters);
+}
+
+function sortTransactions(transactions, column, direction) {
+    return transactions.slice().sort((a, b) => {
+        let valA, valB;
+        
+        switch(column) {
+            case 'date':
+                valA = new Date(a.date);
+                valB = new Date(b.date);
+                break;
+            case 'operations':
+                valA = parseInt(a.operations) || 0;
+                valB = parseInt(b.operations) || 0;
+                break;
+            case 'amount':
+                valA = typeof a.amount === 'number' ? a.amount : parseFloat(String(a.amount).replace(/[,.€]/g, '').replace(/[^\d.-]/g, '')) || 0;
+                valB = typeof b.amount === 'number' ? b.amount : parseFloat(String(b.amount).replace(/[,.€]/g, '').replace(/[^\d.-]/g, '')) || 0;
+                break;
+            default:
+                return 0;
+        }
+        
+        if (valA < valB) return direction === 'asc' ? -1 : 1;
+        if (valA > valB) return direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+}
+
+function updateSortIcons(activeColumn, direction) {
+    const allIcons = document.querySelectorAll('th.sortable .sort-icon');
+    allIcons.forEach(icon => {
+        if (icon.dataset.sort === activeColumn) {
+            icon.textContent = direction === 'asc' ? 'keyboard_arrow_up' : 'keyboard_arrow_down';
+        } else {
+            icon.textContent = 'unfold_more';
+        }
+    });
+}
+
+function saveSortState() {
+    const userData = document.getElementById('userPermissionsData');
+    const userId = userData ? userData.dataset.userId : 'anonymous';
+    sessionStorage.setItem(`reconciliation_sort_${userId}`, JSON.stringify(currentSort));
+}
+
+function restoreSortState() {
+    const userData = document.getElementById('userPermissionsData');
+    const userId = userData ? userData.dataset.userId : 'anonymous';
+    const saved = sessionStorage.getItem(`reconciliation_sort_${userId}`);
+    
+    if (saved) {
+        try {
+            const parsed = JSON.parse(saved);
+            if (parsed.column && parsed.direction) {
+                currentSort = parsed;
+                updateSortIcons(currentSort.column, currentSort.direction);
+                
+                if (window.loadedTransactions && window.loadedTransactions.length > 0) {
+                    const sortedTx = sortTransactions(window.loadedTransactions, currentSort.column, currentSort.direction);
+                    updateTable(sortedTx);
+                }
+            }
+        } catch (e) {
+            console.error('Error restoring sort state:', e);
+        }
+    }
+}
+
+function clearSortState() {
+    currentSort = { column: null, direction: 'asc' };
+    
+    const userData = document.getElementById('userPermissionsData');
+    const userId = userData ? userData.dataset.userId : 'anonymous';
+    sessionStorage.removeItem(`reconciliation_sort_${userId}`);
+    
+    const allIcons = document.querySelectorAll('th.sortable .sort-icon');
+    allIcons.forEach(icon => {
+        icon.textContent = 'unfold_more';
+    });
 }
 
 // ===== Tabla y Acciones =====
@@ -1283,7 +1411,6 @@ function reviewError(reference) {
 
 // ===== Paginación =====
 function setupPaginationListeners() {
-    // Seleccionamos los nuevos botones creados dinámicamente con la clase 'page-link-btn'
     document.querySelectorAll('.page-link-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -1293,11 +1420,9 @@ function setupPaginationListeners() {
             const targetPage = this.getAttribute('data-page');
             
             if (targetPage) {
-                // Actualizamos la página de los filtros activos sin borrarlos
-                currentFilters.page = parseInt(targetPage);
-                
-                // Cargar transacciones preservando los filtros
-                loadTransactions(currentFilters);
+                const filters = getCurrentFilterValues();
+                filters.page = parseInt(targetPage);
+                loadTransactions(filters);
             }
         });
     });

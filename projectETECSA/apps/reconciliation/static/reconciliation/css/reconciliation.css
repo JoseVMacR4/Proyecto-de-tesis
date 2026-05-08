@@ -779,3 +779,21 @@
     width: 100%;
     font-size: 0.875rem;
 }
+
+/* ===== Sortable Table Headers ===== */
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+
+th.sortable:hover {
+    background-color: var(--surface-container-high);
+}
+
+th.sortable .sort-icon {
+    font-size: 0.85rem;
+    vertical-align: middle;
+    margin-left: 0.25rem;
+    color: #999;
+}
