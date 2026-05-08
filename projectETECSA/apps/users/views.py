@@ -1018,6 +1018,37 @@ def get_user_notifications(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
+@login_required
+@require_http_methods(["POST"])
+def update_avatar_color(request):
+    """Actualiza el color del avatar del usuario."""
+    try:
+        data = json.loads(request.body)
+        color = data.get('avatar_color', '#1E88E5')
+        
+        # Validar que es un color hex válido
+        if not color.startswith('#') or len(color) != 7:
+            return JsonResponse({'success': False, 'error': 'Color inválido'}, status=400)
+        
+        # Guardar en la base de datos
+        request.user.avatar_color = color
+        request.user.save(update_fields=['avatar_color'])
+        
+        # Actualizar la sesión del usuario para que el cambio se refleje inmediatamente
+        request.session['avatar_color'] = color
+        
+        # También actualizar el usuario en la sesión de Django
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        # Actualizar el caché del usuario en la sesión
+        request.user.refresh_from_db()
+        
+        return JsonResponse({'success': True, 'color': color})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Datos inválidos'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
 
 @login_required
 def get_reports(request):

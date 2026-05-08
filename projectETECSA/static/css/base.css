@@ -420,16 +420,16 @@ h1, h2, h3, h4, h5, h6, .font-manrope {
 
 /* User Avatar Circle */
 .user-avatar-circle {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary-container) 0%, var(--primary) 100%);
+    background-color: var(--user-avatar-color, #1E88E5);
     color: #ffffff;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-family: 'Manrope', sans-serif;
     transition: all 0.2s ease;
 }

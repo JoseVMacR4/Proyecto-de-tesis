@@ -89,9 +89,96 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // ===== AVATAR COLOR PICKER =====
+    initAvatarColorPicker();
+
     // ===== INITIALIZATION LOG =====
     console.log('Settings Page Initialized Successfully');
 });
+
+function initAvatarColorPicker() {
+    const colorSwatches = document.querySelectorAll('.color-swatch');
+    const profileAvatarCircle = document.getElementById('profileAvatarCircle');
+    
+    if (!colorSwatches.length || !profileAvatarCircle) return;
+    
+    // Get current color from data attribute or fall back to default
+    const currentColor = profileAvatarCircle.dataset.color || '#1E88E5';
+    
+    // Mark active color based on dataset.color only
+    colorSwatches.forEach(swatch => {
+        const buttonColor = swatch.dataset.color;
+        
+        if (buttonColor === currentColor) {
+            swatch.classList.add('active');
+        }
+        
+        swatch.addEventListener('click', async function() {
+            const newColor = this.dataset.color;
+            
+            // Update active state
+            colorSwatches.forEach(s => s.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Save to backend
+            const success = await saveAvatarColor(newColor);
+            if (success) {
+                // Actualizar el círculo del tab de perfil
+                if (profileAvatarCircle) {
+                    profileAvatarCircle.style.backgroundColor = newColor;
+                    profileAvatarCircle.dataset.color = newColor;
+                }
+                
+                // Actualizar el círculo del navbar dinámicamente
+                const navbarAvatar = document.querySelector('.user-avatar-circle');
+                if (navbarAvatar) {
+                    navbarAvatar.style.backgroundColor = newColor;
+                    navbarAvatar.dataset.color = newColor;
+                }
+            }
+        });
+    });
+}
+
+async function saveAvatarColor(color) {
+    try {
+        const response = await fetch('/api/user/avatar-color/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ avatar_color: color })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            return true;
+        } else {
+            console.error('Error saving avatar color:', data.error);
+            return false;
+        }
+    } catch (error) {
+        console.error('Error saving avatar color:', error);
+        return false;
+    }
+}
+
+function rgbToHex(rgb) {
+    if (!rgb || rgb === '') return '';
+    // Handle rgb(r, g, b) format
+    if (rgb.startsWith('rgb')) {
+        const values = rgb.match(/\d+/g);
+        if (values && values.length >= 3) {
+            return '#' + values.slice(0, 3).map(x => {
+                const hex = parseInt(x).toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+        }
+    }
+    return rgb;
+}
 
 async function loadUserActivities() {
     console.log('[DEBUG] loadUserActivities iniciado');

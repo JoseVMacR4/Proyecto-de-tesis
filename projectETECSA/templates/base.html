@@ -73,9 +73,9 @@
             <!-- User Menu Dropdown -->
             <div class="position-relative">
                 <button class="btn btn-link p-0 text-decoration-none" type="button" id="userMenuBtn"
-                    aria-expanded="false" style="width: 36px; height: 36px;">
-                    <div class="user-avatar-circle">
-                        {{ user.username|slice:":1"|upper }}
+                    aria-expanded="false" style="width: 44px; height: 44px;">
+                    <div class="user-avatar-circle" data-color="{{ user.avatar_color|default:'#1E88E5' }}" style="background-color: {{ user.avatar_color|default:'#1E88E5' }};">
+                        {{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}
                     </div>
                 </button>
             </div>

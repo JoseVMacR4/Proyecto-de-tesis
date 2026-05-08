@@ -28,12 +28,15 @@
         <div class="tab-content active" data-tab-content="profile">
             <div class="settings-grid">
                 <!-- Left Column: Profile Card (30%) -->
-                <div class="settings-card" style="grid-column: span 4;">
+                <div class="settings-card profile-card" style="grid-column: span 4;">
                     <div class="settings-card-header">
                         <h3 class="settings-card-title">Perfil del Usuario</h3>
                         <span class="material-symbols-outlined settings-card-icon">person</span>
                     </div>
                     <div class="profile-avatar-container">
+                        <div class="profile-avatar-circle" id="profileAvatarCircle" style="background-color: {{ user.avatar_color|default:'#1E88E5' }};" data-color="{{ user.avatar_color|default:'#1E88E5' }}">
+                            {{ profile_user.first_name|slice:":1"|upper }}{{ profile_user.last_name|slice:":1"|upper }}
+                        </div>
                         <span class="profile-name">{{ profile_user.first_name }} {{ profile_user.last_name }}</span>
                         <span class="profile-role">{{ profile_role }}</span>
                     </div>
@@ -53,6 +56,33 @@
                         <div class="profile-info-item">
                             <label class="profile-info-label">Último Acceso</label>
                             <span class="profile-info-value">{% if profile_user.last_login %}{{ profile_user.last_login|date:"d/m/Y H:i:s" }}{% else %}Primera vez{% endif %}</span>
+                        </div>
+                    </div>
+                    <div class="profile-color-bar">
+                        <span class="profile-color-label">Color de avatar:</span>
+                        <div class="profile-color-options">
+                            <button class="color-swatch" data-color="#E53935" style="background-color: #E53935;" title="Rojo"></button>
+                            <button class="color-swatch" data-color="#FB8C00" style="background-color: #FB8C00;" title="Naranja"></button>
+                            <button class="color-swatch" data-color="#FDD835" style="background-color: #FDD835;" title="Amarillo"></button>
+                            <button class="color-swatch" data-color="#43A047" style="background-color: #43A047;" title="Verde"></button>
+                            <button class="color-swatch" data-color="#1E88E5" style="background-color: #1E88E5;" title="Azul"></button>
+                            <button class="color-swatch" data-color="#8E24AA" style="background-color: #8E24AA;" title="Púrpura"></button>
+                        </div>
+                        <div class="profile-color-options">
+                            <button class="color-swatch" data-color="#EC407A" style="background-color: #EC407A;" title="Rosa"></button>
+                            <button class="color-swatch" data-color="#00ACC1" style="background-color: #00ACC1;" title="Cian"></button>
+                            <button class="color-swatch" data-color="#7CB342" style="background-color: #7CB342;" title="Lima"></button>
+                            <button class="color-swatch" data-color="#8D6E63" style="background-color: #8D6E63;" title="Marrón"></button>
+                            <button class="color-swatch" data-color="#757575" style="background-color: #757575;" title="Gris"></button>
+                            <button class="color-swatch" data-color="#424242" style="background-color: #424242;" title="Negro"></button>
+                        </div>
+                        <div class="profile-color-options">
+                            <button class="color-swatch" data-color="#26A69A" style="background-color: #26A69A;" title="Turquesa"></button>
+                            <button class="color-swatch" data-color="#5C6BC0" style="background-color: #5C6BC0;" title="Índigo"></button>
+                            <button class="color-swatch" data-color="#FF7043" style="background-color: #FF7043;" title="Coral"></button>
+                            <button class="color-swatch" data-color="#9575CD" style="background-color: #9575CD;" title="Lavanda"></button>
+                            <button class="color-swatch" data-color="#FF8A65" style="background-color: #FF8A65;" title="Salmón"></button>
+                            <button class="color-swatch" data-color="#29B6F6" style="background-color: #29B6F6;" title="Azul cielo"></button>
                         </div>
                     </div>
                 </div>

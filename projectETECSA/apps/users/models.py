@@ -35,6 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
+    avatar_color = models.CharField(max_length=7, default='#1E88E5')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

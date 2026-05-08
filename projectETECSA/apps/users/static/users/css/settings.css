@@ -62,6 +62,12 @@
     border: 1px solid rgba(193, 199, 210, 0.1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
     transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-card.profile-card {
+    min-height: 100%;
 }
 
 .settings-card:hover {
@@ -1013,4 +1019,85 @@
 .btn-action-delete:hover {
     color: #dc3545 !important;
     transform: scale(1.1);
+}
+
+/* Profile Avatar Circle */
+.profile-avatar-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.75rem;
+    font-family: 'Manrope', sans-serif;
+    margin: 0 auto 1rem auto;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 62, 111, 0.25);
+}
+
+.profile-avatar-circle:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(0, 62, 111, 0.35);
+}
+
+/* Profile Color Bar */
+.profile-color-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-top: auto;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--outline-variant);
+    width: 100%;
+}
+
+.profile-color-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+    white-space: nowrap;
+}
+
+.profile-color-options {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.color-swatch:hover {
+    transform: scale(1.15);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.color-swatch.active {
+    border-color: var(--on-surface);
+    transform: scale(1.1);
+}
+
+@media (max-width: 576px) {
+    .profile-color-bar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .color-swatch {
+        width: 28px;
+        height: 28px;
+    }
 }
