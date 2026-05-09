@@ -220,9 +220,11 @@ def upload_statement_api(request):
 
     except ValueError as e:
         logger.warning(f"Validación de extracto falló: {str(e)}")
+        Notification.objects.create(user=request.user, type='error', content=f"Error al subir extracto: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
     except Exception as e:
         logger.error(f"Error al procesar extracto: {str(e)}")
+        Notification.objects.create(user=request.user, type='error', content="Error al procesar extracto bancario")
         return JsonResponse({'success': False, 'error': 'Error interno del servidor.'}, status=500)
 
 
@@ -285,11 +287,13 @@ def get_statement_detail(request, statement_file):
         
     except BankStatement.DoesNotExist:
         logger.error(f"Estado de cuenta no encontrado: {statement_file}")
+        Notification.objects.create(user=request.user, type='error', content="Estado de cuenta no encontrado")
         return JsonResponse({
             'error': 'Estado de cuenta no encontrado'
         }, status=404)
     except Exception as e:
         logger.error(f"Error al obtener detalles del estado: {str(e)}", exc_info=True)
+        Notification.objects.create(user=request.user, type='error', content="Error al obtener detalles del estado de cuenta")
         return JsonResponse({
             'error': f'Error al obtener el estado de cuenta: {str(e)}'
         }, status=500)
@@ -328,17 +332,20 @@ def download_statement(request, statement_file):
             return response
         except IOError as io_err:
             logger.error(f"Error al abrir archivo: {str(io_err)}")
+            Notification.objects.create(user=request.user, type='error', content="Error al abrir archivo para descarga")
             return JsonResponse({
                 'error': f'Error al abrir archivo: {str(io_err)}'
             }, status=500)
         
     except BankStatement.DoesNotExist:
         logger.error(f"Estado de cuenta no encontrado: {statement_file}")
+        Notification.objects.create(user=request.user, type='error', content="Estado de cuenta no encontrado para descarga")
         return JsonResponse({
             'error': 'Estado de cuenta no encontrado'
         }, status=404)
     except Exception as e:
         logger.error(f"Error al descargar estado: {str(e)}", exc_info=True)
+        Notification.objects.create(user=request.user, type='error', content="Error al descargar estado de cuenta")
         return JsonResponse({
             'error': f'Error al descargar el estado de cuenta: {str(e)}'
         }, status=500)
@@ -365,6 +372,7 @@ def get_filter_options(request):
             }
         })
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content="Error al obtener opciones de filtro")
         return JsonResponse({
             'status': 'error',
             'message': str(e)
@@ -505,6 +513,7 @@ def bank_accounts_pagination_api(request):
             }
         })
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content="Error al cargar estados de cuenta")
         return JsonResponse({
             'status': 'error',
             'message': str(e)

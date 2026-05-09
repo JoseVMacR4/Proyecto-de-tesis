@@ -92,10 +92,12 @@
         <span id="selectedCountText">0</span>&nbsp;<span id="selectedCountLabel">Seleccionada</span>
         <span class="material-symbols-outlined ms-1" style="font-size: 0.9rem;">close</span>
     </span>
+    {% if user_permissions.can_reconcile %}
     <button id="bulkReconcileBtn" class="btn btn-success d-flex align-items-center gap-2 shadow-sm" style="display: none;" onclick="openBulkReconcileModal()">
         <span class="material-symbols-outlined" style="font-size: 1.2rem;">sync</span>
         Conciliar Seleccionadas
     </button>
+    {% endif %}
 </div>
 
 <div id="filterContainer" class="filter-bar mb-4" style="display: none;">

@@ -293,6 +293,7 @@ def create_user(request):
 
         return JsonResponse({'success': True, 'message': 'Usuario creado exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al crear usuario: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -329,6 +330,7 @@ def update_user(request, user_id):
         
         return JsonResponse({'success': True, 'message': 'Usuario actualizado exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar usuario: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -357,6 +359,7 @@ def delete_user(request, user_id):
 
         return JsonResponse({'success': True, 'message': 'Usuario eliminado exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al eliminar usuario: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -391,6 +394,7 @@ def create_operation(request):
 
         return JsonResponse({'success': True, 'message': 'Operación creada exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al crear operación: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -414,6 +418,7 @@ def update_operation(request, operation_id):
         
         return JsonResponse({'success': True, 'message': 'Operación actualizada exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar operación: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -442,6 +447,7 @@ def delete_operation(request, operation_id):
 
         return JsonResponse({'success': True, 'message': 'Operación eliminada exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al eliminar operación: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -468,8 +474,9 @@ def get_operations(request):
             'success': True,
             'operations': operations_data,
             'stats': stats
-        })
+})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al obtener reportes: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -504,6 +511,7 @@ def create_bank_account(request):
 
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria creada exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al crear cuenta bancaria: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -527,6 +535,7 @@ def update_bank_account(request, account_id):
         
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria actualizada exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar cuenta bancaria: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -555,11 +564,13 @@ def delete_bank_account(request, account_id):
 
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria eliminada exitosamente'})
     except ProtectedError:
+        Notification.objects.create(user=request.user, type='error', content="No se puede eliminar cuenta bancaria: está asociada a transacciones")
         return JsonResponse({
             'success': False,
             'error': 'No se puede eliminar porque está asociado a transacciones.'
         }, status=400)
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al eliminar cuenta bancaria: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -588,6 +599,7 @@ def get_bank_accounts(request):
             'stats': stats
         })
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al obtener cuentas bancarias: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -622,6 +634,7 @@ def create_office(request):
 
         return JsonResponse({'success': True, 'message': 'Oficina creada exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al crear oficina: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -645,6 +658,7 @@ def update_office(request, office_id):
         
         return JsonResponse({'success': True, 'message': 'Oficina actualizada exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar oficina: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -673,6 +687,7 @@ def delete_office(request, office_id):
 
         return JsonResponse({'success': True, 'message': 'Oficina eliminada exitosamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al eliminar oficina: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -701,6 +716,7 @@ def get_offices(request):
             'stats': stats
         })
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al obtener oficinas: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 @csrf_exempt
@@ -1045,8 +1061,10 @@ def update_avatar_color(request):
         
         return JsonResponse({'success': True, 'color': color})
     except json.JSONDecodeError:
+        Notification.objects.create(user=request.user, type='error', content="Error al actualizar color de avatar: datos inválidos")
         return JsonResponse({'success': False, 'error': 'Datos inválidos'}, status=400)
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar color de avatar: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
@@ -1129,6 +1147,7 @@ def create_report(request):
             'report_id': str(report.id)
         })
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al enviar reporte: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
@@ -1149,11 +1168,28 @@ def update_report_status(request, report_id):
         report.status = new_status
         report.save()
         
+        if new_status == 'resolved':
+            Notification.objects.create(
+                user=request.user,
+                type='success',
+                content=f'Reporte "{report.subject}" marcado como resuelto'
+            )
+        else:
+            Notification.objects.create(
+                user=request.user,
+                type='info',
+                content=f'Reporte "{report.subject}" marcado como pendiente'
+            )
+        
         return JsonResponse({
             'success': True,
             'message': f'Reporte marcado como {"solucionado" if new_status == "resolved" else "pendiente"}'
         })
+    except json.JSONDecodeError:
+        Notification.objects.create(user=request.user, type='error', content="Error al actualizar reporte: datos inválidos")
+        return JsonResponse({'success': False, 'error': 'Datos inválidos'}, status=400)
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar reporte: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
@@ -1165,8 +1201,16 @@ def delete_report(request, report_id):
             return JsonResponse({'success': False, 'error': 'No tienes permiso para realizar esta acción'}, status=403)
         
         report = get_object_or_404(BugReport, id=report_id)
+        report_subject = report.subject
         report.delete()
+        
+        Notification.objects.create(
+            user=request.user,
+            type='warning',
+            content=f'Reporte "{report_subject}" eliminado'
+        )
         
         return JsonResponse({'success': True, 'message': 'Reporte eliminado correctamente'})
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al eliminar reporte: {str(e)}")
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

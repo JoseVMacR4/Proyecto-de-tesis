@@ -745,6 +745,10 @@ function showToast(message, type) {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 4000);
+
+    if (type !== 'info' && typeof window.reloadNotifications === 'function') {
+        setTimeout(() => window.reloadNotifications(), 500);
+    }
 }
 
 function toggleDescription(reportId, btn) {

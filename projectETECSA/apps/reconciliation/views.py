@@ -257,6 +257,7 @@ def get_reconciliation_data(request):
 		import traceback
 		print(f"Error en get_reconciliation_data: {str(e)}")
 		traceback.print_exc()
+		Notification.objects.create(user=request.user, type='error', content=f"Error al obtener datos de conciliación: {str(e)}")
 		return JsonResponse({
 			'status': 'error',
 			'message': str(e)
@@ -305,11 +306,14 @@ def reconcile_transaction(request):
                 'updated_at': updated_at,
             })
         except BankStatementTransaction.DoesNotExist:
+            Notification.objects.create(user=request.user, type='error', content="La transacción ya no existe")
             return JsonResponse({'status': 'error', 'message': 'La transacción ya no existe'}, status=404)
         except ValidationError:
+            Notification.objects.create(user=request.user, type='error', content="Formato UUID inválido para transacción")
             return JsonResponse({'status': 'error', 'message': 'Formato UUID inválido'}, status=400)
 
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al conciliar transacción: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @require_http_methods(["POST"])
@@ -368,8 +372,10 @@ def reconcile_transactions_bulk(request):
             'count': count,
         })
     except json.JSONDecodeError:
+        Notification.objects.create(user=request.user, type='error', content="Error al conciliar transacciones: formato JSON inválido")
         return JsonResponse({'status': 'error', 'message': 'Formato JSON inválido.'}, status=400)
     except Exception as e:
+        Notification.objects.create(user=request.user, type='error', content=f"Error al conciliar transacciones en masa: {str(e)}")
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 @require_http_methods(["POST"])
@@ -391,6 +397,7 @@ def export_reconciliation(request):
 		
 		return JsonResponse(response)
 	except Exception as e:
+		Notification.objects.create(user=request.user, type='error', content=f"Error al exportar conciliación: {str(e)}")
 		return JsonResponse({
 			'status': 'error',
 			'message': str(e)

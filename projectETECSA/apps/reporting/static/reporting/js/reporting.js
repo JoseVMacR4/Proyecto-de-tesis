@@ -309,6 +309,10 @@ function showNotification(message, type = 'info') {
             alertDiv.remove();
         }
     }, 5000);
+
+    if (type !== 'info' && typeof window.reloadNotifications === 'function') {
+        setTimeout(() => window.reloadNotifications(), 500);
+    }
 }
 
 /**

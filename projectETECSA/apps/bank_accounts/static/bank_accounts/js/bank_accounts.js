@@ -573,7 +573,7 @@ function displayNotification(message, type = 'info') {
     }, timeout);
 
     // Actualizar notificaciones del servidor para la campana
-    if (type === 'success' && typeof window.reloadNotifications === 'function') {
+    if (type !== 'info' && typeof window.reloadNotifications === 'function') {
         setTimeout(() => window.reloadNotifications(), 500);
     }
 }
@@ -1172,6 +1172,10 @@ function showNotification(message, type = 'info') {
             alertDiv.remove();
         }
     }, 5000);
+
+    if (type !== 'info' && typeof window.reloadNotifications === 'function') {
+        setTimeout(() => window.reloadNotifications(), 500);
+    }
 }
 
 // ===== Sorting Functions =====

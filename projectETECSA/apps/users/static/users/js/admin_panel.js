@@ -642,7 +642,7 @@ function showAlert(type, message) {
     }, 5000);
 
     // Actualizar notificaciones del servidor para la campana
-    if (type === 'success' && typeof window.reloadNotifications === 'function') {
+    if (type !== 'info' && typeof window.reloadNotifications === 'function') {
         setTimeout(() => window.reloadNotifications(), 500);
     }
 }
