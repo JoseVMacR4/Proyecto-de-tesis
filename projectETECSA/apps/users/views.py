@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Case, When, Value, IntegerField
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -293,8 +293,14 @@ def create_user(request):
 
         return JsonResponse({'success': True, 'message': 'Usuario creado exitosamente'})
     except Exception as e:
-        Notification.objects.create(user=request.user, type='error', content=f"Error al crear usuario: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        error_msg = str(e)
+        if 'llave duplicada' in error_msg or 'duplicate key' in error_msg or 'UNIQUE constraint' in error_msg:
+            if 'email' in error_msg.lower():
+                error_msg = 'El email ya existe'
+            else:
+                error_msg = 'Ya existe un registro con estos datos'
+        Notification.objects.create(user=request.user, type='error', content=f"Error al crear usuario: {error_msg}")
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 @csrf_exempt
 @login_required
@@ -330,8 +336,14 @@ def update_user(request, user_id):
         
         return JsonResponse({'success': True, 'message': 'Usuario actualizado exitosamente'})
     except Exception as e:
-        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar usuario: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        error_msg = str(e)
+        if 'llave duplicada' in error_msg or 'duplicate key' in error_msg or 'UNIQUE constraint' in error_msg:
+            if 'email' in error_msg.lower():
+                error_msg = 'El email ya existe'
+            else:
+                error_msg = 'Ya existe un registro con estos datos'
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar usuario: {error_msg}")
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 @csrf_exempt
 @login_required
@@ -394,8 +406,14 @@ def create_operation(request):
 
         return JsonResponse({'success': True, 'message': 'Operación creada exitosamente'})
     except Exception as e:
-        Notification.objects.create(user=request.user, type='error', content=f"Error al crear operación: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        error_msg = str(e)
+        if 'llave duplicada' in error_msg or 'duplicate key' in error_msg or 'UNIQUE constraint' in error_msg:
+            if 'code' in error_msg.lower():
+                error_msg = 'El código ya existe'
+            else:
+                error_msg = 'Ya existe un registro con estos datos'
+        Notification.objects.create(user=request.user, type='error', content=f"Error al crear operación: {error_msg}")
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 @csrf_exempt
 @login_required
@@ -418,8 +436,14 @@ def update_operation(request, operation_id):
         
         return JsonResponse({'success': True, 'message': 'Operación actualizada exitosamente'})
     except Exception as e:
-        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar operación: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        error_msg = str(e)
+        if 'llave duplicada' in error_msg or 'duplicate key' in error_msg or 'UNIQUE constraint' in error_msg:
+            if 'code' in error_msg.lower():
+                error_msg = 'El código ya existe'
+            else:
+                error_msg = 'Ya existe un registro con estos datos'
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar operación: {error_msg}")
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 @csrf_exempt
 @login_required
@@ -511,8 +535,14 @@ def create_bank_account(request):
 
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria creada exitosamente'})
     except Exception as e:
-        Notification.objects.create(user=request.user, type='error', content=f"Error al crear cuenta bancaria: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        error_msg = str(e)
+        if 'llave duplicada' in error_msg or 'duplicate key' in error_msg or 'UNIQUE constraint' in error_msg:
+            if 'code' in error_msg.lower():
+                error_msg = 'El código ya existe'
+            else:
+                error_msg = 'Ya existe un registro con estos datos'
+        Notification.objects.create(user=request.user, type='error', content=f"Error al crear cuenta bancaria: {error_msg}")
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 @csrf_exempt
 @login_required
@@ -535,8 +565,14 @@ def update_bank_account(request, account_id):
         
         return JsonResponse({'success': True, 'message': 'Cuenta bancaria actualizada exitosamente'})
     except Exception as e:
-        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar cuenta bancaria: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        error_msg = str(e)
+        if 'llave duplicada' in error_msg or 'duplicate key' in error_msg or 'UNIQUE constraint' in error_msg:
+            if 'code' in error_msg.lower():
+                error_msg = 'El código ya existe'
+            else:
+                error_msg = 'Ya existe un registro con estos datos'
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar cuenta bancaria: {error_msg}")
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 @csrf_exempt
 @login_required
@@ -634,8 +670,14 @@ def create_office(request):
 
         return JsonResponse({'success': True, 'message': 'Oficina creada exitosamente'})
     except Exception as e:
-        Notification.objects.create(user=request.user, type='error', content=f"Error al crear oficina: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        error_msg = str(e)
+        if 'llave duplicada' in error_msg or 'duplicate key' in error_msg or 'UNIQUE constraint' in error_msg:
+            if 'code' in error_msg.lower():
+                error_msg = 'El código ya existe'
+            else:
+                error_msg = 'Ya existe un registro con estos datos'
+        Notification.objects.create(user=request.user, type='error', content=f"Error al crear oficina: {error_msg}")
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 @csrf_exempt
 @login_required
@@ -658,8 +700,14 @@ def update_office(request, office_id):
         
         return JsonResponse({'success': True, 'message': 'Oficina actualizada exitosamente'})
     except Exception as e:
-        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar oficina: {str(e)}")
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+        error_msg = str(e)
+        if 'llave duplicada' in error_msg or 'duplicate key' in error_msg or 'UNIQUE constraint' in error_msg:
+            if 'code' in error_msg.lower():
+                error_msg = 'El código ya existe'
+            else:
+                error_msg = 'Ya existe un registro con estos datos'
+        Notification.objects.create(user=request.user, type='error', content=f"Error al actualizar oficina: {error_msg}")
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 @csrf_exempt
 @login_required
@@ -1083,7 +1131,13 @@ def get_reports(request):
         total_pages = (total_count + items_per_page - 1) // items_per_page
         
         offset = (page - 1) * items_per_page
-        reports = BugReport.objects.select_related('reporter').all().order_by('-created_at')[offset:offset + items_per_page]
+        reports = BugReport.objects.select_related('reporter').annotate(
+            priority=Case(
+                When(status='pending', then=Value(0)),
+                default=Value(1),
+                output_field=IntegerField()
+            )
+        ).order_by('priority', '-created_at')[offset:offset + items_per_page]
         
         data = [{
             'id': str(r.id),

@@ -34,6 +34,16 @@ function cleanMessage(message) {
         /AttributeError.*/
     ];
     
+    if (message.includes('llave duplicada') || message.includes('duplicate key') || message.includes('UNIQUE constraint')) {
+        if (message.includes('email') || message.includes('Email') || message.includes('user_email')) {
+            return 'El email ya existe';
+        }
+        if (message.includes('(code)=')) {
+            return 'El código ya existe';
+        }
+        return 'Ya existe un registro con estos datos';
+    }
+    
     const hasTechnicalInfo = technicalPatterns.some(pattern => pattern.test(message));
     
     if (hasTechnicalInfo) {

@@ -126,6 +126,8 @@
     padding: 1rem;
     margin-bottom: 2rem;
     overflow: visible !important;
+    position: relative;
+    z-index: 100;
 }
 
 .filter-bar .row {
@@ -424,6 +426,8 @@
 .pagination-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    z-index: 0 !important;
+    position: relative;
 }
 
 .pagination-btn span {
@@ -789,6 +793,19 @@ th.sortable {
 
 th.sortable:hover {
     background-color: var(--surface-container-high);
+}
+
+th.sortable .sort-icon {
+    font-size: 0.85rem;
+    vertical-align: middle;
+    margin-left: 0.25rem;
+    color: #999;
+}
+
+/* Botones de paginación deshabilitados - reducir z-index para que no se muestren por encima de los dropdowns */
+.pagination-btn.disabled {
+    z-index: 0 !important;
+    position: relative;
 }
 
 th.sortable .sort-icon {

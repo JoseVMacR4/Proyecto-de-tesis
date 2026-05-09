@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.utils.formats import date_format
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 from apps.reconciliation.models import BankStatementTransaction
@@ -41,7 +41,14 @@ def reconciliation_view(request):
 	Vista principal para la conciliación bancaria
 	"""
 	page_number = request.GET.get('page', 1)
-	transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement').order_by('-bank_statement__statement_date', 'current_reference')
+	transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement').annotate(
+		status_order=Case(
+			When(status='pending', then=Value(1)),
+			When(status='reconciled', then=Value(2)),
+			default=Value(3),
+			output_field=IntegerField()
+		)
+	).order_by('status_order', '-bank_statement__statement_date')
 	paginator = Paginator(transactions, 50)
 	page_obj = paginator.get_page(page_number)
 
@@ -118,7 +125,14 @@ def get_reconciliation_data(request):
 			order_prefix = '-' if sort_order == 'desc' else ''
 			transactions = transactions.order_by(f"{order_prefix}{sort_mapping[sort_column]}")
 		else:
-			transactions = transactions.order_by('-bank_statement__statement_date')
+			transactions = transactions.annotate(
+				status_order=Case(
+					When(status='pending', then=Value(1)),
+					When(status='reconciled', then=Value(2)),
+					default=Value(3),
+					output_field=IntegerField()
+				)
+			).order_by('status_order', '-bank_statement__statement_date')
 
 		# Filtro por rango de fechas
 		if date_range:
@@ -420,7 +434,7 @@ def get_filter_options(request):
 
 		# Obtener tipos de entrada únicos
 		entry_types = BankStatementTransaction.objects.values_list('entry_type', flat=True).distinct().exclude(entry_type__isnull=True).exclude(entry_type='').order_by('entry_type')
-		entry_type_options = [{'value': '', 'label': 'Todos los Tipos'}]
+		entry_type_options = [{'value': '', 'label': 'Todos las Entradas'}]
 		entry_type_options.extend([
 			{'value': et, 'label': 'Crédito (Cr)' if et == 'Cr' else 'Débito (Db)'}
 			for et in entry_types
@@ -450,7 +464,7 @@ def get_filter_options(request):
 		registered_ops = {o.code: o.name for o in Operation.objects.all()}
 		transaction_op_codes = BankStatementTransaction.objects.values_list('operation_type', flat=True).distinct().exclude(operation_type__isnull=True).exclude(operation_type='').order_by('operation_type')
 		
-		operation_type_options = [{'value': '', 'label': 'Todos los Tipos'}]
+		operation_type_options = [{'value': '', 'label': 'Todas las Operaciones'}]
 		for code in transaction_op_codes:
 			name = registered_ops.get(code, code)
 			operation_type_options.append({
@@ -478,7 +492,14 @@ def get_filter_options(request):
 @login_required
 def get_reconciliation_stats(request):
     try:
-        transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement')
+        transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement').annotate(
+            status_order=Case(
+                When(status='pending', then=Value(1)),
+                When(status='reconciled', then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField()
+            )
+        ).order_by('status_order', '-bank_statement__statement_date')
 
         date_range = request.GET.get('date_range', '')
         date_from = request.GET.get('date_from', '')
@@ -611,7 +632,14 @@ def get_export_data(request):
         currency = request.GET.get('currency', '')
         selected_ids = request.GET.get('ids', '')
 
-        transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement').order_by('-bank_statement__statement_date', 'current_reference')
+        transactions = BankStatementTransaction.objects.select_related('bank_account', 'bank_statement').annotate(
+			status_order=Case(
+				When(status='pending', then=Value(1)),
+				When(status='reconciled', then=Value(2)),
+				default=Value(3),
+				output_field=IntegerField()
+			)
+		).order_by('status_order', '-bank_statement__statement_date')
 
         # Aplicar filtros
         if date_range:

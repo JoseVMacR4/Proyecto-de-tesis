@@ -234,6 +234,7 @@ class BugReport(models.Model):
         EXPORTACION = 'exportacion', _('Exportación')
         INFORMES = 'informes', _('Informes')
         NOTIFICACIONES = 'notificaciones', _('Notificaciones')
+        USUARIO = 'usuario', _('Usuario')
         OTRO = 'otro', _('Otro')
 
     class StatusType(models.TextChoices):

@@ -1,6 +1,3 @@
-{% load bootstrap5 %}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
 {% load static %}
 
 <!DOCTYPE html>
@@ -12,6 +9,7 @@
     <title>{% block title %}ETECSA Finanzas - Gestión Central{% endblock %}</title>
 
     <!-- Bootstrap 5 CSS ya incluido por bootstrap5 -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
 
     <!-- Fonts (local) -->
     <link href="{% static 'css/inter.css' %}" rel="stylesheet">
@@ -22,11 +20,6 @@
 
     <!-- Dashboard CSS Base -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
-
-    <!-- Estilos para notificaciones flotantes -->
-    <style>
-
-    </style>
 
     <!-- Block for additional CSS -->
     {% block extra_css %}{% endblock %}
@@ -78,7 +71,7 @@
 
     <div class="notification-dropdown position-fixed" style="top: 62px; right: 30px; z-index: 9999;">
         <div class="card shadow-lg border-0" id="notificationMenu"
-            style="width: 280px; max-height: 320px; overflow-y: auto; display: none;">
+            style="width: 380px; max-height: 320px; overflow-y: auto; display: none;">
             <div class="card-header d-flex justify-content-between align-items-center fw-bold bg-white">
                 <span>Notificaciones</span>
                 <button class="btn btn-link btn-sm p-0 text-decoration-none" id="clearNotificationsBtn"
@@ -231,6 +224,7 @@
                                 <option value="exportacion">Exportación</option>
                                 <option value="informes">Informes</option>
                                 <option value="notificaciones">Notificaciones</option>
+                                <option value="usuario">Usuario</option>
                                 <option value="otro">Otro</option>
                             </select>
                         </div>
@@ -423,7 +417,5 @@
             }
         });
     </script>
-
 </body>
-
 </html>

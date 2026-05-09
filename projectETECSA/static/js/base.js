@@ -63,6 +63,9 @@ async function loadAllNotifications() {
     const countBadge = document.getElementById('globalNotificationCount');
     if (!list || !countBadge) return;
 
+    // Ocultar badge mientras carga para evitar flash de "0"
+    countBadge.style.display = 'none';
+
     try {
         const response = await fetch('/api/notifications/unread/', {
             cache: 'no-cache',

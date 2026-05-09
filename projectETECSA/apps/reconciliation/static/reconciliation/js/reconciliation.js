@@ -479,7 +479,7 @@ function getFilterValues(menuId) {
 
     const checkedCheckboxes = menu.querySelectorAll('input[type="checkbox"]:checked');
     const specialValues = ['', 'Todos los Bancos', 'Todos los Estados', 'Todas las Oficinas', 
-                           'Todos los Tipos', 'Todas las Monedas', 'Todos', 'Todas'];
+                           'Todas las Entradas', 'Todas las Operaciones', 'Todas las Monedas', 'Todos', 'Todas'];
     
     const values = Array.from(checkedCheckboxes)
         .map(cb => cb.value)
@@ -707,8 +707,8 @@ function updateDropdownButtonText(menu) {
             'bankFilterMenu': 'Todos los Bancos',
             'statusFilterMenu': 'Todos los Estados',
             'officeFilterMenu': 'Todas las Oficinas',
-            'entryTypeFilterMenu': 'Todos los Tipos',
-            'operationTypeFilterMenu': 'Todos los Tipos',
+            'entryTypeFilterMenu': 'Todas las Entradas',
+            'operationTypeFilterMenu': 'Todas las Operaciones',
             'currencyFilterMenu': 'Todas las Monedas'
         };
         textSpan.textContent = defaults[menuId] || 'Todos';
@@ -923,8 +923,8 @@ function resetFilters() {
             'bankFilterMenu': 'Todos los Bancos',
             'statusFilterMenu': 'Todos los Estados',
             'officeFilterMenu': 'Todas las Oficinas',
-            'entryTypeFilterMenu': 'Todos los Tipos',
-            'operationTypeFilterMenu': 'Todos los Tipos',
+            'entryTypeFilterMenu': 'Todas las Entradas',
+            'operationTypeFilterMenu': 'Todas las Operaciones',
             'currencyFilterMenu': 'Todas las Monedas'
         };
         
@@ -964,7 +964,7 @@ function getCurrentFilterValues() {
         currency: getFilterValues('currencyFilterMenu'),
         sort: currentSort.column || '',
         order: currentSort.direction || 'asc',
-        page: 1
+        page: currentFilters.page || 1
     };
 }
 
@@ -1414,15 +1414,14 @@ function setupPaginationListeners() {
     document.querySelectorAll('.page-link-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             if (this.classList.contains('disabled') || this.classList.contains('active')) return;
 
             const targetPage = this.getAttribute('data-page');
-            
+
             if (targetPage) {
-                const filters = getCurrentFilterValues();
-                filters.page = parseInt(targetPage);
-                loadTransactions(filters);
+                currentFilters.page = parseInt(targetPage);
+                loadTransactions(currentFilters);
             }
         });
     });
@@ -1502,6 +1501,12 @@ async function handleExport() {
         
         if (scope === 'current') {
             data = await getCurrentPageData();
+            if (!data || data.transactions.length === 0) {
+                showNotification('No hay transacciones en la página actual para exportar', 'warning');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
+            }
         } else if (scope === 'all') {
             data = await getAllFilteredData();
         } else if (scope === 'selected') {
@@ -1528,6 +1533,11 @@ async function handleExport() {
 }
 
 async function getCurrentPageData() {
+    const tbody = document.getElementById('transactionsTableBody');
+    if (tbody && tbody.querySelector('tr td[colspan]')) {
+        return { transactions: [], filters_applied: {} };
+    }
+    
     const rows = document.querySelectorAll('.reconciliation-table tbody tr');
     const transactions = [];
 

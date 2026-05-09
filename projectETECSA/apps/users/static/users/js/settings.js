@@ -379,7 +379,7 @@ function createNotificationRow(notif) {
 
     const label = typeLabels[notif.type] || notif.type;
     const icon = typeIcons[notif.type] || 'notifications';
-    const truncatedContent = notif.content.length > 60 ? notif.content.substring(0, 60) + '...' : notif.content;
+    const truncatedContent = notif.content;
     
     const statusBadge = notif.is_read 
         ? `<span class="status-read"><span class="material-symbols-outlined" style="font-size: 0.9rem;">visibility</span>Leída</span>`
@@ -584,6 +584,7 @@ function createReportRow(report) {
         'exportacion': 'Exportación',
         'informes': 'Informes',
         'notificaciones': 'Notificaciones',
+        'usuario': 'Usuario',
         'otro': 'Otro'
     };
 
@@ -595,6 +596,7 @@ function createReportRow(report) {
         'exportacion': 'download',
         'informes': 'description',
         'notificaciones': 'notifications',
+        'usuario': 'person',
         'otro': 'more_horiz'
     };
 
