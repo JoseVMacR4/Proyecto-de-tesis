@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('pieChart');
     if (ctx) {
         new Chart(ctx.getContext('2d'), {
-            type: 'pie',
+            type: 'doughnut',
             data: {
                 labels: ['Conciliados', 'Pendientes'],
                 datasets: [{
@@ -20,10 +20,10 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                cutout: '55%',
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        zIndex: 1000,
                         callbacks: {
                             label: function(context) {
                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);

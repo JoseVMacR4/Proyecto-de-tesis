@@ -61,21 +61,28 @@ def dashboard(request):
     last_account_stmt = BankStatement.objects.select_related('bank_account').order_by('-created_at').first()
 
     if last_statement:
-        total_balance = sum(
-            bs.ending_balance for bs in BankStatement.objects.all()
-        )
-        available_balance = sum(
-            bs.available_balance for bs in BankStatement.objects.all()
-        )
-        reserved_balance = sum(
-            bs.reserved_balance for bs in BankStatement.objects.all()
-        )
-        overdraft_balance = sum(
-            bs.overdraft_balance for bs in BankStatement.objects.all()
-        )
+        total_balance = 0
+        available_balance = 0
+        reserved_balance = 0
+        overdraft_balance = 0
+
+        bank_accounts = BankAccount.objects.all()
+
+        for account in bank_accounts:
+            latest_stmt = BankStatement.objects.filter(
+                bank_account=account
+            ).order_by('-statement_date', '-created_at').first()
+
+            if latest_stmt:
+                total_balance += latest_stmt.ending_balance
+                available_balance += latest_stmt.available_balance
+                reserved_balance += latest_stmt.reserved_balance
+                overdraft_balance += latest_stmt.overdraft_balance
+
         total_transactions = sum(
             bs.entry_count for bs in BankStatement.objects.all()
         )
+
         last_update_date = date_format(last_statement.statement_date, 'M d, Y')
         last_update_time = date_format(last_statement.created_at, 'H:i')
     else:
