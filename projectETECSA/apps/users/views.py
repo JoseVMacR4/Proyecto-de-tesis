@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from django.db.models import ProtectedError, Case, When, Value, IntegerField
+from django.db.models import ProtectedError, Case, When, Value, IntegerField, Q
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -977,6 +977,39 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def forgot_password(request):
+    """Permite a un usuario no autenticado solicitar recuperación de contraseña."""
+    try:
+        data = json.loads(request.body)
+        email = data.get('email', '').strip().lower()
+
+        if not email:
+            return JsonResponse({'success': False, 'error': 'El email es requerido'}, status=400)
+
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'No existe un usuario con ese email'}, status=404)
+
+        BugReport.objects.create(
+            reporter=user,
+            type=BugReport.ReportType.CONTRASENA,
+            subject=f'Solicitud de cambio de contraseña',
+            description=f'El usuario {user.username} ha solicitado el restablecimiento de su contraseña. Email registrado: {user.email}',
+            status='pending'
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Recibirá su nueva contraseña al correo.'
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Datos inválidos'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
 @login_required
 @require_GET
 def get_unread_notifications(request):
@@ -1134,17 +1167,26 @@ def get_reports(request):
         if items_per_page < 1 or items_per_page > 100:
             items_per_page = 20
         
-        total_count = BugReport.objects.count()
-        total_pages = (total_count + items_per_page - 1) // items_per_page
+        is_admin = can_access_admin(request.user)
         
-        offset = (page - 1) * items_per_page
-        reports = BugReport.objects.select_related('reporter').annotate(
+        base_queryset = BugReport.objects.select_related('reporter').annotate(
             priority=Case(
                 When(status='pending', then=Value(0)),
                 default=Value(1),
                 output_field=IntegerField()
             )
-        ).order_by('priority', '-created_at')[offset:offset + items_per_page]
+        ).order_by('priority', '-created_at')
+        
+        if not is_admin:
+            base_queryset = base_queryset.filter(
+                ~Q(type='contrasena') | Q(reporter=request.user)
+            )
+        
+        total_count = base_queryset.count()
+        total_pages = (total_count + items_per_page - 1) // items_per_page
+        
+        offset = (page - 1) * items_per_page
+        reports = base_queryset[offset:offset + items_per_page]
         
         data = [{
             'id': str(r.id),

@@ -7,6 +7,7 @@ urlpatterns = [
     path('settings/', views.settings, name='settings'),
     path('admin-panel/', views.admin_panel, name='admin_panel'),
     path('logout/', views.logout_view, name='logout'),
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
     
     path('api/notifications/unread/', views.get_unread_notifications, name='api_notifications_unread'),
     path('api/notifications/mark-read/', views.mark_notifications_read, name='api_notifications_read'),

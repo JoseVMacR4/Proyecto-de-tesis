@@ -585,6 +585,7 @@ function createReportRow(report) {
         'informes': 'Informes',
         'notificaciones': 'Notificaciones',
         'usuario': 'Usuario',
+        'contrasena': 'Contraseña',
         'otro': 'Otro'
     };
 
@@ -597,6 +598,7 @@ function createReportRow(report) {
         'informes': 'description',
         'notificaciones': 'notifications',
         'usuario': 'person',
+        'contrasena': 'key',
         'otro': 'more_horiz'
     };
 

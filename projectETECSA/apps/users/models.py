@@ -235,6 +235,7 @@ class BugReport(models.Model):
         INFORMES = 'informes', _('Informes')
         NOTIFICACIONES = 'notificaciones', _('Notificaciones')
         USUARIO = 'usuario', _('Usuario')
+        CONTRASENA = 'contrasena', _('Contraseña')
         OTRO = 'otro', _('Otro')
 
     class StatusType(models.TextChoices):

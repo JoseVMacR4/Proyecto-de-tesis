@@ -45,6 +45,7 @@
                 </div>
 
                 <form id="loginForm" action="" method="POST" novalidate>
+                    {% csrf_token %}
                     <!-- Error Messages Container -->
                     <div id="formErrors" class="form-error-container">
                         {% csrf_token %}
@@ -71,7 +72,7 @@
                             <input type="password" class="form-control form-control-lg bg-light border-0 rounded-3 py-3 px-4{% if messages %} is-invalid{% endif %}" id="password" name="password" placeholder="••••••••" required>
                         </div>
                         <div class="text-end mt-1">
-                            <a href="#" class="text-muted text-decoration-none forgot-link" style="font-size: 0.8rem; opacity: 0.6;">¿Olvidó su contraseña?</a>
+                            <a href="#" id="forgotPasswordLink" class="text-muted text-decoration-none forgot-link" style="font-size: 0.8rem; opacity: 0.6;">¿Olvidó su contraseña?</a>
                         </div>
                     </div>
 
@@ -106,13 +107,41 @@
                 © 2026 ETECSA. TODOS LOS DERECHOS RESERVADOS.
             </div>
             <nav class="d-flex flex-wrap justify-content-between gap-4 gap-md-5">
-                <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Seguridad</a>
-                <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Términos y Condiciones</a>
-                <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Documentación</a>
-                <a href="#" id="soporteLink" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link" data-bs-toggle="modal" data-bs-target="#soporteModal">Soporte</a>
+                    <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Términos y Condiciones</a>
+                    <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Seguridad</a>
+                    <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Documentación</a>
+                    <a href="#" id="soporteLink" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link" data-bs-toggle="modal" data-bs-target="#soporteModal">Soporte</a>
             </nav>
         </div>
     </footer>
+
+    <!-- Olvidé mi contraseña Modal -->
+    <div class="modal fade" id="modalForgotPassword" tabindex="-1" aria-labelledby="modalForgotPasswordLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-2">
+                    <h5 class="modal-title fw-extrabold text-primary-dark tracking-tight" id="modalForgotPasswordLabel">Olvidé mi contraseña</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <form id="formForgotPassword">
+                    <div class="modal-body pt-2">
+                        <p class="text-muted small mb-3">Ingrese su correo electrónico y recibirá su nueva contraseña.</p>
+                        <div class="mb-0">
+                            <label for="forgotEmail" class="form-label fw-bold text-primary text-uppercase tracking-widest small">CORREO ELECTRÓNICO</label>
+                            <input type="email" class="form-control form-control-lg bg-light border-0 rounded-3 py-3 px-4" id="forgotEmail" placeholder="correo@ejemplo.com" required>
+                            <div id="forgotEmailError" class="text-danger small mt-2 d-none"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-2">
+                        <button type="button" class="btn btn-secondary rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary-gradient rounded-3 fw-bold">
+                            <span class="btn-text">Enviar</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- Soporte Modal -->
     <div class="modal fade" id="soporteModal" tabindex="-1" aria-labelledby="soporteModalLabel" aria-hidden="true">

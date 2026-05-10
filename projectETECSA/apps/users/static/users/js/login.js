@@ -92,5 +92,101 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
     });
 
+    // Olvidé mi contraseña
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const modalForgotPassword = document.getElementById('modalForgotPassword');
+    const formForgotPassword = document.getElementById('formForgotPassword');
+    const forgotEmailInput = document.getElementById('forgotEmail');
+    const forgotEmailError = document.getElementById('forgotEmailError');
+    const btnForgotSubmit = formForgotPassword.querySelector('button[type="submit"]');
+
+    if (forgotPasswordLink && modalForgotPassword) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(modalForgotPassword);
+            modal.show();
+        });
+    }
+
+    if (formForgotPassword) {
+        formForgotPassword.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = forgotEmailInput.value.trim();
+            
+            forgotEmailError.classList.add('d-none');
+            forgotEmailError.textContent = '';
+            
+            if (!email) {
+                forgotEmailError.textContent = 'El correo electrónico es requerido';
+                forgotEmailError.classList.remove('d-none');
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                forgotEmailError.textContent = 'Ingrese un correo electrónico válido';
+                forgotEmailError.classList.remove('d-none');
+                return;
+            }
+
+            btnForgotSubmit.disabled = true;
+            btnForgotSubmit.innerHTML = `
+                <span class="btn-text">Enviando...</span>
+                <div class="spinner-border spinner-border-sm text-light ms-2" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            `;
+
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                
+                const response = await fetch('/forgot-password/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken || ''
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    const modalInstance = bootstrap.Modal.getInstance(modalForgotPassword);
+                    modalInstance.hide();
+                    
+                    forgotEmailInput.value = '';
+                    
+                    const successToast = document.createElement('div');
+                    successToast.className = 'position-fixed top-0 end-0 p-3';
+                    successToast.style.zIndex = '9999';
+                    successToast.innerHTML = `
+                        <div class="toast show align-items-center text-white bg-success border-0 rounded-3" role="alert">
+                            <div class="d-flex">
+                                <div class="toast-body">${data.message}</div>
+                                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(successToast);
+                    
+                    setTimeout(() => {
+                        successToast.remove();
+                    }, 4000);
+                } else {
+                    forgotEmailError.textContent = data.error || 'Error al procesar la solicitud';
+                    forgotEmailError.classList.remove('d-none');
+                }
+            } catch (error) {
+                forgotEmailError.textContent = 'Error de conexión. Intente nuevamente.';
+                forgotEmailError.classList.remove('d-none');
+            } finally {
+                btnForgotSubmit.disabled = false;
+                btnForgotSubmit.innerHTML = `<span class="btn-text">Enviar</span>`;
+            }
+        });
+    }
+
     console.log('ETECSA Login Interface Initialized');
 });

@@ -202,3 +202,21 @@ body {
 #soporteModal .contact-info p:last-child {
     font-size: 0.95rem;
 }
+
+/* Olvidé mi contraseña Modal */
+#modalForgotPassword .modal-dialog {
+    max-width: 500px;
+}
+
+#modalForgotPassword .modal-content {
+    background-color: #ffffff;
+}
+
+#modalForgotPassword .btn-close {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+#modalForgotPassword .btn-close:hover {
+    opacity: 1;
+}
