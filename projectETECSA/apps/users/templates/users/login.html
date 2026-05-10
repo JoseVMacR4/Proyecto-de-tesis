@@ -106,12 +106,12 @@
             <div class="footer-copy small fw-bold text-muted text-uppercase tracking-widest">
                 © 2026 ETECSA. TODOS LOS DERECHOS RESERVADOS.
             </div>
-            <nav class="d-flex flex-wrap justify-content-between gap-4 gap-md-5">
-                    <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Términos y Condiciones</a>
-                    <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Seguridad</a>
+<nav class="d-flex flex-wrap justify-content-between gap-4 gap-md-5">
+                    <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link" data-bs-toggle="modal" data-bs-target="#terminosModal">Términos y Condiciones</a>
+                    <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link" data-bs-toggle="modal" data-bs-target="#seguridadModal">Seguridad</a>
                     <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Documentación</a>
                     <a href="#" id="soporteLink" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link" data-bs-toggle="modal" data-bs-target="#soporteModal">Soporte</a>
-            </nav>
+                </nav>
         </div>
     </footer>
 
@@ -179,6 +179,84 @@
                             <p class="mb-0 fw-bold text-primary-dark">+53 55317542</p>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Términos y Condiciones Modal -->
+    <div class="modal fade" id="terminosModal" tabindex="-1" aria-labelledby="terminosModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-2">
+                    <h5 class="modal-title fw-extrabold text-primary-dark tracking-tight" id="terminosModalLabel">Políticas de Uso Interno</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body pt-2" style="max-height: 70vh; overflow-y: auto;">
+                    <h6 class="fw-bold text-primary mb-2">1. Introducción y Aceptación</h6>
+                    <p class="text-muted small mb-3">El presente documento establece las condiciones de uso del sistema "ETECSA Finanzas - Gestión Central", una herramienta interna desarrollada para la Unidad de Conciliación. Al acceder y utilizar este sistema, el usuario acepta cumplir con estas políticas. El acceso está estrictamente restringido al personal autorizado.</p>
+
+                    <h6 class="fw-bold text-primary mb-2">2. Uso del Sistema y Confidencialidad</h6>
+                    <p class="text-muted small mb-3">El sistema tiene como propósito exclusivo la gestión de estados de cuenta bancarios, la conciliación de transacciones y la administración financiera interna. Toda la información procesada es de carácter estrictamente confidencial. Queda prohibida la extracción, divulgación o uso de estos datos para fines ajenos a las funciones laborales asignadas.</p>
+
+                    <h6 class="fw-bold text-primary mb-2">3. Roles y Control de Acceso</h6>
+                    <p class="text-muted small mb-3">El acceso a las funcionalidades del sistema está regido por un esquema de permisos granulares basado en cuatro roles predefinidos:</p>
+                    <ul class="text-muted small mb-3 ps-3">
+                        <li><strong>Administrador:</strong> Acceso total al sistema, gestión de usuarios, entidades y configuraciones globales.</li>
+                        <li><strong>Analista Económico / Analista Comercial / Analista Financiero:</strong> Acceso restringido según los permisos asignados.</li>
+                    </ul>
+                    <p class="text-muted small mb-3">El usuario es responsable de mantener la confidencialidad de sus credenciales (usuario y contraseña). El uso de la cuenta es personal e intransferible.</p>
+
+                    <h6 class="fw-bold text-primary mb-2">4. Responsabilidades en el Procesamiento de Datos</h6>
+                    <p class="text-muted small mb-3"><strong>Carga de Archivos:</strong> Los usuarios autorizados para subir archivos con estados de cuenta deben garantizar que los documentos provengan de fuentes bancarias oficiales y no hayan sido alterados.</p>
+                    <p class="text-muted small mb-3"><strong>Conciliación:</strong> Las acciones de marcar transacciones como conciliadas deben realizarse con la debida diligencia, ya que impactan directamente en las estadísticas globales de saldos y reportes de la Unidad.</p>
+
+                    <h6 class="fw-bold text-primary mb-2">5. Auditoría y Monitoreo</h6>
+                    <p class="text-muted small mb-3">Para garantizar la seguridad y transparencia, el sistema cuenta con un módulo de auditoría permanente. Se registrarán de forma automática todas las actividades del usuario, incluyendo inicios y cierres de sesión, así como cualquier operación de creación, lectura, actualización o eliminación de entidades y transacciones.</p>
+
+                    <h6 class="fw-bold text-primary mb-2">6. Reporte de Incidencias</h6>
+                    <p class="text-muted small mb-0">Cualquier falla en el sistema, error de datos o sospecha de brecha de seguridad debe ser notificada inmediatamente a través del Sistema de Tickets interno, categorizando adecuadamente el problema.</p>
+                </div>
+                <div class="modal-footer border-0 pt-2">
+                    <button type="button" class="btn btn-primary-gradient rounded-3 fw-bold" data-bs-dismiss="modal">Aceptar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seguridad Modal -->
+    <div class="modal fade" id="seguridadModal" tabindex="-1" aria-labelledby="seguridadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-2">
+                    <h5 class="modal-title fw-extrabold text-primary-dark tracking-tight" id="seguridadModalLabel">Políticas de Seguridad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body pt-2" style="max-height: 70vh; overflow-y: auto;">
+                    <h6 class="fw-bold text-primary mb-2">1. Propósito y Alcance</h6>
+                    <p class="text-muted small mb-3">Este documento detalla los mecanismos de seguridad implementados en el sistema "ETECSA Finanzas - Gestión Central" para proteger la integridad, confidencialidad y disponibilidad de los datos financieros procesados mediante su arquitectura en Django y PostgreSQL.</p>
+
+                    <h6 class="fw-bold text-primary mb-2">2. Autenticación y Autorización</h6>
+                    <p class="text-muted small mb-3"><strong>Control de Acceso:</strong> Todas las vistas y endpoints críticos del sistema están protegidos mediante el decorador <code>@login_required</code>, impidiendo el acceso a usuarios no autenticados.</p>
+                    <p class="text-muted small mb-3"><strong>Gestión de Contraseñas:</strong> Las contraseñas de los usuarios no se almacenan en texto plano. Se utiliza el sistema de <em>hashing</em> criptográfico nativo de Django para almacenar credenciales seguras.</p>
+                    <p class="text-muted small mb-3"><strong>Manejo de Sesiones:</strong> El sistema gestiona las sesiones de usuario de forma segura en el backend, invalidando tokens al realizar <em>logout</em> o tras períodos de inactividad prolongada.</p>
+                    <p class="text-muted small mb-3"><strong>Permisos Granulares:</strong> El control de acceso basado en roles (RBAC) restringe la ejecución de acciones sensibles estrictamente a los perfiles autorizados.</p>
+
+                    <h6 class="fw-bold text-primary mb-2">3. Protección contra Vulnerabilidades Web</h6>
+                    <p class="text-muted small mb-3"><strong>Protección CSRF:</strong> Todas las peticiones que modifican el estado del servidor, incluyendo la carga de estados de cuenta y la edición de transacciones, están protegidas mediante tokens <em>Cross-Site Request Forgery</em> (CSRF) nativos de Django.</p>
+                    <p class="text-muted small mb-3"><strong>Protección XSS e Inyección SQL:</strong> El uso del ORM de Django previene inherentemente los ataques de inyección SQL mediante la parametrización de consultas en la base de datos. Asimismo, el motor de plantillas Jinja2/Django Templates escapa automáticamente el contenido renderizado para prevenir ataques de <em>Cross-Site Scripting</em> (XSS).</p>
+
+                    <h6 class="fw-bold text-primary mb-2">4. Trazabilidad y Registro de Auditoría</h6>
+                    <p class="text-muted small mb-3">El sistema implementa una trazabilidad estricta para cumplir con los estándares financieros:</p>
+                    <p class="text-muted small mb-3"><strong>Registro de Actividades:</strong> Se mantiene un log inmutable de las acciones de los usuarios, almacenando la acción realizada, el autor, la descripción detallada, metadatos y la marca de tiempo exacta (<em>timestamp</em>).</p>
+                    <p class="text-muted small mb-3"><strong>Trazabilidad de Entidades:</strong> Todos los registros críticos cuentan con campos de <em>timestamps</em> (fecha de creación y última modificación) para su seguimiento temporal.</p>
+
+                    <h6 class="fw-bold text-primary mb-2">5. Resiliencia y Manejo de Errores</h6>
+                    <p class="text-muted small mb-3"><strong>Gestión de Excepciones:</strong> Los errores no manejados no exponen el código fuente ni los <em>tracebacks</em> en el entorno de producción.</p>
+                    <p class="text-muted small mb-0"><strong>Sistema de Tickets:</strong> Se provee un mecanismo interno estructurado para la gestión de vulnerabilidades y bugs. Los usuarios pueden levantar tickets categorizados que el equipo de administración puede gestionar, asegurando un ciclo de vida controlado para cualquier anomalía del sistema.</p>
+                </div>
+                <div class="modal-footer border-0 pt-2">
+                    <button type="button" class="btn btn-primary-gradient rounded-3 fw-bold" data-bs-dismiss="modal">Aceptar</button>
                 </div>
             </div>
         </div>
