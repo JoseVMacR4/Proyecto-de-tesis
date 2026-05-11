@@ -229,7 +229,20 @@
                             </div>
                             <div class="mb-3">
                                 <label for="userPassword" class="form-label fw-bold small">Contraseña *</label>
-                                <input type="password" maxlength="25" class="form-control" id="userPassword" placeholder="Dejar en blanco para mantener la actual (solo edición)">
+                                <input type="password" maxlength="128" class="form-control" id="userPassword" placeholder="Dejar en blanco para mantener la actual (solo edición)">
+                            </div>
+                            <div class="mb-3">
+                                <label for="userPasswordConfirm" class="form-label fw-bold small">Confirmar Contraseña *</label>
+                                <input type="password" maxlength="128" class="form-control" id="userPasswordConfirm" placeholder="Repita la contraseña">
+                            </div>
+                            <div id="passwordRequirements" class="password-requirements small text-muted mb-3 p-2 rounded" style="background-color: var(--surface-container-low);">
+                                <p class="mb-1 fw-bold">La contraseña debe tener:</p>
+                                <ul class="ps-3 mb-0" style="list-style: none; padding-left: 0;">
+                                    <li id="req-length"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">circle</span> Mínimo 8 caracteres</li>
+                                    <li id="req-uppercase"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">circle</span> Al menos 1 mayúscula</li>
+                                    <li id="req-number"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">circle</span> Al menos 1 número</li>
+                                    <li id="req-special"><span class="material-symbols-outlined" style="font-size: 1rem; vertical-align: middle;">circle</span> Al menos 1 símbolo (ej: !@#$%)</li>
+                                </ul>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">

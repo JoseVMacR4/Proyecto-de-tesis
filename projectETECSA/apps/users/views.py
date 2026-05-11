@@ -14,6 +14,7 @@ from django.utils.formats import date_format
 from django.views.decorators.http import require_GET, require_POST
 from .models import Notification
 import json
+import re
 
 DEFAULT_USER_ROLES = [
     'Administrador',
@@ -26,6 +27,30 @@ def ensure_default_roles():
     if not Role.objects.exists():
         for role_name in DEFAULT_USER_ROLES:
             Role.objects.get_or_create(name=role_name)
+
+
+def validate_password(password):
+    """Valida los requisitos de la contraseña.
+    
+    Requisitos:
+    - Mínimo 8 caracteres
+    - Al menos 1 mayúscula
+    - Al menos 1 número
+    - Al menos 1 símbolo especial
+    """
+    errors = []
+    
+    if len(password) < 8:
+        errors.append('La contraseña debe tener al menos 8 caracteres')
+    if not re.search(r'[A-Z]', password):
+        errors.append('La contraseña debe contener al menos una mayúscula')
+    if not re.search(r'[0-9]', password):
+        errors.append('La contraseña debe contener al menos un número')
+    if not re.search(r'[!@#$%^&*()_+\-=\[\]{};:\'"\\|,.<>\/?]', password):
+        errors.append('La contraseña debe contener al menos un símbolo (!@#$%^&*)')
+    
+    return errors
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -265,10 +290,15 @@ def create_user(request):
         last_name = data.get('last_name', '')
         role_id = data.get('role_id')
         is_active = data.get('is_active', True)
-        
+
         if not username or not password:
-            return JsonResponse({'success': False, 'error': 'Username y password son requeridos'}, status=400)
-        
+            return JsonResponse({'success': False, 'error': 'Username y contraseña son requeridos'}, status=400)
+
+        # Validar requisitos de contraseña
+        password_errors = validate_password(password)
+        if password_errors:
+            return JsonResponse({'success': False, 'error': ' '.join(password_errors)}, status=400)
+
         if User.objects.filter(username=username).exists():
             return JsonResponse({'success': False, 'error': 'El username ya existe'}, status=400)
         
@@ -322,8 +352,12 @@ def update_user(request, user_id):
         user.first_name = data.get('first_name', user.first_name)
         user.last_name = data.get('last_name', user.last_name)
         user.is_active = data.get('is_active', user.is_active)
-        
+
         if data.get('password'):
+            # Validar requisitos de contraseña
+            password_errors = validate_password(data.get('password'))
+            if password_errors:
+                return JsonResponse({'success': False, 'error': ' '.join(password_errors)}, status=400)
             user.set_password(data.get('password'))
         
         user.save()

@@ -182,6 +182,14 @@ function initForms() {
         formUser.addEventListener('submit', handleUserSubmit);
     }
 
+    // Event listener para actualizar UI de requisitos de contraseña en tiempo real
+    const userPasswordInput = document.getElementById('userPassword');
+    if (userPasswordInput) {
+        userPasswordInput.addEventListener('input', function() {
+            updatePasswordRequirementsUI(this.value);
+        });
+    }
+
     // Formulario de Operación
     const formOperation = document.getElementById('formOperation');
     if (formOperation) {
@@ -202,27 +210,101 @@ function initForms() {
 }
 
 /**
+ * Valida los requisitos de la contraseña
+ */
+function validatePassword(password) {
+    const errors = [];
+    if (password.length < 8) {
+        errors.push('La contraseña debe tener al menos 8 caracteres');
+    }
+    if (!/[A-Z]/.test(password)) {
+        errors.push('Debe contener al menos una mayúscula');
+    }
+    if (!/[0-9]/.test(password)) {
+        errors.push('Debe contener al menos un número');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        errors.push('Debe contener al menos un símbolo (!@#$%^&*)');
+    }
+    return errors;
+}
+
+/**
+ * Actualiza la UI de requisitos de contraseña en tiempo real
+ */
+function updatePasswordRequirementsUI(password) {
+    const checks = {
+        'req-length': password.length >= 8,
+        'req-uppercase': /[A-Z]/.test(password),
+        'req-number': /[0-9]/.test(password),
+        'req-special': /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+    };
+
+    for (const [id, valid] of Object.entries(checks)) {
+        const el = document.getElementById(id);
+        if (el) {
+            const icon = el.querySelector('.material-symbols-outlined');
+            if (valid) {
+                el.classList.remove('text-danger');
+                el.classList.add('text-success');
+                if (icon) {
+                    icon.textContent = 'check_circle';
+                    icon.style.color = '#198754';
+                }
+            } else {
+                el.classList.remove('text-success');
+                el.classList.add('text-danger');
+                if (icon) {
+                    icon.textContent = 'circle';
+                    icon.style.color = '';
+                }
+            }
+        }
+    }
+}
+
+/**
  * Maneja el envío del formulario de usuario
  */
 async function handleUserSubmit(e) {
     e.preventDefault();
-    
+
     const userId = document.getElementById('userId').value;
     const action = document.getElementById('userFormAction').value;
-    const url = action === 'create' 
-        ? '/admin-panel/users/create/' 
+    const password = document.getElementById('userPassword').value;
+    const passwordConfirm = document.getElementById('userPasswordConfirm').value;
+    const isNewUser = action === 'create';
+
+    // Validar contraseña solo si es nuevo usuario o si se está cambiando
+    if (isNewUser || password) {
+        // Validar requisitos
+        const errors = validatePassword(password);
+        if (errors.length > 0) {
+            showAlert('danger', errors.join('. '));
+            return;
+        }
+
+        // Validar confirmación
+        if (password !== passwordConfirm) {
+            showAlert('danger', 'Las contraseñas no coinciden');
+            return;
+        }
+    }
+
+    const url = isNewUser
+        ? '/admin-panel/users/create/'
         : `/admin-panel/users/${userId}/update/`;
-    
+
     const data = {
         username: document.getElementById('userUsername').value,
         email: document.getElementById('userEmail').value,
-        password: document.getElementById('userPassword').value,
+        password: password,
         first_name: document.getElementById('userFirstName').value,
         last_name: document.getElementById('userLastName').value,
         role_id: document.getElementById('userRole').value,
         is_active: document.getElementById('userIsActive').checked
     };
-    
+
     try {
         const response = await fetch(url, {
             method: 'POST',
@@ -232,13 +314,12 @@ async function handleUserSubmit(e) {
             },
             body: JSON.stringify(data)
         });
-        
+
         const result = await response.json();
-        
+
         if (result.success) {
             showAlert('success', result.message);
             userModal.hide();
-            // Actualizar la tabla de usuarios sin recargar
             await loadUsersTable();
         } else {
             showAlert('danger', result.error || 'Error al guardar el usuario');
@@ -431,11 +512,16 @@ function resetForm(type) {
         document.getElementById('userPassword').value = '';
         document.getElementById('userPassword').required = true;
         document.getElementById('userPassword').placeholder = 'Establezca la contraseña';
+        document.getElementById('userPasswordConfirm').value = '';
+        document.getElementById('userPasswordConfirm').required = true;
+        document.getElementById('userPasswordConfirm').placeholder = 'Repita la contraseña';
         document.getElementById('userFirstName').value = '';
         document.getElementById('userLastName').value = '';
         document.getElementById('userRole').value = '';
         document.getElementById('userIsActive').checked = true;
         document.getElementById('userIsActive').disabled = false;
+        // Resetear UI de requisitos de contraseña
+        updatePasswordRequirementsUI('');
     } else if (type === 'operation') {
         document.getElementById('operationId').value = '';
         document.getElementById('operationFormAction').value = 'create';
@@ -1264,12 +1350,17 @@ function editUser(userId) {
     document.getElementById('userPassword').value = '';
     document.getElementById('userPassword').required = false;
     document.getElementById('userPassword').placeholder = 'Dejar en blanco para mantener la actual';
+    document.getElementById('userPasswordConfirm').value = '';
+    document.getElementById('userPasswordConfirm').required = false;
+    document.getElementById('userPasswordConfirm').placeholder = 'Repita la nueva contraseña (si va a cambiarla)';
     document.getElementById('userFirstName').value = user.first_name || '';
     document.getElementById('userLastName').value = user.last_name || '';
     document.getElementById('userRole').value = user.role_id || '';
     document.getElementById('userIsActive').checked = user.is_active;
     document.getElementById('userIsActive').disabled = String(user.id) === String(window.currentUserId);
-    
+    // Resetear UI de requisitos de contraseña
+    updatePasswordRequirementsUI('');
+
     document.getElementById('modalUserLabel').textContent = 'Editar Usuario';
     userModal.show();
 }
