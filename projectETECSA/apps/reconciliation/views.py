@@ -192,11 +192,15 @@ def get_reconciliation_data(request):
 			if entry_list:
 				transactions = transactions.filter(entry_type__in=entry_list)
 
-		# Filtro por tipo de operación (múltiple)
+		# Filtro por tipo de operación (múltiple) - buscar código en name de transacción
 		if operation_type:
-			operation_list = [o.strip() for o in operation_type.split(',') if o.strip()]
-			if operation_list:
-				transactions = transactions.filter(operation_type__in=operation_list)
+			op_codes = [c.strip() for c in operation_type.split(',') if c.strip()]
+			if op_codes:
+				from django.db.models import Q
+				q_ops = Q()
+				for code in op_codes:
+					q_ops |= Q(name__icontains=code)
+				transactions = transactions.filter(q_ops)
 
 		# Filtro por rango de monto
 		if amount_min:
@@ -222,15 +226,16 @@ def get_reconciliation_data(request):
 		page_obj = paginator.get_page(page)
 
 		office_map = {o.code: o.name for o in Office.objects.all()}
-		operation_map = {o.code: o.name for o in Operation.objects.all()}
+		operation_catalog = list(Operation.objects.all())
 
 		transactions_data = []
 		for tx in page_obj.object_list:
 			try:
 				office_value = tx.office_code or ''
 				office_display = office_map.get(office_value, office_value) if office_value else ''
-				operation_value = tx.operation_type or ''
-				operation_display = operation_map.get(operation_value, '') if operation_value else ''
+				tx_name_lower = tx.name.lower()
+				matched_op = next((op for op in operation_catalog if op.code.lower() in tx_name_lower), None)
+				operation_display = matched_op.name if matched_op else ''
 				transactions_data.append({
 					'id': str(tx.id),
 					'date': date_format(tx.date, 'd/m/Y'),
@@ -246,7 +251,7 @@ def get_reconciliation_data(request):
 					'entry_type': tx.entry_type,
 					'bank_fee': float(tx.bank_fee),
 					'operation_type': operation_display,
-					'operation_type_code': operation_value,
+					'operation_type_code': matched_op.code if matched_op else '',
 					'currency': tx.currency,
 					'statement_date': date_format(tx.bank_statement.statement_date, 'd/m/Y') if tx.bank_statement else '',
 					'status': tx.status,
@@ -460,16 +465,13 @@ def get_filter_options(request):
 				'label': f"{code} - {name}" if code != name else code
 			})
 
-		# Obtener operaciones registradas y códigos de transacciones
-		registered_ops = {o.code: o.name for o in Operation.objects.all()}
-		transaction_op_codes = BankStatementTransaction.objects.values_list('operation_type', flat=True).distinct().exclude(operation_type__isnull=True).exclude(operation_type='').order_by('operation_type')
-		
+		# Buscar operaciones del catálogo
+		operations = Operation.objects.all().order_by('name')
 		operation_type_options = [{'value': '', 'label': 'Todas las Operaciones'}]
-		for code in transaction_op_codes:
-			name = registered_ops.get(code, code)
+		for op in operations:
 			operation_type_options.append({
-				'value': code,
-				'label': f"{code} - {name}" if code != name else code
+				'value': op.code,
+				'label': op.name
 			})
 
 		return JsonResponse({
@@ -567,9 +569,13 @@ def get_reconciliation_stats(request):
                 transactions = transactions.filter(entry_type__in=entry_list)
 
         if operation_type:
-            operation_list = [o.strip() for o in operation_type.split(',') if o.strip()]
-            if operation_list:
-                transactions = transactions.filter(operation_type__in=operation_list)
+            op_codes = [o.strip() for o in operation_type.split(',') if o.strip()]
+            if op_codes:
+                from django.db.models import Q
+                q_ops = Q()
+                for code in op_codes:
+                    q_ops |= Q(name__icontains=code)
+                transactions = transactions.filter(q_ops)
 
         if amount_min:
             try:
@@ -694,9 +700,13 @@ def get_export_data(request):
                 transactions = transactions.filter(entry_type__in=entry_list)
 
         if operation_type:
-            operation_list = [o.strip() for o in operation_type.split(',') if o.strip()]
-            if operation_list:
-                transactions = transactions.filter(operation_type__in=operation_list)
+            op_codes = [o.strip() for o in operation_type.split(',') if o.strip()]
+            if op_codes:
+                from django.db.models import Q
+                q_ops = Q()
+                for code in op_codes:
+                    q_ops |= Q(name__icontains=code)
+                transactions = transactions.filter(q_ops)
 
         if amount_min:
             try:
@@ -722,7 +732,7 @@ def get_export_data(request):
             transactions = transactions.filter(id__in=id_list)
 
         office_map = {o.code: o.name for o in Office.objects.all()}
-        operation_map = {o.code: o.name for o in Operation.objects.all()}
+        operation_catalog = list(Operation.objects.all())
 
         transactions_data = []
         total_amount = 0
@@ -730,8 +740,9 @@ def get_export_data(request):
             try:
                 office_value = tx.office_code or ''
                 office_display = office_map.get(office_value, office_value) if office_value else ''
-                operation_value = tx.operation_type or ''
-                operation_display = operation_map.get(operation_value, '') if operation_value else ''
+                tx_name_lower = tx.name.lower()
+                matched_op = next((op for op in operation_catalog if op.code.lower() in tx_name_lower), None)
+                operation_display = matched_op.name if matched_op else ''
                 total_amount += float(tx.amount)
                 transactions_data.append({
                     'id': str(tx.id),
@@ -748,7 +759,7 @@ def get_export_data(request):
                     'entry_type': tx.entry_type,
                     'bank_fee': float(tx.bank_fee),
                     'operation_type': operation_display,
-                    'operation_type_code': operation_value,
+                    'operation_type_code': matched_op.code if matched_op else '',
                     'currency': tx.currency,
                     'statement_date': date_format(tx.bank_statement.statement_date, 'd/m/Y') if tx.bank_statement else '',
                     'status': tx.status,

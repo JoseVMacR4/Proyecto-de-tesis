@@ -78,6 +78,7 @@ class BankStatementTransaction(models.Model):
     office_code = models.CharField(max_length=50, blank=True, null=True)
     entry_type = models.CharField(max_length=50)
     operation_type = models.CharField(max_length=255, blank=True, null=True)
+    operation_name = models.CharField(max_length=255, blank=True, null=True)
     operation_count = models.IntegerField(default=1)
     bank_fee = models.DecimalField(max_digits=20, decimal_places=4)
     amount = models.DecimalField(max_digits=20, decimal_places=4)

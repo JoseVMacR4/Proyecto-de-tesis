@@ -4,7 +4,7 @@ import uuid
 from django.conf import settings
 from .parsers import parse_txt_statement
 from .models import BankStatement, BankStatementTransaction
-from apps.bank_accounts.models import BankAccount
+from apps.bank_accounts.models import BankAccount, Operation
 
 def process_statement_upload(uploaded_file, bank_account_id):
     """
@@ -94,23 +94,36 @@ def process_statement_upload(uploaded_file, bank_account_id):
         raise e
 
     # Crear las transacciones en bloque para eficiencia
-    txs = [
-        BankStatementTransaction(
+    operation_map = {op.code: op.name for op in Operation.objects.all()}
+    
+    txs = []
+    for tx in parsed['transactions']:
+        op_code_match = None
+        op_name_match = None
+        name_lower = tx['name'].lower()
+        
+        for code, name in operation_map.items():
+            if code.lower() in name_lower:
+                op_code_match = code
+                op_name_match = name
+                break
+                
+        txs.append(BankStatementTransaction(
             bank_statement=stmt,
             current_reference=tx['current_reference'],
             original_reference=tx.get('original_reference'),
-            name=tx['name'][:250], # Limitar longitud si es necesario
+            name=tx['name'][:250],
             bank_account=account,
             office_code=tx.get('office_code'),
             entry_type=tx['entry_type'],
-            operation_type=tx.get('operation_type'),
+            operation_type=op_code_match or tx.get('operation_type'),
+            operation_name=op_name_match,
             operation_count=tx.get('operation_count', 1),
             bank_fee=tx['bank_fee'],
             amount=tx['amount'],
-            currency='CUP', # Asumimos CUP por defecto
+            currency='CUP',
             date=stmt.statement_date,
-        ) for tx in parsed['transactions']
-    ]
+        ))
     
     BankStatementTransaction.objects.bulk_create(txs)
     
