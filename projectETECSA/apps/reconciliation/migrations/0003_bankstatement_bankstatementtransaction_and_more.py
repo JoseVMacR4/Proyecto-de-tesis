@@ -9,7 +9,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('bank_accounts', '0001_initial'),
-        ('reconciliation', '0002_alter_bank_id_alter_banktransaction_id_and_more'),
     ]
 
     operations = [
@@ -61,23 +60,6 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Bank Statement Transactions',
                 'ordering': ['-bank_statement__statement_date', 'current_reference'],
             },
-        ),
-        migrations.RemoveField(
-            model_name='banktransaction',
-            name='bank',
-        ),
-        migrations.RemoveField(
-            model_name='reconciliationlog',
-            name='transaction',
-        ),
-        migrations.DeleteModel(
-            name='Bank',
-        ),
-        migrations.DeleteModel(
-            name='BankTransaction',
-        ),
-        migrations.DeleteModel(
-            name='ReconciliationLog',
         ),
         migrations.AddIndex(
             model_name='bankstatementtransaction',

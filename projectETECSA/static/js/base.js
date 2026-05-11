@@ -1,8 +1,3 @@
-/**
- * ETECSA Finanzas - Dashboard Logic
- * Sistema de notificaciones del servidor
- */
-
 function getUserId() {
     const userElem = document.getElementById('currentUserId');
     if (userElem) return userElem.value;
@@ -276,6 +271,162 @@ document.addEventListener('DOMContentLoaded', () => {
         userMenu.addEventListener('click', (e) => {
             e.stopPropagation();
         });
+    }
+});
+
+function cleanupSessionAndLogout(event) {
+    event.preventDefault();
+    var logoutUrl = event.currentTarget.getAttribute('href');
+    sessionStorage.clear();
+    sessionStorage.setItem('reconciliation_intentional_logout', 'true');
+    window.location.href = logoutUrl;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    // === CONTROL MANUAL DEL MODAL DE REPORTES ===
+    const reportModalEl = document.getElementById('reportModal');
+    let reportModalInstance = null;
+
+    // Función para abrir el modal
+    window.openReportModal = function () {
+        if (!reportModalInstance) {
+            reportModalInstance = new bootstrap.Modal(reportModalEl);
+        }
+        reportModalInstance.show();
+    };
+
+    // Función para cerrar el modal
+    window.closeReportModal = function () {
+        if (reportModalInstance) {
+            reportModalInstance.hide();
+        }
+    };
+
+    // Cleanup cuando el modal se cierra completamente
+    reportModalEl.addEventListener('hidden.bs.modal', function () {
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('overflow');
+        document.body.style.removeProperty('padding-right');
+
+        // Reset del formulario cuando se cierra sin enviar
+        const reportForm = document.getElementById('reportForm');
+        if (reportForm) {
+            reportForm.reset();
+        }
+        const descCharCount = document.getElementById('descCharCount');
+        if (descCharCount) {
+            descCharCount.textContent = '0';
+        }
+    });
+
+    // Asignar evento al botón del sidebar
+    document.getElementById('openReportModalBtn').addEventListener('click', function (e) {
+        e.preventDefault();
+        openReportModal();
+    });
+    // === FIN CONTROL MANUAL DEL MODAL ===
+
+    const submitBtn = document.getElementById('submitReportBtn');
+    const reportForm = document.getElementById('reportForm');
+    const reportDescription = document.getElementById('reportDescription');
+
+    if (reportDescription) {
+        reportDescription.addEventListener('input', function () {
+            document.getElementById('descCharCount').textContent = this.value.length;
+        });
+    }
+
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async function () {
+            const type = document.getElementById('reportType').value;
+            const subject = document.getElementById('reportSubject').value.trim();
+            const description = document.getElementById('reportDescription').value.trim();
+
+            document.getElementById('descCharCount').textContent = description.length;
+
+            if (!type || !subject || !description) {
+                showToast('Por favor complete todos los campos', 'error');
+                return;
+            }
+
+            if (description.length > 400) {
+                showToast('La descripción no puede exceder 400 caracteres', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Enviando...';
+
+            try {
+                const response = await fetch('/api/reports/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ type, subject, description })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    closeReportModal();
+
+                    reportForm.reset();
+                    document.getElementById('descCharCount').textContent = '0';
+
+                    showToast('Reporte enviado correctamente', 'success');
+                    localStorage.setItem('reportes_actualizar', 'true');
+                    window.dispatchEvent(new CustomEvent('reporte-creado'));
+                } else {
+                    showToast(data.error || 'Error al enviar el reporte', 'error');
+                }
+            } catch (error) {
+                showToast('Error al enviar el reporte', 'error');
+                console.error('Error:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span class="material-symbols-outlined me-1">send</span> Enviar Reporte';
+            }
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `toast-notification toast-${type}`;
+        toast.innerHTML = `
+                    <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : 'error'}</span>
+                    <span>${message}</span>
+                `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 10);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+
+        if (type !== 'info' && typeof window.reloadNotifications === 'function') {
+            setTimeout(() => window.reloadNotifications(), 500);
+        }
     }
 });
 

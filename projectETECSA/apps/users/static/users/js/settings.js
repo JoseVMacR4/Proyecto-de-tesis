@@ -1,6 +1,6 @@
-/**
- * ETECSA Finanzas - Settings Logic
- */
+let notificationsPage = 1;
+const maxPages = 5;
+const itemsPerPage = 20;
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('[DEBUG] DOMContentLoaded ejecutado');
@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (tabName === 'reports') {
             loadReports();
+        }
+        if (tabName === 'notifications') {
+            loadUserNotifications(notificationsPage);
         }
     }
 
@@ -282,14 +285,6 @@ function createActivityItem(activity) {
     `;
 }
 
-let notificationsPage = 1;
-const maxPages = 5;
-const itemsPerPage = 20;
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadUserNotifications(notificationsPage);
-});
-
 async function loadUserNotifications(page) {
     console.log('[DEBUG] loadUserNotifications iniciado, page:', page);
 
@@ -329,7 +324,7 @@ async function loadUserNotifications(page) {
             
             if (data.notifications && data.notifications.length > 0) {
                 tableBody.innerHTML = data.notifications.map(notif => createNotificationRow(notif)).join('');
-                renderPagination(data, page);
+                
             } else {
                 tableBody.innerHTML = `
                     <tr>
@@ -341,9 +336,8 @@ async function loadUserNotifications(page) {
                         </td>
                     </tr>
                 `;
-                paginationInfo.textContent = '';
-                paginationControls.innerHTML = '';
             }
+            renderPagination(data, page);
         } else {
             throw new Error(data.error || 'Error desconocido');
         }
@@ -406,7 +400,7 @@ function renderPagination(data, currentPage) {
     const paginationInfo = document.getElementById('paginationInfo');
     const paginationControls = document.getElementById('paginationControls');
     
-    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const startItem = data.total_count === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
     const endItem = Math.min(currentPage * itemsPerPage, data.total_count);
     
     paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${data.total_count} notificaciones`;
@@ -495,7 +489,7 @@ async function loadReports(page) {
 
             if (data.reports && data.reports.length > 0) {
                 tableBody.innerHTML = data.reports.map(report => createReportRow(report)).join('');
-                renderReportsPagination(data, page);
+                
             } else {
                 const colspan = window.userCanAccessAdmin ? 7 : 6;
                 tableBody.innerHTML = `
@@ -508,9 +502,8 @@ async function loadReports(page) {
                         </td>
                     </tr>
                 `;
-                paginationInfo.textContent = '';
-                paginationControls.innerHTML = '';
             }
+            renderReportsPagination(data, page);
         } else {
             throw new Error(data.error || 'Error desconocido');
         }
@@ -533,7 +526,21 @@ function renderReportsPagination(data, currentPage) {
     const paginationInfo = document.getElementById('reportsPaginationInfo');
     const paginationControls = document.getElementById('reportsPaginationControls');
     
-    const startItem = (currentPage - 1) * reportsItemsPerPage + 1;
+    if (data.total_count === 0) {
+        paginationInfo.textContent = 'Mostrando 0 - 0 de 0 reportes';
+        paginationControls.innerHTML = `
+            <span class="pagination-btn" title="Página anterior" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+                <span class="material-symbols-outlined">chevron_left</span>
+            </span>
+            <button class="pagination-btn active" data-page="1">1</button>
+            <span class="pagination-btn" title="Página siguiente" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;">
+                <span class="material-symbols-outlined">chevron_right</span>
+            </span>
+        `;
+        return;
+    }
+
+    const startItem = data.total_count === 0 ? 0 : (currentPage - 1) * reportsItemsPerPage + 1;
     const endItem = Math.min(currentPage * reportsItemsPerPage, data.total_count);
     
     paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${data.total_count} reportes`;
@@ -550,7 +557,10 @@ function renderReportsPagination(data, currentPage) {
         </span>`;
     }
     
-    for (let i = 1; i <= data.total_pages; i++) {
+    // Manejo de páginas totales en caso de que el backend envíe 0
+    const totalPages = data.total_pages || 1;
+    
+    for (let i = 1; i <= totalPages; i++) {
         const isActive = i === currentPage;
         paginationHtml += `<button class="pagination-btn ${isActive ? 'active' : ''}" data-page="${i}">${i}</button>`;
     }

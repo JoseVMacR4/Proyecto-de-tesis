@@ -6,7 +6,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}ETECSA Finanzas - Gestión Central{% endblock %}</title>
+    <title>{% block title %}{% endblock %}</title>
 
     <!-- Bootstrap 5 CSS ya incluido por bootstrap5 -->
     <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
@@ -21,6 +21,7 @@
     <!-- Dashboard CSS Base -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
 
+    <link rel="icon" href="{% static 'svg/logo.svg' %}" type="image/svg+xml">
     <!-- Block for additional CSS -->
     {% block extra_css %}{% endblock %}
 </head>
@@ -34,8 +35,7 @@
             <button class="btn btn-link d-lg-none p-0 text-dark" id="sidebarToggle">
                 <span class="material-symbols-outlined">menu</span>
             </button>
-            <span class="fs-4 font-manrope fw-extrabold text-primary" style="letter-spacing: -0.02em;">ETECSA
-                Finanzas</span>
+            <span class="fs-4 font-manrope fw-extrabold text-primary" style="letter-spacing: -0.02em;">Finanzas | Gestión Central</span>
         </div>
 
         <div class="d-flex align-items-center gap-3 gap-md-4">
@@ -141,10 +141,8 @@
                     <span class="material-symbols-outlined icon-filled">account_balance</span>
                 </div>
                 <div>
-                    <h6 class="font-manrope fw-bold text-primary mb-1 lh-1">Gestión Central</h6>
-                    <small class="text-muted fw-bold"
-                        style="font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;">Unidad de
-                        Conciliación</small>
+                    <h6 class="font-manrope fw-bold text-muted mb-1 lh-1">Unidad de
+                        Conciliación</h6>
                 </div>
             </div>
         </div>
@@ -231,7 +229,7 @@
                         <div class="mb-3">
                             <label for="reportSubject" class="form-label fw-bold">Asunto</label>
                             <input type="text" class="form-control" id="reportSubject"
-                                placeholder="Breve descripción del problema" required maxlength="255">
+                                placeholder="Breve descripción del problema" required maxlength="100">
                         </div>
                         <div class="mb-3">
                             <label for="reportDescription" class="form-label fw-bold">Descripción</label>
@@ -260,162 +258,5 @@
     <script src="{% static 'js/base.js' %}"></script>
     {% endif %}
     {% block extra_js %}{% endblock %}
-    <script>
-        function cleanupSessionAndLogout(event) {
-            event.preventDefault();
-            var logoutUrl = event.currentTarget.getAttribute('href');
-            sessionStorage.clear();
-            sessionStorage.setItem('reconciliation_intentional_logout', 'true');
-            window.location.href = logoutUrl;
-        }
-        
-        document.addEventListener('DOMContentLoaded', function () {
-            // === CONTROL MANUAL DEL MODAL DE REPORTES ===
-            const reportModalEl = document.getElementById('reportModal');
-            let reportModalInstance = null;
-
-            // Función para abrir el modal
-            window.openReportModal = function() {
-                if (!reportModalInstance) {
-                    reportModalInstance = new bootstrap.Modal(reportModalEl);
-                }
-                reportModalInstance.show();
-            };
-
-            // Función para cerrar el modal
-            window.closeReportModal = function() {
-                if (reportModalInstance) {
-                    reportModalInstance.hide();
-                }
-            };
-
-            // Cleanup cuando el modal se cierra completamente
-            reportModalEl.addEventListener('hidden.bs.modal', function() {
-                document.body.classList.remove('modal-open');
-                document.body.style.removeProperty('overflow');
-                document.body.style.removeProperty('padding-right');
-                
-                // Reset del formulario cuando se cierra sin enviar
-                const reportForm = document.getElementById('reportForm');
-                if (reportForm) {
-                    reportForm.reset();
-                }
-                const descCharCount = document.getElementById('descCharCount');
-                if (descCharCount) {
-                    descCharCount.textContent = '0';
-                }
-            });
-
-            // Asignar evento al botón del sidebar
-            document.getElementById('openReportModalBtn').addEventListener('click', function(e) {
-                e.preventDefault();
-                openReportModal();
-            });
-            // === FIN CONTROL MANUAL DEL MODAL ===
-
-            const submitBtn = document.getElementById('submitReportBtn');
-            const reportForm = document.getElementById('reportForm');
-            const reportDescription = document.getElementById('reportDescription');
-            
-            if (reportDescription) {
-                reportDescription.addEventListener('input', function() {
-                    document.getElementById('descCharCount').textContent = this.value.length;
-                });
-            }
-
-            if (submitBtn) {
-                submitBtn.addEventListener('click', async function () {
-                    const type = document.getElementById('reportType').value;
-                    const subject = document.getElementById('reportSubject').value.trim();
-                    const description = document.getElementById('reportDescription').value.trim();
-
-                    document.getElementById('descCharCount').textContent = description.length;
-
-                    if (!type || !subject || !description) {
-                        showToast('Por favor complete todos los campos', 'error');
-                        return;
-                    }
-
-                    if (description.length > 400) {
-                        showToast('La descripción no puede exceder 400 caracteres', 'error');
-                        return;
-                    }
-
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Enviando...';
-
-                    try {
-                        const response = await fetch('/api/reports/create/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': getCookie('csrftoken')
-                            },
-                            body: JSON.stringify({ type, subject, description })
-                        });
-
-                        const data = await response.json();
-
-                        if (data.success) {
-                            closeReportModal();
-                            
-                            reportForm.reset();
-                            document.getElementById('descCharCount').textContent = '0';
-                            
-                            showToast('Reporte enviado correctamente', 'success');
-                            localStorage.setItem('reportes_actualizar', 'true');
-                            window.dispatchEvent(new CustomEvent('reporte-creado'));
-                        } else {
-                            showToast(data.error || 'Error al enviar el reporte', 'error');
-                        }
-                    } catch (error) {
-                        showToast('Error al enviar el reporte', 'error');
-                        console.error('Error:', error);
-                    } finally {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<span class="material-symbols-outlined me-1">send</span> Enviar Reporte';
-                    }
-                });
-            }
-
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-
-            function showToast(message, type) {
-                const toast = document.createElement('div');
-                toast.className = `toast-notification toast-${type}`;
-                toast.innerHTML = `
-                    <span class="material-symbols-outlined">${type === 'success' ? 'check_circle' : 'error'}</span>
-                    <span>${message}</span>
-                `;
-                document.body.appendChild(toast);
-
-                setTimeout(() => {
-                    toast.classList.add('show');
-                }, 10);
-
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                    setTimeout(() => toast.remove(), 300);
-                }, 4000);
-
-                if (type !== 'info' && typeof window.reloadNotifications === 'function') {
-                    setTimeout(() => window.reloadNotifications(), 500);
-                }
-            }
-        });
-    </script>
 </body>
 </html>

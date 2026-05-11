@@ -9,7 +9,7 @@ from django.db.models import Q, Case, When, Value, IntegerField
 from django.core.exceptions import ValidationError
 from decimal import Decimal
 from apps.reconciliation.models import BankStatementTransaction
-from apps.users.permissions import can_upload_statements, can_reconcile
+from apps.users.permissions import can_reconcile
 from apps.bank_accounts.models import BankAccount, Office, Operation
 from apps.users.models import Notification, UserActivity
 import json
@@ -24,12 +24,12 @@ except ImportError:
     OPENPYXL_AVAILABLE = False
 
 try:
-    from reportlab.lib.pagesizes import A4, letter
+    from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import inch
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-    from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+    from reportlab.lib.enums import TA_CENTER
     REPORTLAB_AVAILABLE = True
 except ImportError:
     REPORTLAB_AVAILABLE = False
@@ -212,7 +212,7 @@ def get_reconciliation_data(request):
 			except:
 				pass
 
-# Filtro por moneda (múltiple)
+        # Filtro por moneda (múltiple)
 		if currency:
 			currency_list = [c.strip() for c in currency.split(',') if c.strip()]
 			if currency_list:
@@ -241,7 +241,7 @@ def get_reconciliation_data(request):
 					'office': office_display,
 					'office_code': office_value,
 					'operations': tx.operation_count,
-'description': tx.name,
+                    'description': tx.name,
 					'amount': float(tx.amount),
 					'entry_type': tx.entry_type,
 					'bank_fee': float(tx.bank_fee),

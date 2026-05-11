@@ -1,6 +1,3 @@
-{% load bootstrap5 %}
-{% bootstrap_css %}
-{% bootstrap_javascript %}
 {% load static %}
 
 <!DOCTYPE html>
@@ -8,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ETECSA | Acceso Seguro</title>
+    <title>Finanzas | Acceso Seguro</title>
     
     <!-- Bootstrap 5 (local) -->
     <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
@@ -26,11 +23,11 @@
         <div class="d-flex align-items-center gap-3">
             <div class="logo-box bg-primary d-flex align-items-center justify-content-center rounded-3 shadow-sm">
                 <!-- Logo local -->
-                <img src="{% static 'svg/logo.svg' %}" alt="ETECSA Logo" width="32" height="32">
+                <img src="{% static 'svg/logo.svg' %}" alt="Finanzas Logo" width="32" height="32">
             </div>
             <div class="d-flex flex-column lh-1">
-                <span class="h1 fw-black text-primary mb-0 text-uppercase tracking-tighter">ETECSA</span>
-                <span class="small-text fw-bold text-muted text-uppercase tracking-widest">Telecomunicaciones de Cuba</span>
+                <span class="h1 fw-black text-primary mb-0 text-uppercase tracking-tighter">Finanzas</span>
+                <span class="small-text fw-bold text-muted text-uppercase tracking-widest">Gestión Central</span>
             </div>
         </div>
     </header>
@@ -61,7 +58,7 @@
                     <div class="mb-4">
                         <label for="username" class="form-label fw-bold text-primary text-uppercase tracking-widest">USUARIO</label>
                         <div class="input-group-custom">
-                            <input type="text" class="form-control form-control-lg bg-light border-0 rounded-3 py-3 px-4{% if messages %} is-invalid{% endif %}" id="username" name="username" placeholder="Nombre de usuario" required autofocus>
+                            <input type="text" maxlength="25" class="form-control form-control-lg bg-light border-0 rounded-3 py-3 px-4{% if messages %} is-invalid{% endif %}" id="username" name="username" placeholder="Nombre de usuario" required autofocus>
                         </div>
                     </div>
 
@@ -69,7 +66,7 @@
                     <div class="mb-4">
                         <label for="password" class="form-label fw-bold text-primary text-uppercase tracking-widest mb-2">CONTRASEÑA</label>
                         <div class="input-group-custom">
-                            <input type="password" class="form-control form-control-lg bg-light border-0 rounded-3 py-3 px-4{% if messages %} is-invalid{% endif %}" id="password" name="password" placeholder="••••••••" required>
+                            <input type="password" maxlength="25" class="form-control form-control-lg bg-light border-0 rounded-3 py-3 px-4{% if messages %} is-invalid{% endif %}" id="password" name="password" placeholder="••••••••" required>
                         </div>
                         <div class="text-end mt-1">
                             <a href="#" id="forgotPasswordLink" class="text-muted text-decoration-none forgot-link" style="font-size: 0.8rem; opacity: 0.6;">¿Olvidó su contraseña?</a>
@@ -104,9 +101,9 @@
     <footer class="bg-white py-5 border-top border-light">
         <div class="container-fluid d-flex flex-column flex-md-row justify-content-between align-items-center gap-4 px-5">
             <div class="footer-copy small fw-bold text-muted text-uppercase tracking-widest">
-                © 2026 ETECSA. TODOS LOS DERECHOS RESERVADOS.
+                © 2026 FINANZAS - GESTIÓN CENTRAL. TODOS LOS DERECHOS RESERVADOS.
             </div>
-<nav class="d-flex flex-wrap justify-content-between gap-4 gap-md-5">
+                <nav class="d-flex flex-wrap justify-content-between gap-4 gap-md-5">
                     <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link" data-bs-toggle="modal" data-bs-target="#terminosModal">Términos y Condiciones</a>
                     <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link" data-bs-toggle="modal" data-bs-target="#seguridadModal">Seguridad</a>
                     <a href="#" class="text-decoration-none small fw-extrabold text-primary text-uppercase tracking-widest footer-link">Documentación</a>
@@ -120,7 +117,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-0 pb-2">
-                    <h5 class="modal-title fw-extrabold text-primary-dark tracking-tight" id="modalForgotPasswordLabel">Olvidé mi contraseña</h5>
+                    <h5 class="modal-title fw-extrabold text-primary-dark tracking-tight" id="modalForgotPasswordLabel">Restablecer Contraseña</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <form id="formForgotPassword">
@@ -194,7 +191,7 @@
                 </div>
                 <div class="modal-body pt-2" style="max-height: 70vh; overflow-y: auto;">
                     <h6 class="fw-bold text-primary mb-2">1. Introducción y Aceptación</h6>
-                    <p class="text-muted small mb-3">El presente documento establece las condiciones de uso del sistema "ETECSA Finanzas - Gestión Central", una herramienta interna desarrollada para la Unidad de Conciliación. Al acceder y utilizar este sistema, el usuario acepta cumplir con estas políticas. El acceso está estrictamente restringido al personal autorizado.</p>
+                    <p class="text-muted small mb-3">El presente documento establece las condiciones de uso del sistema "Finanzas - Gestión Central", una herramienta interna desarrollada para la Unidad de Conciliación. Al acceder y utilizar este sistema, el usuario acepta cumplir con estas políticas. El acceso está estrictamente restringido al personal autorizado.</p>
 
                     <h6 class="fw-bold text-primary mb-2">2. Uso del Sistema y Confidencialidad</h6>
                     <p class="text-muted small mb-3">El sistema tiene como propósito exclusivo la gestión de estados de cuenta bancarios, la conciliación de transacciones y la administración financiera interna. Toda la información procesada es de carácter estrictamente confidencial. Queda prohibida la extracción, divulgación o uso de estos datos para fines ajenos a las funciones laborales asignadas.</p>
@@ -234,7 +231,7 @@
                 </div>
                 <div class="modal-body pt-2" style="max-height: 70vh; overflow-y: auto;">
                     <h6 class="fw-bold text-primary mb-2">1. Propósito y Alcance</h6>
-                    <p class="text-muted small mb-3">Este documento detalla los mecanismos de seguridad implementados en el sistema "ETECSA Finanzas - Gestión Central" para proteger la integridad, confidencialidad y disponibilidad de los datos financieros procesados mediante su arquitectura en Django y PostgreSQL.</p>
+                    <p class="text-muted small mb-3">Este documento detalla los mecanismos de seguridad implementados en el sistema "Finanzas - Gestión Central" para proteger la integridad, confidencialidad y disponibilidad de los datos financieros procesados mediante su arquitectura en Django y PostgreSQL.</p>
 
                     <h6 class="fw-bold text-primary mb-2">2. Autenticación y Autorización</h6>
                     <p class="text-muted small mb-3"><strong>Control de Acceso:</strong> Todas las vistas y endpoints críticos del sistema están protegidos mediante el decorador <code>@login_required</code>, impidiendo el acceso a usuarios no autenticados.</p>

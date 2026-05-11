@@ -69,23 +69,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='Reminder',
-            fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('title', models.CharField(max_length=255)),
-                ('message', models.TextField()),
-                ('due_at', models.DateTimeField()),
-                ('status', models.CharField(choices=[('pending', 'Pending'), ('sent', 'Sent'), ('dismissed', 'Dismissed'), ('completed', 'Completed')], max_length=20)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-            ],
-            options={
-                'verbose_name': 'Reminder',
-                'verbose_name_plural': 'Reminders',
-                'ordering': ['due_at'],
-            },
-        ),
-        migrations.CreateModel(
             name='Role',
             fields=[
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
@@ -128,11 +111,6 @@ class Migration(migrations.Migration):
             model_name='role',
             index=models.Index(fields=['name'], name='users_role_name_dbf39a_idx'),
         ),
-        migrations.AddField(
-            model_name='reminder',
-            name='user',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='reminders', to=settings.AUTH_USER_MODEL),
-        ),
         migrations.AddIndex(
             model_name='permission',
             index=models.Index(fields=['name'], name='users_permi_name_8bf386_idx'),
@@ -167,14 +145,6 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='rolepermission',
             unique_together={('role', 'permission')},
-        ),
-        migrations.AddIndex(
-            model_name='reminder',
-            index=models.Index(fields=['status'], name='users_remin_status_dcd9c2_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='reminder',
-            index=models.Index(fields=['due_at'], name='users_remin_due_at_9dc88b_idx'),
         ),
         migrations.AddIndex(
             model_name='notification',

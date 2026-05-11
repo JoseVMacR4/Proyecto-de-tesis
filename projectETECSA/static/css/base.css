@@ -1,8 +1,3 @@
-/* 
-   ETECSA Finanzas - Dashboard Styles
-   Basado en "Institutional Authority & Tonal Depth"
-*/
-
 :root {
     --primary: #003e6f;
     --primary-container: #005596;
@@ -16,14 +11,6 @@
     --tertiary: #642d00;
     --tertiary-container: #873f01;
     --error: #ba1a1a;
-    
-    /* Status Colors */
-    --status-matched-bg: #c6e4fa;
-    --status-matched-text: #004881;
-    --status-pending-bg: #ffdbc8;
-    --status-pending-text: #743500;
-    --status-flagged-bg: #ffdad6;
-    --status-flagged-text: #93000a;
 }
 
 body>.bank-alert,
@@ -99,7 +86,7 @@ h1, h2, h3, h4, h5, h6, .font-manrope {
     justify-content: center;
     min-height: 42px;
     min-width: 160px;
-    border-radius: 1rem;
+    border-radius: 0.5rem;
     box-shadow: 0 8px 18px rgba(0, 62, 111, 0.14);
     text-decoration: none;
 }
@@ -112,27 +99,6 @@ h1, h2, h3, h4, h5, h6, .font-manrope {
 
 .btn-primary-gradient:active {
     transform: scale(0.98);
-}
-
-.search-input {
-    background-color: var(--surface-container-low);
-    border: none;
-    border-radius: 0.25rem;
-    padding-left: 2.5rem;
-    font-size: 0.875rem;
-}
-
-.search-input:focus {
-    box-shadow: 0 0 0 2px var(--primary-container);
-    outline: none;
-}
-
-.search-icon {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--outline);
 }
 
 /* Sidebar */
@@ -335,42 +301,6 @@ h1, h2, h3, h4, h5, h6, .font-manrope {
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
-
-.table-custom th {
-    background-color: rgba(245, 243, 243, 0.5);
-    color: var(--outline);
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--surface-container-high);
-    padding: 1rem 1.5rem;
-}
-
-.table-custom td {
-    padding: 1rem 1.5rem;
-    vertical-align: middle;
-    border-bottom: 1px solid var(--surface-container-low);
-    font-size: 0.875rem;
-}
-
-.table-custom tbody tr:hover {
-    background-color: rgba(245, 243, 243, 0.3);
-}
-
-/* Status Badges */
-.status-badge {
-    font-size: 0.65rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    padding: 0.25rem 0.75rem;
-    border-radius: 50rem;
-    letter-spacing: 0.05em;
-}
-
-.status-matched { background-color: var(--status-matched-bg); color: var(--status-matched-text); }
-.status-pending { background-color: var(--status-pending-bg); color: var(--status-pending-text); }
-.status-flagged { background-color: var(--status-flagged-bg); color: var(--status-flagged-text); }
 
 /* Responsive */
 @media (max-width: 991.98px) {

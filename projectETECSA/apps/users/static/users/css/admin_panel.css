@@ -1,7 +1,23 @@
-/*
-   ETECSA Finanzas - Admin Panel Styles
-   Basado en "Institutional Authority & Tonal Depth"
-*/
+:root {
+    --primary: #003e6f;
+    --primary-container: #005596;
+    --secondary: #466275;
+    --secondary-container: #c6e4fa;
+    --tertiary: #642d00;
+    --tertiary-container: #ffdbc8;
+    --surface: #fbf9f8;
+    --surface-container: #efeded;
+    --surface-container-high: #e9e8e7;
+    --surface-container-lowest: #ffffff;
+    --on-surface: #1b1c1c;
+    --on-surface-variant: #414750;
+    --outline: #727781;
+    --outline-variant: #c1c7d2;
+    --error: #ba1a1a;
+    --error-container: #ffdad6;
+    --success: #21a038;
+    --success-container: #d1f2d9;
+}
 
 /* Navigation Tabs */
 .settings-tabs {
@@ -39,14 +55,10 @@
 /* Settings Cards */
 .settings-card {
     background-color: var(--surface-container-lowest);
-    border-radius: 0;
-    padding: 0;
-    border: 1px solid rgba(193, 199, 210, 0.1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-    transition: all 0.2s ease;
-    display: flex;
-    flex-direction: column;
-    overflow: visible;
+    border: 1px solid var(--outline-variant);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .settings-card-header {
@@ -178,24 +190,6 @@
     align-items: center;
     justify-content: center;
     color: var(--primary);
-}
-
-.bank-status {
-    font-size: 0.625rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-}
-
-.bank-status.active {
-    background-color: var(--secondary-container);
-    color: var(--on-secondary-container);
-}
-
-.bank-status.pending {
-    background-color: var(--tertiary-fixed);
-    color: var(--on-tertiary-fixed-variant);
 }
 
 .btn-bank-action {
@@ -354,4 +348,26 @@
 
 .pagination-btn span {
     font-size: 1rem !important;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.status-matched {
+    background-color: var(--secondary-container);
+    color: #004881;
+}
+
+.status-pending {
+    background-color: var(--tertiary-container);
+    color: #743500;
 }

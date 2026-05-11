@@ -1,7 +1,3 @@
-/**
- * ETECSA - Login Page Logic
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const usernameInput = document.getElementById('username');
@@ -45,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (passwordEmpty) passwordInput.classList.add('is-invalid');
 
                 const message = usernameEmpty && passwordEmpty
-                    ? 'Rellena los campos de usuario y contraseña.'
+                    ? 'Rellene los campos de usuario y contraseña.'
                     : usernameEmpty
                         ? 'El campo de usuario es obligatorio.'
                         : 'El campo de contraseña es obligatorio.';
@@ -188,5 +184,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    console.log('ETECSA Login Interface Initialized');
+    console.log('Login Interface Initialized');
 });

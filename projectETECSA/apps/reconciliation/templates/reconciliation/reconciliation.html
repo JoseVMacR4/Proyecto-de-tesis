@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static humanize %}
 
-{% block title %}Conciliación Bancaria - ETECSA Finanzas{% endblock %}
+{% block title %}Finanzas | Conciliación Bancaria {% endblock %}
 
 {% block extra_css %}
 <!-- Reconciliation Custom CSS -->
@@ -73,8 +73,6 @@
             </div>
         </div>
     </div>
-
-    
 </div>
 
 <!-- Filter Bar -->
@@ -170,7 +168,7 @@
                 <span class="input-group-text border-0 bg-white" style="color: #999;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">tag</span>
                 </span>
-                <input type="text" id="referenceFilter" class="form-control filter-input" placeholder="Referencia">
+                <input type="text" maxlength="25" id="referenceFilter" class="form-control filter-input" placeholder="Referencia">
             </div>
         </div>
 
@@ -179,7 +177,7 @@
                 <span class="input-group-text border-0 bg-white" style="color: #999;">
                     <span class="material-symbols-outlined" style="font-size: 1.1rem;">description</span>
                 </span>
-                <input type="text" id="nameFilter" class="form-control filter-input" placeholder="Nombre/Descripción">
+                <input type="text" maxlength="50" id="nameFilter" class="form-control filter-input" placeholder="Nombre/Descripción">
             </div>
         </div>
 
@@ -351,7 +349,6 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Detalle de Transacción</h5>
-                    <!-- Se reemplaza onclick por data-bs-dismiss="modal" -->
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                 </div>
                 <div class="modal-body">
@@ -403,7 +400,6 @@
                     </dl>
                 </div>
                 <div class="modal-footer">
-                    <!-- Se reemplaza onclick por data-bs-dismiss="modal" -->
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
@@ -540,7 +536,7 @@
                                 <input class="form-check-input" type="radio" name="exportFormat" id="formatXls" value="xls" checked>
                                 <label class="form-check-label" for="formatXls">
                                     <span class="material-symbols-outlined align-middle" style="font-size: 1rem; color: #217346;">description</span>
-                                    Excel (XLS)
+                                    Excel (XLSX)
                                 </label>
                             </div>
                             <div class="form-check">

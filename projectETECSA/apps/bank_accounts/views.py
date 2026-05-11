@@ -1,10 +1,9 @@
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, FileResponse
-from django.views.decorators.http import require_POST, require_http_methods, require_GET
-from django.db.models import Q
+from django.views.decorators.http import require_POST, require_http_methods
 from decimal import Decimal
 from apps.bank_accounts.models import BankAccount
 from apps.reconciliation.models import BankStatement, BankStatementTransaction
@@ -138,7 +137,7 @@ def bank_accounts(request):
             }
         })
 
-    # Último statement cargado (para mostrar en la sidebar)
+    # Último statement cargado
     last_statement = BankStatement.objects.order_by('-created_at').first()
     last_processing = None
     if last_statement:
@@ -176,9 +175,6 @@ def upload_statement_api(request):
             return JsonResponse({'success': False, 'error': 'ID de cuenta bancaria requerido.'}, status=400)
 
         stmt = process_statement_upload(uploaded_file, account_id)
-
-        from django.utils.formats import date_format
-        from django.utils import timezone
         
         # Formatear fechas usando Django para consistencia con la plantilla
         created_at_formatted = date_format(stmt.created_at, 'd/m/Y H:i')

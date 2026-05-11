@@ -107,7 +107,7 @@ def process_statement_upload(uploaded_file, bank_account_id):
             operation_count=tx.get('operation_count', 1),
             bank_fee=tx['bank_fee'],
             amount=tx['amount'],
-            currency='CUP', # Asumimos CUP por defecto según ejemplo
+            currency='CUP', # Asumimos CUP por defecto
             date=stmt.statement_date,
         ) for tx in parsed['transactions']
     ]

@@ -1,8 +1,4 @@
 /**
- * Lógica completa para la interfaz de carga y manejo de extractos
- */
-
-/**
  * Limpia mensajes de error eliminando información técnica
  */
 function cleanMessage(message) {
@@ -87,7 +83,7 @@ function cleanMessage(message) {
     return cleaned;
 }
 
-/* ===== Manejo de Estado, Filtros y Paginación Refactorizado ===== */
+/* ===== Manejo de Estado, Filtros y Paginación ===== */
 
 // Sorting state
 let currentSort = { column: null, direction: 'asc' };
@@ -261,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Restaurar Filtros desde URL ANTES de cargar
     restoreFiltersFromURL();
     setupFilterToggle();
+    initDropdowns();
     loadFilterOptions(); // Rellena dropdown usando la info restaurada
     initFilterEvents();
 
@@ -268,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupSortListeners();
     restoreSortState();
 
-    // 4. Paginación (delegation)
+    // 4. Paginación
     const paginationFooter = document.querySelector('.pagination-footer');
     if (paginationFooter) {
         paginationFooter.addEventListener('click', (e) => {
@@ -283,30 +280,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 5. Dropdowns (SOLUCIÓN AL CIERRE ACCIDENTAL)
-    document.querySelectorAll('.dropdown-multiselect button').forEach(btn => {
-        btn.addEventListener('click', e => {
-            e.stopPropagation();
-            btn.nextElementSibling.classList.toggle('show');
-        });
-    });
-
-    // Solo cierra el menú si el clic fue AFUERA del componente de filtro
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.dropdown-multiselect')) {
-            document.querySelectorAll('.dropdown-multiselect .dropdown-menu.show').forEach(m => {
-                m.classList.remove('show');
-            });
-        }
-    });
-
     // 6. Navegación en el historial del navegador (Atrás/Adelante)
     window.addEventListener('popstate', () => {
         window.location.reload();
     });
-
-    // NO cargamos datos por AJAX aquí porque Django ya renderiza la tabla filtrada 
-    // desde el servidor basándose en la URL. Esto ahorra una doble petición AJAX.
 });
 
 function getFilterValues(menuId) {
@@ -342,7 +319,7 @@ function loadFilterOptions() {
     });
 }
 
-// --- NUEVO: Rellena inputs DESDE la URL al recargar ---
+// Rellena inputs DESDE la URL al recargar
 function restoreFiltersFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
     
@@ -392,7 +369,7 @@ function restoreFiltersFromURL() {
     }
 }
 
-// --- ACTUALIZADO: Rellena las opciones del banco respetando la URL ---
+// Rellena las opciones del banco respetando la URL
 function populateFilterOptions(filters) {
     const populateMenu = (menuId, options) => {
         const menu = document.getElementById(menuId);
@@ -442,8 +419,10 @@ function initDropdowns() {
     const buttons = document.querySelectorAll('.dropdown-multiselect button');
     
     buttons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.onclick = function(e) {
+            e.preventDefault();
             e.stopPropagation();
+            
             const dropdown = this.closest('.dropdown-multiselect');
             const menu = dropdown.querySelector('.dropdown-menu');
             
@@ -454,7 +433,7 @@ function initDropdowns() {
             });
             
             menu.classList.toggle('show');
-        });
+        };
     });
 
     document.addEventListener('click', function(e) {
@@ -463,7 +442,7 @@ function initDropdowns() {
                 menu.classList.remove('show');
             });
         }
-});
+    });
 }
 
  /**
@@ -503,7 +482,7 @@ function initializeFileUpload() {
 }
 
 /**
- * Función principal: Validación y envío al servidor
+ * Validación y envío al servidor
  */
 function handleFiles(files) {
     if (!files || files.length === 0) return;
@@ -720,17 +699,20 @@ function parseDateTimeString(isoStr) {
  * Añade fila a la tabla de historial sin recargar
  */
 function formatFileSize(bytes) {
-    if (bytes == null || Number.isNaN(bytes)) return '';
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let size = bytes;
-    let index = 0;
-
-    while (size >= 1024 && index < units.length - 1) {
-        size /= 1024;
-        index += 1;
+    if (bytes == null || isNaN(bytes) || bytes === '') return '';
+    
+    bytes = parseInt(bytes);
+    if (bytes === 0) return '0 bytes';
+    
+    const k = 1024;
+    const sizes = ['bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    if (i === 0) {
+        return bytes + ' ' + sizes[i];
     }
-
-    return `${size.toFixed(1).replace(/\.0$/, '')} ${units[index]}`;
+    
+    return (bytes / Math.pow(k, i)).toFixed(1).replace(/\.0$/, '') + ' ' + sizes[i];
 }
 
 function addHistoryRow(data) {
@@ -813,7 +795,7 @@ function updatePaginationInfo() {
 }
 
 /**
- * Utilidad: Obtener token CSRF de Django
+ * Obtener token CSRF de Django
  */
 function getCSRFToken() {
     const name = 'csrftoken=';
@@ -925,28 +907,9 @@ function getFileIcon(extension) {
     let iconClass = 'txt';
     let iconName = 'text_snippet';
     
-    if (ext === 'pdf') {
-        iconClass = 'pdf';
-        iconName = 'picture_as_pdf';
-    } else if (ext === 'csv') {
-        iconClass = 'csv';
-        iconName = 'csv';
-    } else if (ext === 'xlsx' || ext === 'xls') {
-        iconClass = 'xlsx';
-        iconName = 'table_chart';
-    }
-    
     return `<div class="file-icon ${iconClass}">
         <span class="material-symbols-outlined">${iconName}</span>
     </div>`;
-}
-
-function formatFileSize(bytes) {
-    if (!bytes) return '';
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 Bytes';
-    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 }
 
 function formatNumber(num) {

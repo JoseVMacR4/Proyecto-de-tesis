@@ -1,8 +1,3 @@
-/**
- * ETECSA Finanzas - Admin Panel JavaScript
- * Gestión de usuarios, operaciones, cuentas bancarias y oficinas
- */
-
 // Variables globales para los modales
 let userModal, operationModal, operationDetailsModal, bankModal, bankDetailsModal, officeModal, officeDetailsModal, deleteModal, userDetailsModal;
 
@@ -422,106 +417,6 @@ function initActionButtons() {
             officeModal.show();
         });
     }
-
-    // Botones de Ver Usuario
-    document.querySelectorAll('.btn-view-user').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            viewUserDetails(userId);
-        });
-    });
-
-    // Botones de Editar Usuario
-    document.querySelectorAll('.btn-edit-user').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            editUser(userId);
-        });
-    });
-
-    // Botones de Eliminar Usuario
-    document.querySelectorAll('.btn-delete-user').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            const row = this.closest('tr');
-            const username = row.querySelector('td:first-child').textContent;
-            
-            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar el usuario "${username}"?`;
-            document.getElementById('btnConfirmDelete').onclick = function() {
-                deleteItem(`/admin-panel/users/${userId}/delete/`, 'usuario');
-                deleteModal.hide();
-            };
-            deleteModal.show();
-        });
-    });
-
-    // Botones de Editar Operación
-    document.querySelectorAll('.btn-edit-operation').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const operationId = this.getAttribute('data-operation-id');
-            const row = this.closest('tr');
-            const code = row.querySelector('td:first-child').textContent;
-            const name = row.querySelector('td:nth-child(2)').textContent;
-            
-            document.getElementById('operationId').value = operationId;
-            document.getElementById('operationFormAction').value = 'edit';
-            document.getElementById('operationCode').value = code;
-            document.getElementById('operationName').value = name;
-            
-            document.getElementById('modalOperationLabel').textContent = 'Editar Operación';
-            operationModal.show();
-        });
-    });
-
-    // Botones de Eliminar Operación
-    document.querySelectorAll('.btn-delete-operation').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const operationId = this.getAttribute('data-operation-id');
-            const row = this.closest('tr');
-            const operationName = row.querySelector('td:nth-child(2)').textContent;
-            
-            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la operación "${operationName}"?`;
-            document.getElementById('btnConfirmDelete').onclick = function() {
-                deleteItem(`/admin-panel/operations/${operationId}/delete/`, 'operación');
-                deleteModal.hide();
-            };
-            deleteModal.show();
-        });
-    });
-
-    // Botones de Editar Oficina
-    document.querySelectorAll('.btn-edit-office').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const officeId = this.getAttribute('data-office-id');
-            const row = this.closest('tr');
-            const code = row.querySelector('td:first-child').textContent;
-            const name = row.querySelector('td:nth-child(2)').textContent;
-            
-            document.getElementById('officeId').value = officeId;
-            document.getElementById('officeFormAction').value = 'edit';
-            document.getElementById('officeCode').value = code;
-            document.getElementById('officeName').value = name;
-            
-            document.getElementById('modalOfficeLabel').textContent = 'Editar Oficina';
-            officeModal.show();
-        });
-    });
-
-    // Botones de Eliminar Oficina
-    document.querySelectorAll('.btn-delete-office').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const officeId = this.getAttribute('data-office-id');
-            const row = this.closest('tr');
-            const officeName = row.querySelector('td:nth-child(2)').textContent;
-            
-            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar la oficina "${officeName}"?`;
-            document.getElementById('btnConfirmDelete').onclick = function() {
-                deleteItem(`/admin-panel/offices/${officeId}/delete/`, 'oficina');
-                deleteModal.hide();
-            };
-            deleteModal.show();
-        });
-    });
 }
 
 /**
@@ -535,7 +430,7 @@ function resetForm(type) {
         document.getElementById('userEmail').value = '';
         document.getElementById('userPassword').value = '';
         document.getElementById('userPassword').required = true;
-        document.getElementById('userPassword').placeholder = 'Dejar en blanco para mantener la actual (solo edición)';
+        document.getElementById('userPassword').placeholder = 'Establezca la contraseña';
         document.getElementById('userFirstName').value = '';
         document.getElementById('userLastName').value = '';
         document.getElementById('userRole').value = '';
@@ -746,7 +641,7 @@ function renderUsersPagination(pagination) {
     
     if (!paginationInfo || !paginationControls) return;
     
-    const startItem = (pagination.current_page - 1) * usersItemsPerPage + 1;
+    const startItem = pagination.total_count === 0 ? 0 : (pagination.current_page - 1) * usersItemsPerPage + 1;
     const endItem = Math.min(pagination.current_page * usersItemsPerPage, pagination.total_count);
     
     paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${pagination.total_count} usuarios`;
@@ -847,7 +742,7 @@ function renderOperationsPagination(pagination) {
     
     if (!paginationInfo || !paginationControls) return;
     
-    const startItem = (pagination.current_page - 1) * operationsItemsPerPage + 1;
+    const startItem = pagination.total_count === 0 ? 0 : (pagination.current_page - 1) * operationsItemsPerPage + 1;
     const endItem = Math.min(pagination.current_page * operationsItemsPerPage, pagination.total_count);
     
     paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${pagination.total_count} operaciones`;
@@ -956,7 +851,7 @@ function renderBanksPagination(pagination) {
     
     if (!paginationInfo || !paginationControls) return;
     
-    const startItem = (pagination.current_page - 1) * banksItemsPerPage + 1;
+    const startItem = pagination.total_count === 0 ? 0 : (pagination.current_page - 1) * banksItemsPerPage + 1;
     const endItem = Math.min(pagination.current_page * banksItemsPerPage, pagination.total_count);
     
     paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${pagination.total_count} cuentas`;
@@ -1057,7 +952,7 @@ function renderOfficesPagination(pagination) {
     
     if (!paginationInfo || !paginationControls) return;
     
-    const startItem = (pagination.current_page - 1) * officesItemsPerPage + 1;
+    const startItem = pagination.total_count === 0 ? 0 : (pagination.current_page - 1) * officesItemsPerPage + 1;
     const endItem = Math.min(pagination.current_page * officesItemsPerPage, pagination.total_count);
     
     paginationInfo.textContent = `Mostrando ${startItem} - ${endItem} de ${pagination.total_count} oficinas`;
@@ -1134,43 +1029,6 @@ function updateStats(section, stats) {
         if (totalEl) totalEl.textContent = stats.total_offices;
         if (activeEl) activeEl.textContent = stats.active_offices;
     }
-}
-
-/**
- * Re-inicializa los botones de editar/eliminar usuario después de actualizar la tabla
- */
-function reinitializeUserButtons() {
-    // Botones de Ver Usuario
-    document.querySelectorAll('.btn-view-user').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            viewUserDetails(userId);
-        });
-    });
-
-    // Botones de Editar Usuario
-    document.querySelectorAll('.btn-edit-user').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            editUser(userId);
-        });
-    });
-
-    // Botones de Eliminar Usuario
-    document.querySelectorAll('.btn-delete-user').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const userId = this.getAttribute('data-user-id');
-            const row = this.closest('tr');
-            const username = row.querySelector('td:first-child').textContent;
-            
-            document.getElementById('deleteMessage').textContent = `¿Está seguro que desea eliminar el usuario "${username}"?`;
-            document.getElementById('btnConfirmDelete').onclick = function() {
-                deleteItem(`/admin-panel/users/${userId}/delete/`, 'usuario');
-                deleteModal.hide();
-            };
-            deleteModal.show();
-        });
-    });
 }
 
 /**

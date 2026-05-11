@@ -1,8 +1,3 @@
-/* 
-   ETECSA Finanzas - Settings Styles
-   Basado en "Institutional Authority & Tonal Depth"
-*/
-
 /* Settings Header */
 .settings-header {
     margin-bottom: 2.5rem;
@@ -152,285 +147,6 @@
     font-weight: 700;
 }
 
-.btn-edit-profile {
-    width: 100%;
-    padding: 0.5rem 1rem;
-    background-color: var(--primary);
-    color: #ffffff;
-    font-weight: 700;
-    border: none;
-    border-radius: 0.5rem;
-    font-size: 0.875rem;
-    transition: all 0.2s ease;
-    margin-top: 2rem;
-}
-
-.btn-edit-profile:hover {
-    background-color: var(--primary-container);
-    transform: translateY(-1px);
-}
-
-/* Bank Items */
-.bank-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.bank-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem;
-    background-color: var(--surface);
-    border-radius: 0.75rem;
-    border: 1px solid transparent;
-    transition: all 0.2s ease;
-}
-
-.bank-item:hover {
-    background-color: var(--surface-container-low);
-    border-color: rgba(193, 199, 210, 0.3);
-}
-
-.bank-item-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.bank-icon-container {
-    width: 40px;
-    height: 40px;
-    background-color: var(--primary-fixed-dim);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary);
-}
-
-.bank-name {
-    font-weight: 700;
-    color: var(--on-surface);
-    margin-bottom: 0.125rem;
-}
-
-.bank-description {
-    font-size: 0.75rem;
-    color: var(--on-surface-variant);
-    font-weight: 500;
-}
-
-.bank-status {
-    font-size: 0.625rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-}
-
-.bank-status.active {
-    background-color: var(--secondary-container);
-    color: var(--on-secondary-container);
-}
-
-.bank-status.pending {
-    background-color: var(--tertiary-fixed);
-    color: var(--on-tertiary-fixed-variant);
-}
-
-.btn-bank-action {
-    padding: 0.25rem;
-    background: none;
-    border: none;
-    color: var(--outline);
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-bank-action:hover {
-    color: var(--primary);
-}
-
-.btn-add-bank {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background-color: var(--secondary-fixed);
-    color: var(--on-secondary-fixed);
-    font-weight: 700;
-    font-size: 0.75rem;
-    border: none;
-    border-radius: 0.5rem;
-    transition: all 0.2s ease;
-}
-
-.btn-add-bank:hover {
-    background-color: var(--secondary-container);
-}
-
-/* Security Section */
-.security-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.5rem 0;
-}
-
-.security-label {
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--on-surface-variant);
-}
-
-.security-link {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--primary);
-    text-decoration: none;
-    transition: all 0.2s ease;
-}
-
-.security-link:hover {
-    text-decoration: underline;
-}
-
-/* Toggle Switch */
-.toggle-switch {
-    width: 32px;
-    height: 16px;
-    background-color: var(--primary-container);
-    border-radius: 50rem;
-    position: relative;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.toggle-switch::after {
-    content: '';
-    position: absolute;
-    right: 2px;
-    top: 2px;
-    width: 12px;
-    height: 12px;
-    background-color: #ffffff;
-    border-radius: 50%;
-    transition: all 0.2s ease;
-}
-
-.toggle-switch.inactive {
-    background-color: var(--surface-container-high);
-}
-
-.toggle-switch.inactive::after {
-    right: auto;
-    left: 2px;
-}
-
-/* Permissions Section */
-.permissions-description {
-    font-size: 0.75rem;
-    color: var(--on-surface-variant);
-    line-height: 1.6;
-    margin-bottom: 1rem;
-}
-
-.btn-view-permissions {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--primary);
-    background: none;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.btn-view-permissions:hover {
-    gap: 0.5rem;
-}
-
-.btn-view-permissions .material-symbols-outlined {
-    font-size: 1rem;
-}
-
-/* System Preferences Strip */
-.preferences-strip {
-    margin-top: 2rem;
-    background-color: var(--primary);
-    padding: 1.5rem;
-    border-radius: 1rem;
-    color: #ffffff;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    overflow: hidden;
-    position: relative;
-}
-
-.preferences-strip::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 256px;
-    height: 256px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 50%;
-    filter: blur(40px);
-    transform: translate(20%, -20%);
-}
-
-.preferences-title {
-    font-size: 1.125rem;
-    font-weight: 700;
-    margin-bottom: 0.25rem;
-}
-
-.preferences-subtitle {
-    font-size: 0.875rem;
-    color: var(--primary-fixed-dim);
-    opacity: 0.9;
-}
-
-.preference-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background-color: rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
-    backdrop-filter: blur(10px);
-}
-
-.preference-badge-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-.preference-badge-divider {
-    width: 1px;
-    height: 16px;
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-.preference-badge-value {
-    font-size: 0.875rem;
-    font-weight: 700;
-}
-
-.preference-badge-bordered {
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 /* Animations */
 @keyframes fadeInUp {
     from {
@@ -444,7 +160,7 @@
 }
 
 .settings-card {
-    animation: fadeInUp 0.4s ease-out;
+    animation: fadeInUp 0.4s ease-out backwards;
 }
 
 .settings-card:nth-child(1) {
@@ -466,7 +182,6 @@
 
 .tab-content {
     display: none;
-    animation: fadeInUp 0.3s ease-out;
 }
 
 .tab-content.active {
@@ -556,40 +271,6 @@
     margin: 0.5rem 0;
 }
 
-/* Preferences Grid */
-.preferences-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-}
-
-.preference-item {
-    background-color: var(--surface-container-low);
-    padding: 1rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(193, 199, 210, 0.1);
-}
-
-.preference-item-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--outline);
-    margin-bottom: 0.75rem;
-}
-
-.preference-value-badge {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    background-color: var(--primary-fixed);
-    color: var(--on-primary-fixed);
-    border-radius: 0.5rem;
-    font-weight: 700;
-    font-size: 0.875rem;
-}
-
 /* Responsive adjustments */
 @media (max-width: 767.98px) {
     .settings-header h1 {
@@ -606,20 +287,6 @@
     .settings-tab {
         padding-bottom: 0.75rem;
         font-size: 0.75rem;
-    }
-    
-    .preferences-strip {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .preference-badges {
-        width: 100%;
-        justify-content: flex-start;
-    }
-    
-    .preferences-grid {
-        grid-template-columns: 1fr;
     }
 }
 
@@ -830,6 +497,8 @@
 
 /* Reports Section */
 .reports-container {
+    display: flex;
+    flex-direction: column;
     background-color: var(--surface-container-lowest);
     border: 1px solid var(--outline-variant);
     border-radius: 0.75rem;
@@ -863,11 +532,15 @@
 }
 
 .reports-table-wrapper {
+    flex: 1;
+    min-height: 0;
     margin: 0;
+    overflow: auto;
 }
 
 .reports-container .pagination-footer {
     margin: 0;
+    margin-top: auto;
     border-radius: 0;
 }
 

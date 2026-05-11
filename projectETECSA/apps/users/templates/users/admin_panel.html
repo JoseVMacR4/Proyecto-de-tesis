@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}ETECSA Finanzas - Panel de Administración{% endblock %}
+{% block title %}Finanzas | Panel de Administración{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'users/css/admin_panel.css' %}">
@@ -221,24 +221,24 @@
                             <input type="hidden" id="userFormAction" value="create">
                             <div class="mb-3">
                                 <label for="userUsername" class="form-label fw-bold small">Usuario *</label>
-                                <input type="text" class="form-control" id="userUsername" required>
+                                <input type="text" maxlength="25" class="form-control" id="userUsername" required>
                             </div>
                             <div class="mb-3">
                                 <label for="userEmail" class="form-label fw-bold small">Email *</label>
-                                <input type="email" class="form-control" id="userEmail" required>
+                                <input type="email" maxlength="50" class="form-control" id="userEmail" required>
                             </div>
                             <div class="mb-3">
                                 <label for="userPassword" class="form-label fw-bold small">Contraseña *</label>
-                                <input type="password" class="form-control" id="userPassword" placeholder="Dejar en blanco para mantener la actual (solo edición)">
+                                <input type="password" maxlength="25" class="form-control" id="userPassword" placeholder="Dejar en blanco para mantener la actual (solo edición)">
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="userFirstName" class="form-label fw-bold small">Nombre *</label>
-                                    <input type="text" class="form-control" id="userFirstName" required>
+                                    <input type="text" maxlength="50"  class="form-control" id="userFirstName" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="userLastName" class="form-label fw-bold small">Apellido *</label>
-                                    <input type="text" class="form-control" id="userLastName" required>
+                                    <input type="text" maxlength="50" class="form-control" id="userLastName" required>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -278,11 +278,11 @@
                             <input type="hidden" id="operationFormAction" value="create">
                             <div class="mb-3">
                                 <label for="operationCode" class="form-label fw-bold small">Código *</label>
-                                <input type="text" class="form-control" id="operationCode" required>
+                                <input type="text" maxlength="300" class="form-control" id="operationCode" required>
                             </div>
                             <div class="mb-3">
                                 <label for="operationName" class="form-label fw-bold small">Nombre *</label>
-                                <input type="text" class="form-control" id="operationName" required>
+                                <input type="text" maxlength="50" class="form-control" id="operationName" required>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -308,11 +308,11 @@
                             <input type="hidden" id="bankFormAction" value="create">
                             <div class="mb-3">
                                 <label for="bankCode" class="form-label fw-bold small">Código *</label>
-                                <input type="text" class="form-control" id="bankCode" required>
+                                <input type="text" maxlength="30" class="form-control" id="bankCode" required>
                             </div>
                             <div class="mb-3">
                                 <label for="bankName" class="form-label fw-bold small">Nombre *</label>
-                                <input type="text" class="form-control" id="bankName" required>
+                                <input type="text" maxlength="30" class="form-control" id="bankName" required>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -338,11 +338,11 @@
                             <input type="hidden" id="officeFormAction" value="create">
                             <div class="mb-3">
                                 <label for="officeCode" class="form-label fw-bold small">Código *</label>
-                                <input type="text" class="form-control" id="officeCode" required>
+                                <input type="text" maxlength="30" class="form-control" id="officeCode" required>
                             </div>
                             <div class="mb-3">
                                 <label for="officeName" class="form-label fw-bold small">Nombre *</label>
-                                <input type="text" class="form-control" id="officeName" required>
+                                <input type="text" maxlength="50" class="form-control" id="officeName" required>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -392,30 +392,30 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Rol</label>
-                            <input type="text" class="form-control" id="detailRole" readonly>
+                            <input type="text" maxlength="100" class="form-control" id="detailRole" readonly>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Nombre</label>
-                                <input type="text" class="form-control" id="detailFirstName" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailFirstName" readonly>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Apellido</label>
-                                <input type="text" class="form-control" id="detailLastName" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailLastName" readonly>
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Estado</label>
-                            <input type="text" class="form-control" id="detailIsActive" readonly>
+                            <input type="text" maxlength="100" class="form-control" id="detailIsActive" readonly>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Fecha de Creación</label>
-                                <input type="text" class="form-control" id="detailCreatedAt" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailCreatedAt" readonly>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Última Edición</label>
-                                <input type="text" class="form-control" id="detailUpdatedAt" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailUpdatedAt" readonly>
                             </div>
                         </div>
                     </div>
@@ -437,20 +437,20 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Código</label>
-                            <input type="text" class="form-control" id="detailOperationCode" readonly>
+                            <input type="text" maxlength="100" class="form-control" id="detailOperationCode" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Nombre</label>
-                            <input type="text" class="form-control" id="detailOperationName" readonly>
+                            <input type="text" maxlength="100" class="form-control" id="detailOperationName" readonly>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Fecha de Creación</label>
-                                <input type="text" class="form-control" id="detailOperationCreatedAt" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailOperationCreatedAt" readonly>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Última Edición</label>
-                                <input type="text" class="form-control" id="detailOperationUpdatedAt" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailOperationUpdatedAt" readonly>
                             </div>
                         </div>
                     </div>
@@ -472,20 +472,20 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Código</label>
-                            <input type="text" class="form-control" id="detailBankCode" readonly>
+                            <input type="text" maxlength="100" class="form-control" id="detailBankCode" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Nombre</label>
-                            <input type="text" class="form-control" id="detailBankName" readonly>
+                            <input type="text" maxlength="100" class="form-control" id="detailBankName" readonly>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Fecha de Creación</label>
-                                <input type="text" class="form-control" id="detailBankCreatedAt" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailBankCreatedAt" readonly>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Última Edición</label>
-                                <input type="text" class="form-control" id="detailBankUpdatedAt" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailBankUpdatedAt" readonly>
                             </div>
                         </div>
                     </div>
@@ -507,20 +507,20 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Código</label>
-                            <input type="text" class="form-control" id="detailOfficeCode" readonly>
+                            <input type="text" maxlength="100" class="form-control" id="detailOfficeCode" readonly>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold small">Nombre</label>
-                            <input type="text" class="form-control" id="detailOfficeName" readonly>
+                            <input type="text" maxlength="100" class="form-control" id="detailOfficeName" readonly>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Fecha de Creación</label>
-                                <input type="text" class="form-control" id="detailOfficeCreatedAt" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailOfficeCreatedAt" readonly>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold small">Última Edición</label>
-                                <input type="text" class="form-control" id="detailOfficeUpdatedAt" readonly>
+                                <input type="text" maxlength="100" class="form-control" id="detailOfficeUpdatedAt" readonly>
                             </div>
                         </div>
                     </div>

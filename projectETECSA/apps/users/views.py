@@ -6,7 +6,6 @@ from django.http import JsonResponse
 from django.db.models import ProtectedError, Case, When, Value, IntegerField, Q
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
-import json
 from apps.users.models import User, UserRole, Role, UserActivity, BugReport
 from apps.users.permissions import can_access_admin
 from apps.bank_accounts.models import BankAccount, Office, Operation
@@ -14,6 +13,7 @@ from django.utils import timezone
 from django.utils.formats import date_format
 from django.views.decorators.http import require_GET, require_POST
 from .models import Notification
+import json
 
 DEFAULT_USER_ROLES = [
     'Administrador',

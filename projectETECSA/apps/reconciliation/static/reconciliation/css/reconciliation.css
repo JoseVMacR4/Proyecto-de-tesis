@@ -1,8 +1,3 @@
-/*
-   ETECSA Finanzas - Reconciliation Styles
-   Basado en Material Design 3 - Institutional Authority
-*/
-
 :root {
     --primary: #003e6f;
     --primary-container: #005596;
@@ -194,11 +189,11 @@
 
 /* ===== Data Table ===== */
 .reconciliation-table {
-    background: var(--surface-container-lowest);
-    border-radius: 12px;
+    background-color: var(--surface-container-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: 0.75rem;
     overflow: hidden;
-    border: 1px solid #f0f0f0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
 }
 
 .reconciliation-table thead {
@@ -245,37 +240,6 @@
     font-size: 0.8rem;
 }
 
-/* Bank Badge */
-.bank-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.bank-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: white;
-}
-
-.bank-avatar.bm {
-    background-color: #2196f3;
-}
-
-.bank-avatar.bc {
-    background-color: #ff9800;
-}
-
-.bank-avatar.bp {
-    background-color: #f44336;
-}
-
 .bank-name {
     font-weight: 500;
 }
@@ -301,11 +265,6 @@
 .status-pending {
     background-color: var(--tertiary-container);
     color: #743500;
-}
-
-.status-flagged {
-    background-color: var(--error-container);
-    color: var(--error);
 }
 
 /* Amount Column */
@@ -495,11 +454,12 @@
 
 /* Table Header with Export */
 .table-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid #f0f0f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: rgba(245, 243, 243, 0.5);
+    border-bottom: 1px solid var(--surface-container-high);
 }
 
 .table-title {

@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}ETECSA Finanzas - Gestión Central{% endblock %}
+{% block title %}Finanzas | Gestión Central{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'users/css/dashboard.css' %}">
@@ -93,10 +93,11 @@
                     <div style="flex: 0 0 auto;">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <h5 class="font-manrope fw-bold mb-0" style="font-size: 1.1rem;">Últimos Reportes</h5>
-                            <span class="badge bg-success bg-opacity-25 text-success" style="font-size: 0.75rem;">3 resueltos</span>
+                            <span class="badge bg-success bg-opacity-25 text-success" style="font-size: 0.75rem;">Resueltos</span>
                         </div>
                     </div>
                     <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-evenly;">
+                        {% if recent_reports %}
                         {% for report in recent_reports %}
                         <div class="d-flex justify-content-between align-items-center py-2" style="border-bottom: 1px solid var(--surface-container-high);">
                             <div class="d-flex align-items-center gap-2">
@@ -119,6 +120,9 @@
                             </div>
                         </div>
                         {% endfor %}
+                        {% else %}
+                        <div colspan="7" class="text-center py-5 text-muted">No se encontraron reportes resueltos.</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

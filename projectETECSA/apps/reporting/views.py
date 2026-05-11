@@ -7,7 +7,7 @@ from django.db.models.functions import TruncMonth
 from datetime import timedelta
 from django.utils import timezone
 from apps.reconciliation.models import BankStatementTransaction
-from apps.bank_accounts.models import BankAccount, Operation
+from apps.bank_accounts.models import Operation
 
 MONTHS_ES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 
              'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']

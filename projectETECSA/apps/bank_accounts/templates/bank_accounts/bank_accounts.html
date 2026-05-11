@@ -2,7 +2,7 @@
 {% load static humanize %}
 
 {% block title %}
-  ETECSA Finanzas - Estados de Cuenta
+  Finanzas | Estados de Cuenta
 {% endblock %}
 
 {% block extra_css %}
@@ -122,7 +122,7 @@
           <span class="material-symbols-outlined" style="font-size: 1.1rem;">account_balance</span>
         </span>
         <div class="dropdown dropdown-multiselect w-100">
-          <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="bankFilterBtn" data-bs-toggle="dropdown" aria-expanded="false">
+          <button class="btn btn-outline-secondary dropdown-toggle text-start" type="button" id="bankFilterBtn">
             <span class="bank-filter-text">Todos los Bancos</span>
           </button>
           <ul class="dropdown-menu w-100" id="bankFilterMenu">
@@ -182,7 +182,7 @@
     <div class="history-header">
       <h5 class="history-title">Historial de Estados de Cuenta</h5>
     </div>
-
+  
     <!-- Table -->
     <div class="table-responsive">
       <table class="upload-history-table">
@@ -192,62 +192,53 @@
             <th>Cuenta</th>
             <th>Fecha de Carga</th>
             <th>Periodo</th>
-<th class="text-end sortable" style="cursor: pointer;">Saldo Inicial <span class="sort-icon material-symbols-outlined" data-sort="starting_balance">unfold_more</span></th>
-                    <th class="text-end sortable" style="cursor: pointer;">Saldo Final <span class="sort-icon material-symbols-outlined" data-sort="ending_balance">unfold_more</span></th>
+            <th class="text-end sortable" style="cursor: pointer;">Saldo Inicial <span
+                class="sort-icon material-symbols-outlined" data-sort="starting_balance">unfold_more</span></th>
+            <th class="text-end sortable" style="cursor: pointer;">Saldo Final <span
+                class="sort-icon material-symbols-outlined" data-sort="ending_balance">unfold_more</span></th>
             <th style="text-align: right;">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {% if page_obj and page_obj.object_list %}
-            {% for statement in page_obj.object_list %}
-              <tr>
-                <td>
-                  <div class="file-item">
-                    {% with ext=statement.file_extension|lower %}
-                      {% if ext == 'pdf' %}
-                        <div class="file-icon pdf">
-                          <span class="material-symbols-outlined">picture_as_pdf</span>
-                        </div>
-                      {% elif ext == 'csv' %}
-                        <div class="file-icon csv">
-                          <span class="material-symbols-outlined">csv</span>
-                        </div>
-                      {% elif ext == 'xlsx' or ext == 'xls' %}
-                        <div class="file-icon xlsx">
-                          <span class="material-symbols-outlined">table_chart</span>
-                        </div>
-                      {% else %}
-                        <div class="file-icon txt">
-                          <span class="material-symbols-outlined">text_snippet</span>
-                        </div>
-                      {% endif %}
-                    {% endwith %}
-                    <div class="file-info">
-                      <p class="file-name">{{ statement.file_name }}</p>
-                      <p class="file-size">
-                        {{ statement.entry_count }} transacciones
-                        {% if statement.file_size %}· {{ statement.file_size|filesizeformat }}{% endif %}
-                      </p>
-                    </div>
-                  </div>
-                </td>
-                <td class="bank-name">{{ statement.bank_account.name }}</td>
-                <td class="upload-date">{{ statement.created_at|date:"d/m/Y H:i" }}</td>
-                <td class="upload-period">{{ statement.period_start|date:"d/m/Y" }} - {{ statement.period_end|date:"d/m/Y" }}</td>
-                <td class="text-end amount">${{ statement.starting_balance|floatformat:2|intcomma }}</td>
-                <td class="text-end amount">${{ statement.ending_balance|floatformat:2|intcomma }}</td>
-                <td>
-                  <div class="action-buttons">
-                    <button class="action-btn btn-view" title="Ver" data-statement-file="{{ statement.file_name }}" onclick="openStatementModal(this)"><span class="material-symbols-outlined">visibility</span></button>
-                    <button class="action-btn btn-download" title="Descargar" data-statement-file="{{ statement.file_name }}" onclick="downloadStatement(this)"><span class="material-symbols-outlined">download</span></button>
-                  </div>
-                </td>
-              </tr>
-            {% endfor %}
+          {% for statement in page_obj.object_list %}
+          <tr>
+            <td>
+              <div class="file-item">
+                {% with ext=statement.file_extension|lower %}
+                <div class="file-icon txt">
+                  <span class="material-symbols-outlined">text_snippet</span>
+                </div>
+                {% endwith %}
+                <div class="file-info">
+                  <p class="file-name">{{ statement.file_name }}</p>
+                  <p class="file-size">
+                    {{ statement.entry_count }} transacciones
+                    {% if statement.file_size %}· {{ statement.file_size|filesizeformat }}{% endif %}
+                  </p>
+                </div>
+              </div>
+            </td>
+            <td class="bank-name">{{ statement.bank_account.name }}</td>
+            <td class="upload-date">{{ statement.created_at|date:"d/m/Y H:i" }}</td>
+            <td class="upload-period">{{ statement.period_start|date:"d/m/Y" }} - {{ statement.period_end|date:"d/m/Y" }}
+            </td>
+            <td class="text-end amount">${{ statement.starting_balance|floatformat:2|intcomma }}</td>
+            <td class="text-end amount">${{ statement.ending_balance|floatformat:2|intcomma }}</td>
+            <td>
+              <div class="action-buttons">
+                <button class="action-btn btn-view" title="Ver" data-statement-file="{{ statement.file_name }}"
+                  onclick="openStatementModal(this)"><span class="material-symbols-outlined">visibility</span></button>
+                <button class="action-btn btn-download" title="Descargar" data-statement-file="{{ statement.file_name }}"
+                  onclick="downloadStatement(this)"><span class="material-symbols-outlined">download</span></button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
           {% else %}
-            <tr>
-              <td colspan="7" class="text-center py-5 text-muted">No se encontraron estados de cuenta cargados.</td>
-            </tr>
+          <tr>
+            <td colspan="7" class="text-center py-5 text-muted">No se encontraron estados de cuenta cargados.</td>
+          </tr>
           {% endif %}
         </tbody>
       </table>

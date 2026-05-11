@@ -1,8 +1,3 @@
-/*
-   ETECSA Finanzas - Reconciliation JavaScript
-   Funcionalidad para gestionar transacciones bancarias
- */
-
 /**
  * Limpia mensajes de error eliminando información técnica
  */
@@ -292,17 +287,13 @@ function initializeUserPermissions() {
 
 // ===== Inicialización General =====
 function initializeReconciliation() {
-    // Verificación adicional: si hay estado guardado pero NO hay marca de logout,
-    // significa que es navegación normal (no logout), mantener estado
-    // Si hay marca de logout, validateSession ya limpiara todo
     const hasState = sessionStorage.getItem(getStorageKey('State'));
     const hasLogoutMarker = sessionStorage.getItem(LOGOUT_MARKER);
 
-    // Si hay estado pero NO hay logout marker, es navegación normal -> mantener
-    // Si hay logout marker, validateSession lo manejará
-
     const restored = tryRestoreState();
     
+    restoreSortState();
+
     initializeDropdowns();
     setupFilterListeners();
     setupTableListeners();
@@ -894,7 +885,6 @@ function setupFilterToggle() {
     }
 }
 
-// Única versión correcta de resetFilters
 function resetFilters() {
     // 1. Limpiar inputs normales de texto y fechas
     const filterInputs = document.querySelectorAll('.filter-input:not([type="hidden"]), .filter-select');
@@ -906,7 +896,7 @@ function resetFilters() {
         }
     });
 
-    // 2. Reiniciar los checkboxes en el DOM (esto faltaba en la versión anterior)
+    // 2. Reiniciar los checkboxes en el DOM
     const isAllOption = (val) => val === '' || val === 'Todos' || val === 'Todas' || val === 'Todos los Bancos';
     
     document.querySelectorAll('.dropdown-multiselect').forEach(dropdown => {
@@ -1068,9 +1058,10 @@ function handleSort(column, thElement) {
     updateSortIcons(column, currentSort.direction);
     saveSortState();
     
-    const filters = getCurrentFilterValues();
-    filters.page = 1;
-    loadTransactions(filters);
+    currentFilters = getCurrentFilterValues();
+    currentFilters.page = 1;
+
+    loadTransactions(currentFilters);
 }
 
 function sortTransactions(transactions, column, direction) {
@@ -1128,11 +1119,6 @@ function restoreSortState() {
             if (parsed.column && parsed.direction) {
                 currentSort = parsed;
                 updateSortIcons(currentSort.column, currentSort.direction);
-                
-                if (window.loadedTransactions && window.loadedTransactions.length > 0) {
-                    const sortedTx = sortTransactions(window.loadedTransactions, currentSort.column, currentSort.direction);
-                    updateTable(sortedTx);
-                }
             }
         } catch (e) {
             console.error('Error restoring sort state:', e);
@@ -1258,16 +1244,6 @@ function setupRowActions() {
             e.preventDefault();
             const row = this.closest('tr');
             viewTransactionDetails(row);
-        });
-    });
-
-    // Botones de error/revisar
-    document.querySelectorAll('.btn-error').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const row = this.closest('tr');
-            const reference = row.querySelector('.ref-code')?.textContent;
-            reviewError(reference);
         });
     });
 }
@@ -1420,7 +1396,9 @@ function setupPaginationListeners() {
             const targetPage = this.getAttribute('data-page');
 
             if (targetPage) {
+                currentFilters = getCurrentFilterValues();
                 currentFilters.page = parseInt(targetPage);
+                
                 loadTransactions(currentFilters);
             }
         });

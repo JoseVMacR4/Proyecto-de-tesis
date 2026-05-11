@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Configuración - ETECSA Finanzas{% endblock %}
+{% block title %}Finanzas | Configuración{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'users/css/settings.css' %}">
@@ -58,7 +58,7 @@
                             <span class="profile-info-value">{% if profile_user.last_login %}{{ profile_user.last_login|date:"d/m/Y H:i:s" }}{% else %}Primera vez{% endif %}</span>
                         </div>
                     </div>
-<div class="profile-color-bar">
+                    <div class="profile-color-bar">
                         <span class="profile-color-label">Color de avatar:</span>
                         <div class="profile-color-options">
                             <button class="color-swatch" data-color="#D32F2F" style="background-color: #D32F2F;" title="Rojo"></button>
@@ -84,7 +84,7 @@
                             <button class="color-swatch" data-color="#616161" style="background-color: #616161;" title="Gris"></button>
                             <button class="color-swatch" data-color="#212121" style="background-color: #212121;" title="Negro"></button>
                         </div>
-</div>
+                    </div>
                 </div>
 
                 <!-- Right Column: Recent Activities (70%) -->

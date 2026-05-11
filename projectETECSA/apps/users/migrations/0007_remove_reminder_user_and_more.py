@@ -11,10 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='reminder',
-            name='user',
-        ),
         migrations.RenameIndex(
             model_name='useractivity',
             new_name='users_usera_user_id_63b4df_idx',
@@ -29,8 +25,5 @@ class Migration(migrations.Migration):
             model_name='useractivity',
             name='id',
             field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
-        migrations.DeleteModel(
-            name='Reminder',
         ),
     ]
